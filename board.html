@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>研发看板 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  /* ============ 专业研发看板 ============ */
+  .kb-wrap { overflow-x: auto; padding-bottom: 14px; }
+  .kb { display: flex; gap: 12px; align-items: flex-start; min-width: min-content; }
+  .kb-col {
+    width: 252px; flex: none; background: #eef1f6; border-radius: 12px;
+    display: flex; flex-direction: column; max-height: calc(100vh - 300px); transition: background .15s, box-shadow .15s;
+  }
+  .kb-col.compact { width: 216px; }
+  .kb-col.over { background: #fdeeee; box-shadow: inset 0 0 0 1.5px var(--danger); }
+  .kb-col.drop { box-shadow: inset 0 0 0 2px var(--brand-400); background: var(--brand-50); }
+  .kb-col.done-col { background: #eaf6ef; }
+  .kb-head { padding: 10px 12px 8px; flex: none; }
+  .kb-title { display: flex; align-items: center; gap: 7px; }
+  .kb-title .n { font-size: 12.5px; font-weight: 600; color: var(--ink-800); }
+  .kb-title .c { font-size: 11px; color: var(--ink-500); background: rgba(255,255,255,.9); border-radius: 9px; padding: 0 6px; line-height: 16px; font-weight: 600; }
+  .kb-wip { font-size: 10.5px; border-radius: 5px; padding: 1px 6px; background: #fff; color: var(--ink-500); font-weight: 600; }
+  .kb-wip.warn { background: var(--warning-bg); color: #b8760a; }
+  .kb-wip.over { background: var(--danger); color: #fff; }
+  .kb-ico { margin-left: auto; display: flex; gap: 2px; }
+  .kb-ico span { width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; color: var(--ink-400); cursor: pointer; }
+  .kb-ico span:hover { background: rgba(255,255,255,.95); color: var(--brand-600); }
+  .kb-sub { font-size: 10.5px; color: var(--ink-400); margin-top: 4px; display: flex; gap: 8px; }
+  .kb-body { padding: 2px 8px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 90px; }
+  .kb-empty { border: 1.5px dashed var(--ink-200); border-radius: 9px; padding: 14px; text-align: center; color: var(--ink-300); font-size: 11.5px; }
+
+  .kb-card {
+    background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-xs);
+    border: 1px solid transparent; cursor: grab; transition: .15s; position: relative;
+  }
+  .kb-card:hover { box-shadow: var(--shadow); border-color: var(--brand-200); transform: translateY(-1px); }
+  .kb-card.dragging { opacity: .4; transform: rotate(1.5deg); }
+  .kb-card.blocked { border-color: #f3b4b6; }
+  .kb-card.blocked::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: repeating-linear-gradient(45deg, #e5484d 0 4px, #f7a5a7 4px 8px);
+  }
+  .kb-card .strip { height: 3px; }
+  .kb-card .body { padding: 9px 11px 10px; }
+  .kb-card.compact .body { padding: 7px 9px 8px; }
+  .kb-card .row1 { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
+  .kb-card .title { font-size: 12.5px; line-height: 1.5; color: var(--ink-800); font-weight: 500; }
+  .kb-card .parent { font-size: 10.5px; color: var(--ink-400); margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+  .kb-card .parent b { color: var(--brand-600); font-weight: 600; }
+  .kb-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 7px; }
+  .chip { display: inline-flex; align-items: center; gap: 3px; height: 18px; padding: 0 6px; border-radius: 5px; font-size: 10.5px; background: var(--ink-100); color: var(--ink-600); white-space: nowrap; }
+  .chip svg { width: 10px; height: 10px; }
+  .chip.ok { background: var(--success-bg); color: var(--success); }
+  .chip.fail { background: var(--danger-bg); color: var(--danger); }
+  .chip.run { background: var(--info-bg); color: #0284c7; }
+  .chip.warn { background: var(--warning-bg); color: #b8760a; }
+  .chip.brand { background: var(--brand-50); color: var(--brand-600); }
+  .chip.mono { font-family: var(--mono); }
+  .kb-foot { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ink-100); }
+  .age { font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+  .age.g { color: var(--success); } .age.y { color: var(--warning); } .age.r { color: var(--danger); }
+  .blk-note { margin-top: 7px; background: var(--danger-bg); color: #a3282c; font-size: 10.5px; border-radius: 6px; padding: 5px 7px; display: flex; gap: 4px; align-items: flex-start; }
+  .pull-tag {
+    margin-top: 7px; border: 1px dashed var(--success); color: var(--success); border-radius: 6px;
+    font-size: 10.5px; padding: 3px 6px; text-align: center; background: var(--success-bg);
+  }
+  /* 泳道 */
+  .lane { margin-bottom: 10px; }
+  .lane-head {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: #fff;
+    border: 1px solid var(--ink-200); border-radius: 9px; margin-bottom: 8px; position: sticky; left: 0;
+  }
+  .lane-head.expedite { background: var(--danger-bg); border-color: #f3b4b6; }
+  .lane .kb-col { max-height: none; background: transparent; }
+  .lane .kb-body { background: #eef1f6; border-radius: 10px; padding: 8px; min-height: 60px; }
+  .lane .kb-head { display: none; }
+  .lane-cols-head { display: flex; gap: 12px; margin-bottom: 6px; }
+  .lane-cols-head > div { width: 252px; flex: none; font-size: 11.5px; color: var(--ink-500); font-weight: 600; padding-left: 4px; }
+  /* 图例 */
+  .legend-bar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-500); }
+  .legend-bar b { color: var(--ink-700); }
+  .kb-col.collapsed { width: 46px; background: #eef1f6; cursor: pointer; }
+  .kb-col.collapsed:hover { background: #e4e9f2; }
+  .kb-col.collapsed .kb-body, .kb-col.collapsed .kb-sub { display: none; }
+  .kb-col.collapsed .kb-head { padding: 10px 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .kb-col.collapsed .kb-title { flex-direction: column; gap: 8px; }
+  .kb-col.collapsed .kb-title .n { writing-mode: vertical-rl; letter-spacing: 2px; }
+  .kb-col.collapsed .kb-ico { display: none; }
+  .pop {
+    position: absolute; z-index: 60; background: #fff; border: 1px solid var(--ink-200); border-radius: 10px;
+    box-shadow: var(--shadow-lg); width: 320px; padding: 12px 14px; font-size: 12px;
+  }
+</style>
+</head>
+<body data-nav="board" data-crumb="交付管理/研发看板">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head" style="margin-bottom:12px">
+        <div>
+          <div class="page-title">研发看板
+            <span class="tag brand lg">Sprint 26-14</span>
+            <span class="tag warning lg">剩余 3 天</span>
+          </div>
+          <div class="page-desc">统一支付网关 3.0 重构 · 迭代目标：完成路由引擎核心链路与灰度框架 · 42 点承诺 / 28 点已完成</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn" id="btnMetrics"><span data-icon="chart"></span>看板度量</button>
+          <button class="btn" data-modal="mConfig"><span data-icon="settings"></span>看板配置</button>
+          <button class="btn btn-primary" data-modal="mNewCard"><span data-icon="plus"></span>新建工作项</button>
+        </div>
+      </div>
+
+      <!-- 看板切换 -->
+      <div class="tabs" style="margin-bottom:12px">
+        <div class="tab active" data-bd="sprint"><span data-icon="refresh" data-size="14"></span>迭代看板</div>
+        <div class="tab" data-bd="req"><span data-icon="bulb" data-size="14"></span>需求看板</div>
+        <div class="tab" data-bd="bug"><span data-icon="bug" data-size="14"></span>缺陷看板</div>
+        <div class="tab" data-bd="release"><span data-icon="rocket" data-size="14"></span>发布看板</div>
+        <div class="tab" data-bd="mine"><span data-icon="user" data-size="14"></span>我的看板</div>
+      </div>
+
+      <!-- 工具条 -->
+      <div class="toolbar" style="margin-bottom:10px">
+        <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索工作项 / 分支 / 经办人" id="kbSearch"></div>
+        <div class="filter" data-f="mine"><span data-icon="user"></span>只看我的</div>
+        <div class="filter" data-f="blocked"><span data-icon="alert"></span>阻塞 <b>3</b></div>
+        <div class="filter" data-f="aging"><span data-icon="clock"></span>超期停留 <b>4</b></div>
+        <div class="filter" data-f="ci"><span data-icon="zap"></span>CI 失败 <b>2</b></div>
+        <div class="vdivider"></div>
+        <span class="fz12 muted">泳道</span>
+        <div class="btn-group" id="laneGroup">
+          <button class="active" data-lane="none">不分泳道</button>
+          <button data-lane="req">按需求</button>
+          <button data-lane="pri">按优先级</button>
+          <button data-lane="own">按经办人</button>
+        </div>
+        <div class="vdivider"></div>
+        <div class="btn-group" id="densGroup">
+          <button class="active" data-dens="normal"><span data-icon="list" data-size="13"></span>标准</button>
+          <button data-dens="compact"><span data-icon="grid" data-size="13"></span>紧凑</button>
+        </div>
+        <div class="ml-auto flex items-center gap8">
+          <span class="fz12 muted" id="kbCount"></span>
+          <button class="icon-btn tip" data-tip="全屏" id="btnFull"><span data-icon="maximize" data-size="16"></span></button>
+        </div>
+      </div>
+
+      <!-- WIP 告警条 -->
+      <div id="wipAlert"></div>
+
+      <!-- 看板主体 -->
+      <div class="kb-wrap" id="kbWrap"><div class="kb" id="kb"></div></div>
+
+      <!-- 图例 -->
+      <div class="card mt12"><div class="card-body" style="padding:10px 14px">
+        <div class="legend-bar">
+          <span><b>卡片色条</b>：</span>
+          <span><i style="display:inline-block;width:14px;height:4px;border-radius:2px;background:#15a86b;margin-right:4px"></i>用户故事</span>
+          <span><i style="display:inline-block;width:14px;height:4px;border-radius:2px;background:#2b5cff;margin-right:4px"></i>任务</span>
+          <span><i style="display:inline-block;width:14px;height:4px;border-radius:2px;background:#e5484d;margin-right:4px"></i>缺陷</span>
+          <span><i style="display:inline-block;width:14px;height:4px;border-radius:2px;background:#7c5cff;margin-right:4px"></i>技术债</span>
+          <span class="vdivider"></span>
+          <span><b>停留天数</b>：<span class="age g">● ≤2 天</span> <span class="age y">● 3-4 天</span> <span class="age r">● &gt;4 天（需关注）</span></span>
+          <span class="vdivider"></span>
+          <span><b>斑马纹左边</b>=已阻塞</span>
+          <span><b>虚线绿框</b>=本列已完成，下游可拉取</span>
+          <span><b>WIP</b>=在制品上限，超限列标红</span>
+          <span class="vdivider"></span>
+          <span>点击列头 <b>?</b> 看准入/准出策略，<b>−</b> 可折叠列（「已完成」默认折叠）</span>
+        </div>
+      </div></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 卡片详情抽屉 -->
+<div class="drawer" id="dCard" style="width:680px">
+  <div class="drawer-head">
+    <span class="tico story" id="cdIco"></span>
+    <div style="flex:1;min-width:0">
+      <div class="flex items-center gap8"><span class="id-link" id="cdId">STORY-3313</span>
+        <span class="tag brand" id="cdCol">开发中</span><span id="cdPri"></span></div>
+      <div class="fw6" style="font-size:14.5px;color:var(--ink-900)" id="cdTitle"></div>
+    </div>
+    <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
+  </div>
+  <div class="drawer-body" style="padding:16px 18px">
+    <div class="flex gap8 mb16" id="cdQuick"></div>
+    <div class="grid g2 mb16" id="cdProps"></div>
+    <div class="fw6 mb8">研发上下文（自动关联）</div>
+    <div id="cdCtx"></div>
+    <div class="fw6 mt20 mb8">流转轨迹（含各列停留时长）</div>
+    <div id="cdFlow"></div>
+    <div class="fw6 mt20 mb8">子任务</div>
+    <div id="cdSub"></div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" data-toast="已标记阻塞并通知相关人">标记阻塞</button>
+    <button class="btn" data-toast="已拆分为 2 个子任务">拆分</button>
+    <button class="btn btn-primary" id="cdNext">流转到下一列</button>
+  </div>
+</div>
+
+<!-- 度量抽屉 -->
+<div class="drawer" id="dMetrics" style="width:900px">
+  <div class="drawer-head">
+    <span class="tico task"><span data-icon="chart" data-size="11"></span></span>
+    <div style="flex:1"><div class="fw6" style="font-size:14.5px">看板度量</div>
+      <div class="muted fz12">Sprint 26-14 · 交易平台组 · 用流动效率而非忙碌程度衡量团队</div></div>
+    <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
+  </div>
+  <div class="drawer-body" style="padding:16px 18px">
+    <div class="grid g4 mb16" id="mtStats"></div>
+    <div class="grid g2 mb16">
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chartArea"></span>累积流图 CFD</div>
+        <div class="card-sub">带宽=在制品，斜率=吞吐</div></div>
+        <div class="card-body"><div id="mtCfd"></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>周期时间散点图</div>
+        <div class="card-sub">每个点=一个已完成工作项</div></div>
+        <div class="card-body"><div id="mtScatter"></div>
+          <div class="legend mt8"><span><i style="background:#15a86b"></i>用户故事</span><span><i style="background:#2b5cff"></i>任务</span>
+            <span><i style="background:#e5484d"></i>缺陷</span><span><i style="background:#b3bfd0"></i>50%/85% 分位线</span></div></div></div>
+    </div>
+    <div class="grid g3">
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>各列平均停留</div></div>
+        <div class="card-body"><div id="mtStay"></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>WIP 趋势</div></div>
+        <div class="card-body"><div id="mtWip"></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="alert"></span>阻塞时长 TOP</div></div>
+        <div class="card-body"><div id="mtBlock"></div></div></div>
+    </div>
+    <div class="card mt16"><div class="card-head"><div class="card-title"><span data-icon="bulb"></span>看板健康诊断</div>
+      <div class="card-sub">基于流动数据自动生成</div></div>
+      <div class="card-body" id="mtDiag"></div></div>
+  </div>
+</div>
+
+<!-- 看板配置 -->
+<div class="modal" id="mConfig" style="width:720px">
+  <div class="modal-head"><span data-icon="settings"></span><span class="modal-title">看板配置</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tabs" style="margin-bottom:14px">
+      <div class="tab active" data-tab="cfg1">列与 WIP</div>
+      <div class="tab" data-tab="cfg2">列策略（准入/准出）</div>
+      <div class="tab" data-tab="cfg3">卡片显示</div>
+      <div class="tab" data-tab="cfg4">自动化流转</div>
+    </div>
+    <div class="tab-pane active" data-pane="cfg1">
+      <div class="table-wrap"><table class="tbl" id="cfgCols"></table></div>
+      <button class="btn btn-sm mt12"><span data-icon="plus" data-size="13"></span>添加列</button>
+    </div>
+    <div class="tab-pane" data-pane="cfg2"><div id="cfgPolicy"></div></div>
+    <div class="tab-pane" data-pane="cfg3"><div id="cfgFields"></div></div>
+    <div class="tab-pane" data-pane="cfg4"><div id="cfgAuto"></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="看板配置已保存">保存配置</button></div>
+</div>
+
+<div class="modal" id="mNewCard">
+  <div class="modal-head"><span data-icon="plus"></span><span class="modal-title">新建工作项</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>类型</label>
+      <div class="pills"><span class="pill active">用户故事</span><span class="pill">任务</span><span class="pill">缺陷</span><span class="pill">技术债</span></div></div>
+    <div class="field"><label>标题<span class="req">*</span></label><input class="input" placeholder="作为…我希望…以便…"></div>
+    <div class="form-row">
+      <div class="field"><label>所属需求</label><select class="select"><option>REQ-2041 支付网关多渠道智能路由能力</option><option>REQ-2036 商户后台大额账单异步导出</option></select></div>
+      <div class="field"><label>放入列</label><select class="select"><option>待办（任务池，等待认领）</option><option>设计中</option><option>开发中</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>故事点</label><select class="select"><option>1</option><option>2</option><option>3</option><option selected>5</option><option>8</option><option>13</option></select></div>
+      <div class="field"><label>经办人</label><select class="select"><option>不指派（进入任务池自助认领）</option><option>何俊</option><option>王倩</option></select></div>
+    </div>
+    <div class="field"><label>技能标签</label><input class="input" value="Java, 支付核心"></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="工作项已创建并放入任务池">创建</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* ================= 列定义（与软件研发流程对齐） ================= */
+var COLS = [
+  { k: 'todo', n: '待办 / 任务池', c: '#b3bfd0', wip: 0, hint: '已就绪待拉取',
+    inn: ['需求已澄清、验收标准明确', '已拆分为 ≤ 8 故事点', '依赖已识别且有对接人'],
+    out: ['有明确经办人（认领或指派）', '技术方案无争议'] },
+  { k: 'design', n: '设计中', c: '#7c5cff', wip: 3, hint: '方案/交互设计',
+    inn: ['需求已进入迭代', '设计负责人已确定'],
+    out: ['技术方案或交互稿已评审通过', '接口契约已产出'] },
+  { k: 'dev', n: '开发中', c: '#2b5cff', wip: 4, hint: '编码 + 自测',
+    inn: ['方案已评审', '分支已创建并关联工作项'],
+    out: ['本地自测通过 + 单测覆盖达标', '已提交 PR 且 CI 全绿'] },
+  { k: 'review', n: '代码评审', c: '#0ea5e9', wip: 3, hint: 'Code Review',
+    inn: ['PR 已创建并关联工作项', 'CI 检查全部通过'],
+    out: ['≥ 2 人批准且评审意见已闭环', '已合并到 develop'] },
+  { k: 'test', n: '测试中', c: '#f59e0b', wip: 4, hint: '提测验证',
+    inn: ['已部署测试环境', '冒烟用例通过'],
+    out: ['用例执行完成且通过率达标', 'P0/P1 缺陷清零'] },
+  { k: 'accept', n: '待验收', c: '#0fb5ba', wip: 3, hint: '产品/业务验收',
+    inn: ['测试报告已出具'],
+    out: ['产品负责人验收通过', '验收标准逐条确认'] },
+  { k: 'done', n: '已完成', c: '#15a86b', wip: 0, hint: '本迭代交付',
+    inn: ['验收通过'], out: ['已合入发布分支，等待版本发布'] }
+];
+
+/* ================= 卡片数据 ================= */
+var CARDS = [
+  { id: 'STORY-3318', ty: 'story', t: '通道限额中心对接', pri: 'P0', pt: 8, own: '', col: 'todo', age: 1, req: 'REQ-2041', reqN: '智能路由', skills: ['Java', '支付核心'], claim: 1 },
+  { id: 'TASK-5541', ty: 'debt', t: '老网关流量镜像回放工具', pri: 'P1', pt: 5, own: '', col: 'todo', age: 3, req: '技术债', reqN: '技术债', skills: ['中间件', '压测'], claim: 1 },
+  { id: 'STORY-3321', ty: 'story', t: '风控前置调用并行化改造', pri: 'P1', pt: 5, own: '', col: 'todo', age: 1, req: 'REQ-2041', reqN: '智能路由', skills: ['并发', '风控'], claim: 1 },
+  { id: 'TASK-5531', ty: 'task', t: '路由引擎性能压测（12k TPS）', pri: 'P0', pt: 5, own: '', col: 'todo', age: 5, req: '风险专项', reqN: '风险专项', skills: ['压测', 'SRE'], claim: 1, blocked: '压测环境 K8s 节点未扩容，依赖基础架构组（已等待 2 天）' },
+
+  { id: 'STORY-3314', ty: 'story', t: '灰度切流与回滚机制', pri: 'P0', pt: 5, own: '林小满', col: 'design', age: 2, req: 'REQ-2041', reqN: '智能路由', doc: '方案 V0.9 评审中' },
+  { id: 'STORY-3330', ty: 'story', t: '商户后台账单异步导出', pri: 'P1', pt: 5, own: '王倩', col: 'design', age: 1, req: 'REQ-2036', reqN: '账单导出', doc: '交互稿评审中', cust: 8 },
+
+  { id: 'STORY-3313', ty: 'story', t: '成本与成功率实时计算引擎', pri: 'P0', pt: 8, own: '何俊', col: 'dev', age: 3, req: 'REQ-2041', reqN: '智能路由', br: 'feature/smart-router', commits: 12, pg: 60, sub: '2/4', ci: 'fail' },
+  { id: 'STORY-3320', ty: 'story', t: '渠道适配层重构（招行/工行）', pri: 'P1', pt: 8, own: '何俊', col: 'dev', age: 2, req: 'REQ-2041', reqN: '智能路由', br: 'feature/adapter-v2', commits: 8, pg: 45, sub: '1/3', ci: 'ok' },
+  { id: 'STORY-3312', ty: 'story', t: '路由策略配置界面', pri: 'P0', pt: 5, own: '王倩', col: 'dev', age: 4, req: 'REQ-2041', reqN: '智能路由', br: 'feature/router-ui', commits: 6, pg: 85, sub: '3/4', ci: 'ok', ready: 1 },
+  { id: 'TASK-5540', ty: 'task', t: '对账差错工单自动派发', pri: 'P1', pt: 3, own: '何俊', col: 'dev', age: 6, req: 'REQ-2035', reqN: '对账核销', br: 'feature/settle-dispatch', commits: 4, pg: 70, ci: 'ok', blocked: '限额中心接口未就绪，已推动风控算法组（已等待 3 天）' },
+  { id: 'BUG-770', ty: 'bug', t: '熔断后备用通道限额校验缺失', pri: 'P1', pt: 2, own: '何俊', col: 'dev', age: 1, req: 'REQ-2041', reqN: '智能路由', br: 'hotfix/limit-check', commits: 3, pg: 80, ci: 'run' },
+
+  { id: 'STORY-3308', ty: 'story', t: '通道费率配置中心接口对接', pri: 'P1', pt: 3, own: '何俊', col: 'review', age: 1, req: 'REQ-2041', reqN: '智能路由', br: 'feature/rate-config', pr: '#482', ci: 'ok', rev: '1/2' },
+  { id: 'STORY-3311', ty: 'story', t: '路由决策日志埋点', pri: 'P2', pt: 2, own: '林小满', col: 'review', age: 3, req: 'REQ-2041', reqN: '智能路由', br: 'feature/router-log', pr: '#479', ci: 'ok', rev: '2/2', ready: 1 },
+  { id: 'TASK-5545', ty: 'debt', t: '收银台组件库升级至 v4', pri: 'P2', pt: 5, own: '王倩', col: 'review', age: 5, req: '技术债', reqN: '技术债', br: 'refactor/ui-v4', pr: '#312', ci: 'fail', rev: '0/2' },
+
+  { id: 'STORY-3305', ty: 'story', t: '数字人民币受理协议对接', pri: 'P0', pt: 13, own: '吴敏', col: 'test', age: 4, req: 'REQ-2040', reqN: '数币支付', cases: '18/26', bugs: 2, env: '测试环境' },
+  { id: 'BUG-762', ty: 'bug', t: '钱包签约回调重复通知', pri: 'P1', pt: 2, own: '吴敏', col: 'test', age: 2, req: 'REQ-2040', reqN: '数币支付', cases: '6/6', bugs: 0, env: '测试环境', ready: 1 },
+  { id: 'TASK-5530', ty: 'task', t: '费率配置中心联调验证', pri: 'P1', pt: 3, own: '吴敏', col: 'test', age: 1, req: 'REQ-2041', reqN: '智能路由', cases: '9/12', bugs: 1, env: '测试环境' },
+
+  { id: 'STORY-3301', ty: 'story', t: '收银台组件视觉规范落地', pri: 'P2', pt: 5, own: '周雅', col: 'accept', age: 2, req: 'REQ-2033', reqN: '首页重构', ac: '4/5' },
+  { id: 'STORY-3298', ty: 'story', t: '对账文件解析与标准化', pri: 'P1', pt: 8, own: '周雅', col: 'accept', age: 1, req: 'REQ-2035', reqN: '对账核销', ac: '5/5', ready: 1 },
+
+  { id: 'TASK-5532', ty: 'task', t: '技术方案评审与文档归档', pri: 'P2', pt: 2, own: '陈立', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由' },
+  { id: 'TASK-5533', ty: 'task', t: '灰度运营 SOP 编写', pri: 'P2', pt: 3, own: '周雅', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由' },
+  { id: 'BUG-755', ty: 'bug', t: '收银台在低端安卓机白屏', pri: 'P1', pt: 2, own: '王倩', col: 'done', age: 0, req: 'REQ-2033', reqN: '首页重构' },
+  { id: 'STORY-3296', ty: 'story', t: '交易受理层接口重构', pri: 'P1', pt: 8, own: '何俊', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由' },
+  { id: 'TASK-5528', ty: 'task', t: '压测脚本与影子库准备', pri: 'P1', pt: 3, own: '林小满', col: 'done', age: 0, req: '风险专项', reqN: '风险专项' }
+];
+
+var TY = {
+  story: { n: '用户故事', c: '#15a86b', i: 'file' }, task: { n: '任务', c: '#2b5cff', i: 'kanban' },
+  bug: { n: '缺陷', c: '#e5484d', i: 'bug' }, debt: { n: '技术债', c: '#7c5cff', i: 'database' }
+};
+var ME = '何俊';
+var state = { lane: 'none', dens: 'normal', filters: {}, q: '', collapsed: { done: true } };
+
+/* ================= 渲染 ================= */
+function ageCls(d) { return d <= 2 ? 'g' : d <= 4 ? 'y' : 'r'; }
+function visible(c) {
+  var f = state.filters;
+  if (f.mine && c.own !== ME) return false;
+  if (f.blocked && !c.blocked) return false;
+  if (f.aging && c.age <= 4) return false;
+  if (f.ci && c.ci !== 'fail') return false;
+  if (state.q) {
+    var s = (c.id + c.t + (c.own || '') + (c.br || '') + c.req).toLowerCase();
+    if (s.indexOf(state.q.toLowerCase()) < 0) return false;
+  }
+  return true;
+}
+function cardHtml(c) {
+  var ty = TY[c.ty];
+  var badges = [];
+  if (c.pt) badges.push('<span class="chip">' + c.pt + ' 点</span>');
+  if (c.br) badges.push('<span class="chip mono">' + icon('branch', 10) + c.br.replace(/^(feature|hotfix|refactor)\//, '') + '</span>');
+  if (c.commits) badges.push('<span class="chip mono">' + icon('commit', 10) + c.commits + '</span>');
+  if (c.pr) badges.push('<span class="chip brand mono">' + icon('pr', 10) + c.pr + '</span>');
+  if (c.ci) badges.push('<span class="chip ' + c.ci + '">' + icon(c.ci === 'ok' ? 'check' : c.ci === 'fail' ? 'x' : 'refresh', 10) + 'CI</span>');
+  if (c.rev) badges.push('<span class="chip ' + (c.rev === '2/2' ? 'ok' : 'warn') + '">' + icon('eye', 10) + '评审 ' + c.rev + '</span>');
+  if (c.cases) badges.push('<span class="chip ' + (c.cases.split('/')[0] === c.cases.split('/')[1] ? 'ok' : 'warn') + '">' + icon('flask', 10) + c.cases + '</span>');
+  if (c.bugs) badges.push('<span class="chip fail">' + icon('bug', 10) + c.bugs + '</span>');
+  if (c.ac) badges.push('<span class="chip ' + (c.ac === '5/5' ? 'ok' : 'warn') + '">' + icon('circleCheck', 10) + 'AC ' + c.ac + '</span>');
+  if (c.sub) badges.push('<span class="chip">' + icon('list', 10) + c.sub + '</span>');
+  if (c.doc) badges.push('<span class="chip warn">' + icon('file', 10) + c.doc + '</span>');
+  if (c.env) badges.push('<span class="chip">' + icon('server', 10) + c.env + '</span>');
+  if (c.cust) badges.push('<span class="chip brand">' + icon('building', 10) + c.cust + ' 家客户</span>');
+  if (c.skills) c.skills.forEach(function (s) { badges.push('<span class="chip">' + s + '</span>'); });
+
+  return '<div class="kb-card ' + (c.blocked ? 'blocked ' : '') + (state.dens === 'compact' ? 'compact' : '') + '" draggable="true" data-id="' + c.id + '" onclick="openCard(\'' + c.id + '\')">' +
+    '<div class="strip" style="background:' + ty.c + '"></div>' +
+    '<div class="body">' +
+    '<div class="row1"><span class="tico ' + (c.ty === 'debt' ? 'epic' : c.ty) + '" style="width:16px;height:16px">' + icon(ty.i, 10) + '</span>' +
+    '<span class="id-link">' + c.id + '</span>' + UI.priority(c.pri) +
+    '<span class="ml-auto age ' + ageCls(c.age) + '">' + icon('clock', 11) + (c.col === 'done' ? '已完成' : c.age + 'd') + '</span></div>' +
+    '<div class="title">' + c.t + '</div>' +
+    (state.dens === 'compact' ? '' :
+      '<div class="parent">' + icon('link', 10) + '<b>' + c.req + '</b> ' + c.reqN + '</div>' +
+      '<div class="kb-badges">' + badges.join('') + '</div>' +
+      (c.pg ? '<div class="kcard-bar" style="margin:8px 0 0"><i style="width:' + c.pg + '%"></i></div>' : '') +
+      (c.blocked ? '<div class="blk-note">' + icon('alert', 11) + '<span>' + c.blocked + '</span></div>' : '') +
+      (c.ready ? '<div class="pull-tag">' + icon('arrowRight', 11) + ' 本列已完成，下游可拉取</div>' : '')) +
+    '<div class="kb-foot">' +
+    (c.own ? UI.avatar(c.own, 'sm') + '<span class="fz11 dim">' + c.own + '</span>'
+      : '<span class="chip warn">' + icon('user', 10) + '待认领</span>') +
+    (c.claim ? '<button class="btn btn-sm btn-primary ml-auto" style="height:22px;font-size:11px" onclick="event.stopPropagation();UI.toast(\'认领成功，已进入你的看板\')">认领</button>'
+      : '<span class="ml-auto flex gap4">' +
+        (c.pg ? '<span class="fz11 muted">' + c.pg + '%</span>' : '') + '</span>') +
+    '</div></div></div>';
+}
+function colHtml(col, cards, inLane) {
+  if (state.collapsed[col.k] && !inLane) {
+    return '<div class="kb-col collapsed" data-col="' + col.k + '" onclick="toggleCol(\'' + col.k + '\')" title="点击展开">' +
+      '<div class="kb-head"><div class="kb-title"><span class="dot-status" style="background:' + col.c + '"></span>' +
+      '<span class="n">' + col.n + '</span><span class="c">' + cards.length + '</span></div>' +
+      '<span style="margin-top:auto;color:var(--ink-400)">' + icon('left', 13) + '</span></div></div>';
+  }
+  var over = col.wip && cards.length > col.wip;
+  var warn = col.wip && cards.length === col.wip;
+  var pts = cards.reduce(function (a, b) { return a + (b.pt || 0); }, 0);
+  return '<div class="kb-col ' + (state.dens === 'compact' ? 'compact ' : '') + (over ? 'over ' : '') + (col.k === 'done' ? 'done-col' : '') + '" data-col="' + col.k + '">' +
+    (inLane ? '' :
+      '<div class="kb-head"><div class="kb-title"><span class="dot-status" style="background:' + col.c + '"></span>' +
+      '<span class="n">' + col.n + '</span><span class="c">' + cards.length + '</span>' +
+      (col.wip ? '<span class="kb-wip ' + (over ? 'over' : warn ? 'warn' : '') + '">WIP ' + cards.length + '/' + col.wip + '</span>' : '') +
+      '<span class="kb-ico"><span class="tip" data-tip="列策略（准入/准出）" onclick="event.stopPropagation();showPolicy(\'' + col.k + '\',this)">' + icon('help', 13) + '</span>' +
+      '<span onclick="event.stopPropagation();UI.toast(\'在此列新建工作项\')">' + icon('plus', 13) + '</span>' +
+      '<span class="tip" data-tip="折叠此列" onclick="event.stopPropagation();toggleCol(\'' + col.k + '\')">' + icon('minus', 13) + '</span></span></div>' +
+      '<div class="kb-sub"><span>' + pts + ' 点</span><span>·</span><span>' + col.hint + '</span></div></div>') +
+    '<div class="kb-body">' + (cards.length ? cards.map(cardHtml).join('')
+      : '<div class="kb-empty">' + (col.k === 'todo' ? '任务池为空' : '拖入卡片') + '</div>') + '</div></div>';
+}
+function render() {
+  var list = CARDS.filter(visible);
+  var html = '';
+  if (state.lane === 'none') {
+    html = COLS.map(function (col) {
+      return colHtml(col, list.filter(function (c) { return c.col === col.k; }), false);
+    }).join('');
+    document.getElementById('kb').className = 'kb';
+    document.getElementById('kb').innerHTML = html;
+  } else {
+    var key = { req: 'req', pri: 'pri', own: 'own' }[state.lane];
+    var groups = [];
+    list.forEach(function (c) {
+      var g = key === 'own' ? (c.own || '未认领') : key === 'pri' ? c.pri : c.req;
+      if (groups.indexOf(g) < 0) groups.push(g);
+    });
+    groups.sort();
+    html = '<div style="width:100%"><div class="lane-cols-head">' + COLS.map(function (col) {
+      return '<div><span class="dot-status" style="background:' + col.c + '"></span> ' + col.n +
+        (col.wip ? ' <span class="muted">(WIP ' + col.wip + ')</span>' : '') + '</div>';
+    }).join('') + '</div>' +
+      groups.map(function (g) {
+        var gc = list.filter(function (c) { return (key === 'own' ? (c.own || '未认领') : key === 'pri' ? c.pri : c.req) === g; });
+        var expedite = key === 'pri' && g === 'P0';
+        return '<div class="lane"><div class="lane-head' + (expedite ? ' expedite' : '') + '">' +
+          (expedite ? '<span class="tag danger">加急泳道</span>' : '<span class="tag brand">' + (key === 'own' ? '经办人' : key === 'pri' ? '优先级' : '需求') + '</span>') +
+          '<b class="fz13">' + g + '</b>' +
+          '<span class="muted fz11">' + gc.length + ' 项 · ' + gc.reduce(function (a, b) { return a + (b.pt || 0); }, 0) + ' 点</span>' +
+          (expedite ? '<span class="muted fz11 ml-auto">加急项不受 WIP 限制，但需在 24 小时内闭环</span>' : '') + '</div>' +
+          '<div class="kb" style="min-width:min-content">' + COLS.map(function (col) {
+            return colHtml(col, gc.filter(function (c) { return c.col === col.k; }), true);
+          }).join('') + '</div></div>';
+      }).join('') + '</div>';
+    document.getElementById('kb').className = '';
+    document.getElementById('kb').innerHTML = html;
+  }
+  // WIP 告警
+  var overs = COLS.filter(function (col) {
+    return col.wip && CARDS.filter(function (c) { return c.col === col.k; }).length > col.wip;
+  });
+  document.getElementById('wipAlert').innerHTML = overs.length ?
+    '<div class="card mb10" style="border-color:#f3b4b6;background:var(--danger-bg)"><div class="card-body" style="padding:9px 14px">' +
+    '<div class="flex items-center gap8"><span style="color:var(--danger)">' + icon('alert', 16) + '</span>' +
+    '<span class="fz12" style="color:#a3282c"><b>WIP 超限：</b>' + overs.map(function (o) { return o.n; }).join('、') +
+    ' 在制品超过上限，团队正在并行做太多事。建议先合力完成右侧卡片再拉取新任务（看板核心原则：停止开始，开始完成）。</span>' +
+    '<button class="btn btn-sm ml-auto" data-toast="已在站会议题中添加 WIP 超限讨论">加入站会议题</button></div></div></div>' : '';
+  document.getElementById('kbCount').textContent = '共 ' + list.length + ' 项 · ' +
+    list.reduce(function (a, b) { return a + (b.pt || 0); }, 0) + ' 故事点';
+  UI.hydrateIcons(document.getElementById('kb'));
+}
+render();
+
+/* ================= 拖拽（委托，重渲染后依然有效） ================= */
+(function () {
+  var kb = document.getElementById('kb'), dragging = null;
+  kb.addEventListener('dragstart', function (e) {
+    var c = e.target.closest('.kb-card'); if (!c) return;
+    dragging = c; c.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+  });
+  kb.addEventListener('dragend', function () {
+    if (dragging) dragging.classList.remove('dragging');
+    kb.querySelectorAll('.kb-col').forEach(function (x) { x.classList.remove('drop'); });
+    dragging = null;
+  });
+  kb.addEventListener('dragover', function (e) {
+    if (!dragging) return;
+    var col = e.target.closest('.kb-col'); if (!col) return;
+    e.preventDefault();
+    kb.querySelectorAll('.kb-col').forEach(function (x) { x.classList.remove('drop'); });
+    col.classList.add('drop');
+    var body = col.querySelector('.kb-body'), after = null;
+    body.querySelectorAll('.kb-card:not(.dragging)').forEach(function (c) {
+      var b = c.getBoundingClientRect();
+      if (e.clientY > b.top + b.height / 2) after = c;
+    });
+    var empty = body.querySelector('.kb-empty'); if (empty) empty.remove();
+    if (after) after.after(dragging); else body.prepend(dragging);
+  });
+  kb.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var col = e.target.closest('.kb-col'); if (!col || !dragging) return;
+    var id = dragging.dataset.id, k = col.dataset.col;
+    var card = CARDS.filter(function (c) { return c.id === id; })[0];
+    var def = COLS.filter(function (c) { return c.k === k; })[0];
+    if (card) {
+      card.col = k; card.age = 0; card.ready = 0;
+      if (k !== 'todo') card.claim = 0;
+    }
+    var cnt = CARDS.filter(function (c) { return c.col === k; }).length;
+    if (def.wip && cnt > def.wip) {
+      UI.toast('⚠ ' + def.n + ' 已超 WIP 上限（' + cnt + '/' + def.wip + '），建议先完成在制项', 'error');
+    } else {
+      UI.toast('已移动到「' + def.n + '」，状态与企业微信通知已同步');
+    }
+    render();
+  });
+})();
+
+/* ================= 工具条交互 ================= */
+document.querySelectorAll('[data-f]').forEach(function (f) {
+  f.onclick = function () {
+    f.classList.toggle('on');
+    state.filters[f.dataset.f] = f.classList.contains('on');
+    render();
+  };
+});
+document.getElementById('laneGroup').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  state.lane = b.dataset.lane; render();
+};
+document.getElementById('densGroup').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  state.dens = b.dataset.dens; render();
+};
+document.getElementById('kbSearch').oninput = function () { state.q = this.value; render(); };
+document.getElementById('btnFull').onclick = function () {
+  document.querySelector('.app').classList.toggle('collapsed');
+  window.dispatchEvent(new Event('resize'));
+};
+document.querySelectorAll('[data-bd]').forEach(function (t) {
+  t.onclick = function () {
+    document.querySelectorAll('[data-bd]').forEach(function (x) { x.classList.remove('active'); });
+    t.classList.add('active');
+    var m = { sprint: '迭代看板', req: '需求看板', bug: '缺陷看板', release: '发布看板', mine: '我的看板' };
+    if (t.dataset.bd === 'mine') {
+      state.filters.mine = true;
+      document.querySelector('[data-f="mine"]').classList.add('on');
+    } else {
+      state.filters.mine = false;
+      document.querySelector('[data-f="mine"]').classList.remove('on');
+    }
+    UI.toast('已切换到「' + m[t.dataset.bd] + '」（列与卡片字段按看板类型自动适配）');
+    render();
+  };
+});
+
+function toggleCol(k) { state.collapsed[k] = !state.collapsed[k]; render(); }
+
+/* 列策略气泡 */
+function showPolicy(k, el) {
+  document.querySelectorAll('.pop').forEach(function (p) { p.remove(); });
+  var col = COLS.filter(function (c) { return c.k === k; })[0];
+  var p = document.createElement('div');
+  p.className = 'pop';
+  p.innerHTML = '<div class="flex items-center gap6 mb8"><span class="dot-status" style="background:' + col.c + '"></span>' +
+    '<b>' + col.n + ' · 列策略</b>' + (col.wip ? '<span class="tag ml-auto">WIP ' + col.wip + '</span>' : '') + '</div>' +
+    '<div class="fz12 fw6" style="color:var(--success)">准入条件（Ready）</div>' +
+    '<ul style="list-style:disc;padding-left:18px;margin:6px 0 10px;color:var(--ink-600);font-size:11.5px;line-height:1.8">' +
+    col.inn.map(function (i) { return '<li>' + i + '</li>'; }).join('') + '</ul>' +
+    '<div class="fz12 fw6" style="color:var(--brand-600)">准出条件（Done）</div>' +
+    '<ul style="list-style:disc;padding-left:18px;margin:6px 0 0;color:var(--ink-600);font-size:11.5px;line-height:1.8">' +
+    col.out.map(function (i) { return '<li>' + i + '</li>'; }).join('') + '</ul>' +
+    '<div class="muted fz11 mt8">策略显性化是看板方法的核心：所有人对「什么叫做完」有一致理解。</div>';
+  document.body.appendChild(p);
+  var r = el.getBoundingClientRect();
+  p.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  p.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 340) + 'px';
+  setTimeout(function () {
+    document.addEventListener('click', function h(ev) {
+      if (!p.contains(ev.target)) { p.remove(); document.removeEventListener('click', h); }
+    });
+  }, 0);
+}
+
+/* ================= 卡片详情 ================= */
+function openCard(id) {
+  var c = CARDS.filter(function (x) { return x.id === id; })[0]; if (!c) return;
+  var ty = TY[c.ty], col = COLS.filter(function (x) { return x.k === c.col; })[0];
+  document.getElementById('cdIco').className = 'tico ' + (c.ty === 'debt' ? 'epic' : c.ty);
+  document.getElementById('cdIco').innerHTML = icon(ty.i, 11);
+  document.getElementById('cdId').textContent = c.id;
+  document.getElementById('cdTitle').textContent = c.t;
+  document.getElementById('cdPri').innerHTML = UI.priority(c.pri);
+  var colEl = document.getElementById('cdCol'); colEl.textContent = col.n;
+  colEl.className = 'tag'; colEl.style.background = col.c + '18'; colEl.style.color = col.c;
+  document.getElementById('cdQuick').innerHTML = [
+    ['类型', ty.n], ['故事点', (c.pt || '-') + ' 点'], ['本列停留', c.age + ' 天'],
+    ['经办人', c.own || '待认领'], ['所属需求', c.req]
+  ].map(function (q) {
+    return '<div style="flex:1;background:var(--ink-50);border-radius:9px;padding:9px 11px">' +
+      '<div class="muted fz11">' + q[0] + '</div><div class="fw6 fz13 mt4">' + q[1] + '</div></div>';
+  }).join('');
+  document.getElementById('cdProps').innerHTML = [
+    ['当前列', col.n], ['优先级', UI.priority(c.pri)],
+    ['经办人', c.own ? UI.avatar(c.own, 'sm') + ' ' + c.own : '<span class="tag warn">待认领</span>'],
+    ['所属需求', '<a style="color:var(--brand-600)" href="requirement-detail.html">' + c.req + '</a>'],
+    ['迭代', 'Sprint 26-14'], ['本列停留', c.age + ' 天' + (c.age > 4 ? '（超过阈值）' : '')],
+    ['分支', c.br ? '<span class="branch-chip">' + icon('branch', 11) + c.br + '</span>' : '<span class="muted">未创建</span>'],
+    ['PR', c.pr ? '<a style="color:var(--brand-600)" href="devops.html">' + c.pr + '</a>' : '<span class="muted">—</span>'],
+    ['CI 状态', c.ci ? '<span class="chip ' + c.ci + '">' + (c.ci === 'ok' ? '通过' : c.ci === 'fail' ? '失败' : '运行中') + '</span>' : '<span class="muted">—</span>'],
+    ['阻塞', c.blocked ? '<span class="tag danger">是</span>' : '<span class="tag success">否</span>']
+  ].map(function (p) { return '<div class="prop"><span class="k">' + p[0] + '</span><span class="v editable">' + p[1] + '</span></div>'; }).join('');
+  document.getElementById('cdCtx').innerHTML = [
+    c.br ? ['branch', 'epic', '分支 ' + c.br, (c.commits || 0) + ' 次提交 · 最近提交 2 小时前 · 工时自动归集 ' + ((c.commits || 1) * 1.6).toFixed(1) + 'h'] : null,
+    c.pr ? ['pr', 'epic', 'PR ' + c.pr + ' feat: ' + c.t, '评审 ' + (c.rev || '0/2') + ' · CI ' + (c.ci === 'ok' ? '通过' : '失败') + ' · 合并后自动流转到「测试中」'] : null,
+    c.cases ? ['flask', 'test', '关联用例 ' + c.cases, '通过率 ' + Math.round(+c.cases.split('/')[0] / +c.cases.split('/')[1] * 100) + '% · 缺陷 ' + (c.bugs || 0) + ' 个'] : null,
+    ['bulb', 'req', c.req + ' ' + c.reqN, '需求阶段：编码开发（07-28 ~ 09-04）· 计划提测 09-13'],
+    ['send', 'doc', '企业微信推送', '状态变更、阻塞、评审超时会自动推送给经办人与负责人']
+  ].filter(Boolean).map(function (l) {
+    return '<div class="link-item"><span class="tico ' + l[1] + '">' + icon(l[0], 11) + '</span>' +
+      '<div style="flex:1;min-width:0"><div class="fz12 ellipsis" style="color:var(--ink-800)">' + l[2] + '</div>' +
+      '<div class="muted fz11 mt4">' + l[3] + '</div></div>' + icon('right', 13) + '</div>';
+  }).join('') +
+    (c.blocked ? '<div class="blk-note" style="margin-top:8px;padding:9px 11px;font-size:12px">' + icon('alert', 13) +
+      '<span><b>阻塞中：</b>' + c.blocked + '</span></div>' : '');
+  var trail = [
+    ['待办 / 任务池', '07-15 09:20 → 07-15 10:05', '0.8 天', 'gray'],
+    ['设计中', '07-15 10:05 → 07-17 16:40', '2.3 天', 'purple'],
+    ['开发中', '07-17 16:40 → 至今', c.age + ' 天', 'blue']
+  ];
+  document.getElementById('cdFlow').innerHTML =
+    '<div class="timeline">' + trail.map(function (t) {
+      return '<div class="tl-item"><span class="tl-dot ' + (t[3] === 'blue' ? 'brand' : '') + '">' + icon('right', 8) + '</span>' +
+        '<div class="tl-title"><b>' + t[0] + '</b> <span class="tag ml-auto">' + t[2] + '</span></div>' +
+        '<div class="tl-time">' + t[1] + '</div></div>';
+    }).join('') + '</div>' +
+    '<div class="tl-box mt8">累计周期时间 <b>' + (3.1 + c.age).toFixed(1) + ' 天</b>，其中等待时间 <b>1.2 天</b>（流动效率 ' +
+    Math.round((3.1 + c.age - 1.2) / (3.1 + c.age) * 100) + '%）。团队 85 分位周期为 9 天，本项' +
+    ((3.1 + c.age) > 9 ? '<b style="color:var(--danger)">已超出</b>，建议在站会讨论。' : '处于正常区间。') + '</div>';
+  document.getElementById('cdSub').innerHTML = [
+    ['策略权重计算主流程', 1], ['熔断器与半开探活', 1], ['配置中心变更推送', 0], ['单元测试与覆盖率达标', 0]
+  ].map(function (s) {
+    return '<div class="link-item"><span class="checkbox' + (s[1] ? ' checked' : '') + '"></span>' +
+      '<span class="fz12" style="flex:1">' + s[0] + '</span>' + UI.avatar(c.own || '何俊', 'sm') + '</div>';
+  }).join('');
+  var idx = COLS.findIndex(function (x) { return x.k === c.col; });
+  document.getElementById('cdNext').textContent = idx < COLS.length - 1 ? '流转到「' + COLS[idx + 1].n + '」' : '已在末列';
+  document.getElementById('cdNext').onclick = function () {
+    if (idx < COLS.length - 1) { c.col = COLS[idx + 1].k; c.age = 0; c.ready = 0; render(); UI.closeAll(); UI.toast('已流转到「' + COLS[idx + 1].n + '」'); }
+  };
+  UI.hydrateIcons(document.getElementById('dCard'));
+  UI.openDrawer('dCard');
+}
+
+/* ================= 看板度量 ================= */
+document.getElementById('btnMetrics').onclick = function () {
+  UI.openDrawer('dMetrics');
+  setTimeout(drawMetrics, 60);
+};
+var metricsDrawn = false;
+function drawMetrics() {
+  if (metricsDrawn) { window.dispatchEvent(new Event('resize')); return; }
+  metricsDrawn = true;
+  document.getElementById('mtStats').innerHTML = [
+    { l: '平均周期时间', v: '6.8', u: '天', f: '85 分位 9.0 天', c: '#2b5cff' },
+    { l: '本迭代吞吐', v: 12, u: '项', f: '28 故事点', c: '#15a86b' },
+    { l: '当前 WIP', v: 15, u: '项', f: '上限 18 项', c: '#f59e0b' },
+    { l: '流动效率', v: 46, u: '%', f: '增值时间占比', c: '#7c5cff' }
+  ].map(function (s) {
+    return '<div class="stat"><div class="stat-top"><span class="stat-label">' + s.l + '</span></div>' +
+      '<div class="stat-val" style="color:' + s.c + '">' + s.v + '<small>' + s.u + '</small></div>' +
+      '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+  }).join('');
+  Charts.stackedArea('#mtCfd', {
+    height: 240, labels: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'],
+    series: [
+      { name: '已完成', data: [0, 2, 4, 6, 9, 12, 15, 18, 21, 24], color: '#15a86b' },
+      { name: '待验收', data: [0, 0, 1, 2, 2, 3, 2, 3, 2, 2], color: '#0fb5ba' },
+      { name: '测试中', data: [0, 1, 2, 3, 4, 4, 5, 4, 4, 3], color: '#f59e0b' },
+      { name: '代码评审', data: [0, 1, 2, 2, 3, 3, 3, 4, 3, 3], color: '#0ea5e9' },
+      { name: '开发中', data: [4, 5, 6, 6, 7, 6, 6, 5, 5, 5], color: '#2b5cff' },
+      { name: '设计中', data: [3, 3, 2, 2, 2, 2, 2, 2, 2, 2], color: '#7c5cff' },
+      { name: '待办', data: [24, 22, 19, 17, 14, 12, 9, 7, 6, 4], color: '#dde4ee' }
+    ]
+  });
+  (function () {
+    var W = 420, H = 240, pl = 34, pb = 28, pt = 14, pr = 12;
+    var iw = W - pl - pr, ih = H - pt - pb;
+    var pts = [];
+    var types = ['story', 'task', 'bug'];
+    for (var i = 0; i < 34; i++) {
+      var d = Math.floor(Math.random() * 10) + 1;
+      var cy = Math.max(1, Math.round(Math.pow(Math.random(), 2) * 14) + 1);
+      pts.push({ d: d, cy: cy, ty: types[Math.floor(Math.random() * 3)], pt: [1, 2, 3, 5, 8][Math.floor(Math.random() * 5)] });
+    }
+    var maxCy = 16;
+    var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" height="' + H + '">';
+    [0, 4, 8, 12, 16].forEach(function (v) {
+      var y = pt + ih - ih * v / maxCy;
+      s += '<line x1="' + pl + '" y1="' + y + '" x2="' + (W - pr) + '" y2="' + y + '" stroke="#eef2f7"/>' +
+        '<text x="' + (pl - 6) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10" fill="#8c9ab1">' + v + 'd</text>';
+    });
+    [[5, '50% 分位', '#8c9ab1'], [9, '85% 分位', '#e5484d']].forEach(function (q) {
+      var y = pt + ih - ih * q[0] / maxCy;
+      s += '<line x1="' + pl + '" y1="' + y + '" x2="' + (W - pr) + '" y2="' + y + '" stroke="' + q[2] + '" stroke-dasharray="5 4"/>' +
+        '<text x="' + (W - pr - 4) + '" y="' + (y - 4) + '" text-anchor="end" font-size="10" fill="' + q[2] + '">' + q[1] + ' ' + q[0] + 'd</text>';
+    });
+    pts.forEach(function (p) {
+      var x = pl + iw * p.d / 11, y = pt + ih - ih * p.cy / maxCy;
+      s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (3 + p.pt / 3).toFixed(1) + '" fill="' + TY[p.ty].c +
+        '" fill-opacity=".65" stroke="#fff" stroke-width="1"><title>完成于 D' + p.d + ' · 周期 ' + p.cy + ' 天 · ' + p.pt + ' 点</title></circle>';
+    });
+    s += '<text x="' + (pl + iw / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#8c9ab1">完成日期（迭代内第 N 天）</text></svg>';
+    document.getElementById('mtScatter').innerHTML = s;
+  })();
+  Charts.hbar('#mtStay', { unit: ' 天', data: [
+    { name: '待办（等待拉取）', value: 3.6, color: '#b3bfd0' }, { name: '设计中', value: 2.1, color: '#7c5cff' },
+    { name: '开发中', value: 3.4, color: '#2b5cff' }, { name: '代码评审（等待）', value: 1.6, color: '#0ea5e9' },
+    { name: '测试中', value: 2.2, color: '#f59e0b' }, { name: '待验收（等待）', value: 1.1, color: '#0fb5ba' }] });
+  Charts.line('#mtWip', {
+    height: 200, padLeft: 26, labels: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'],
+    series: [{ name: 'WIP', data: [7, 10, 13, 15, 18, 17, 16, 15, 14, 15], color: '#f59e0b', area: true },
+      { name: 'WIP 上限', data: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18], color: '#e5484d', dashed: true, dots: false }]
+  });
+  document.getElementById('mtBlock').innerHTML = [
+    ['TASK-5531 性能压测', '2.0 天', '压测环境未扩容', 'danger'],
+    ['TASK-5540 差错工单派发', '3.0 天', '限额中心接口未就绪', 'danger'],
+    ['STORY-3305 数币受理', '0.5 天', '等待第三方联调窗口', 'warning']
+  ].map(function (b) {
+    return '<div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+      '<span class="tag ' + b[3] + '">' + b[1] + '</span>' +
+      '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + b[0] + '</div><div class="muted fz11">' + b[2] + '</div></div></div>';
+  }).join('') + '<div class="tl-box mt8">本迭代阻塞累计 5.5 天，占总周期 18%，是当前最大的流动损耗。</div>';
+  document.getElementById('mtDiag').innerHTML = [
+    ['danger', '开发中 WIP 已超上限（5 / 4）', '并行任务过多导致上下文切换，建议先合力完成 STORY-3312（已 85%）与 BUG-770（已 80%），再拉取新任务'],
+    ['warning', '待办列平均等待 3.6 天', '任务池投放与认领节奏不匹配，建议缩短投放批量、每日站会同步认领情况'],
+    ['warning', '代码评审 85 分位 2.4 天', 'PR 评审等待偏长，建议设定「4 小时内首次响应」并在企业微信推送提醒'],
+    ['success', '缺陷卡片周期显著缩短', 'P1 缺陷平均 1.8 天闭环，比上迭代快 0.9 天，缺陷优先策略有效']
+  ].map(function (d) {
+    return '<div style="padding:10px 12px;border-radius:9px;background:var(--' + (d[0] === 'success' ? 'success' : d[0]) + '-bg);margin-bottom:8px">' +
+      '<div class="fz12 fw6" style="color:var(--ink-800)">' + d[1] + '</div>' +
+      '<div class="muted fz11 mt4" style="line-height:1.7">' + d[2] + '</div></div>';
+  }).join('');
+}
+
+/* 深链：#lane=pri 预设泳道，#metrics=1 打开度量抽屉 */
+(function () {
+  var h = location.hash;
+  var lm = h.match(/lane=(\w+)/);
+  if (lm) {
+    var b = document.querySelector('[data-lane="' + lm[1] + '"]');
+    if (b) {
+      document.querySelectorAll('#laneGroup button').forEach(function (x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      state.lane = lm[1];
+      render();
+    }
+  }
+  if (h.indexOf('metrics=1') > -1) setTimeout(function () { UI.openDrawer('dMetrics'); drawMetrics(); }, 120);
+  if (h.indexOf('card=1') > -1) setTimeout(function () { openCard('STORY-3313'); }, 120);
+})();
+
+/* ================= 看板配置 ================= */
+document.getElementById('cfgCols').innerHTML =
+  '<thead><tr><th>列名称</th><th>对应研发阶段</th><th>WIP 上限</th><th>停留预警</th><th>自动流转</th><th style="width:60px">操作</th></tr></thead><tbody>' +
+  [['待办 / 任务池', '需求已就绪，等待认领', '不限', '3 天', '认领后自动进入设计/开发'],
+   ['设计中', '技术方案 / 交互设计', '3', '3 天', '方案评审通过自动流转'],
+   ['开发中', '编码与自测', '5', '4 天', '创建 PR 自动流转到代码评审'],
+   ['代码评审', 'Code Review', '3', '2 天', 'PR 合并自动流转到测试中'],
+   ['测试中', '提测验证', '4', '3 天', '用例全部通过自动流转到待验收'],
+   ['待验收', '产品/业务验收', '3', '2 天', '验收通过自动流转到已完成'],
+   ['已完成', '本迭代交付', '不限', '—', '版本发布后自动归档']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td>' +
+      '<td><input class="input" value="' + r[2] + '" style="width:64px;height:26px"></td>' +
+      '<td><input class="input" value="' + r[3] + '" style="width:70px;height:26px"></td>' +
+      '<td class="fz12 muted">' + r[4] + '</td>' +
+      '<td><button class="icon-btn" style="width:24px;height:24px">' + icon('more', 14) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('cfgPolicy').innerHTML = COLS.map(function (c) {
+  return '<div class="card mb8"><div class="card-body" style="padding:12px 14px">' +
+    '<div class="flex items-center gap6 mb8"><span class="dot-status" style="background:' + c.c + '"></span><b class="fz13">' + c.n + '</b>' +
+    (c.wip ? '<span class="tag ml-auto">WIP ' + c.wip + '</span>' : '') + '</div>' +
+    '<div class="grid g2" style="gap:12px">' +
+    '<div><div class="fz12 fw6" style="color:var(--success)">准入条件</div>' +
+    c.inn.map(function (i) { return '<div class="flex items-center gap6 mt4"><span class="checkbox checked"></span><span class="fz12">' + i + '</span></div>'; }).join('') + '</div>' +
+    '<div><div class="fz12 fw6" style="color:var(--brand-600)">准出条件</div>' +
+    c.out.map(function (i) { return '<div class="flex items-center gap6 mt4"><span class="checkbox checked"></span><span class="fz12">' + i + '</span></div>'; }).join('') + '</div>' +
+    '</div></div></div>';
+}).join('');
+document.getElementById('cfgFields').innerHTML = [
+  ['类型色条', '按用户故事/任务/缺陷/技术债区分', 1], ['优先级标记', 'P0~P3', 1],
+  ['停留天数（老化）', '超过阈值变色提醒', 1], ['故事点', '', 1],
+  ['分支与提交数', '来自 GitHub', 1], ['PR 与评审进度', '来自 GitHub', 1],
+  ['CI 状态徽标', '来自流水线', 1], ['测试用例通过情况', '来自测试管理', 1],
+  ['关联需求', '显示父需求编号与简称', 1], ['子任务进度', '', 1],
+  ['客户呼声', '有客户诉求的卡片显示客户数', 1], ['阻塞原因', '', 1],
+  ['技能标签', '仅任务池卡片显示', 1], ['预估工时/剩余工时', '', 0]
+].map(function (f) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + f[0] + '</div>' + (f[1] ? '<div class="muted fz11 mt4">' + f[1] + '</div>' : '') + '</div>' +
+    '<span class="switch ' + (f[2] ? 'on' : '') + '"></span></div>';
+}).join('') + '<div class="tl-box mt12">卡片字段并非越多越好。建议只保留「一眼判断该不该动这张卡」所需的信息，其余放进详情抽屉。</div>';
+document.getElementById('cfgAuto').innerHTML = [
+  ['创建分支 feature/REQ-xxxx', '卡片自动从「待办」流转到「开发中」', 1],
+  ['提交 PR 并关联工作项', '自动流转到「代码评审」并 @ 评审人', 1],
+  ['PR 合并到 develop', '自动流转到「测试中」并通知测试负责人', 1],
+  ['CI 失败', '卡片显示红色 CI 徽标并推送提交人', 1],
+  ['用例全部通过且无 P0/P1 缺陷', '自动流转到「待验收」', 1],
+  ['卡片停留超过阈值', '自动标记老化并在站会清单中列出', 1],
+  ['卡片被标记阻塞', '推送阻塞双方与项目经理，开始阻塞计时', 1],
+  ['迭代结束', '未完成卡片自动移入下个迭代并标注携带次数', 1]
+].map(function (a) {
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag warning" style="width:auto">WHEN</span>' +
+    '<span class="fz12" style="width:38%">' + a[0] + '</span>' +
+    '<span class="tag success">THEN</span>' +
+    '<span class="fz12" style="flex:1">' + a[1] + '</span>' +
+    '<span class="switch ' + (a[2] ? 'on' : '') + '"></span></div>';
+}).join('');
+</script>
+</body>
+</html>

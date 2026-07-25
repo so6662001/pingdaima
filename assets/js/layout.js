@@ -18,6 +18,7 @@
     },
     {
       group: '交付管理', items: [
+        { key: 'board', name: '研发看板', icon: 'kanban', href: 'board.html', badge: '核心' },
         { key: 'product', name: '产品管理', icon: 'box', href: 'product.html' },
         { key: 'project', name: '项目管理', icon: 'kanban', href: 'project.html' },
         { key: 'agile', name: '敏捷迭代', icon: 'refresh', href: 'agile.html' },
@@ -78,7 +79,7 @@
       return '<div class="nav-group-title">' + g.group + '</div>' + g.items.map(function (it) {
         return '<a class="nav-item' + (it.key === cur ? ' active' : '') + '" href="' + it.href + '">' +
           icon(it.icon, 16) + '<span class="nav-label">' + it.name + '</span>' +
-          (it.badge ? '<span class="nav-badge' + (it.key === 'mywork' ? ' soft' : '') + '">' + it.badge + '</span>' : '') +
+          (it.badge ? '<span class="nav-badge' + (/^\d+$/.test(it.badge) && it.key !== 'mywork' ? '' : ' soft') + '">' + it.badge + '</span>' : '') +
           '</a>';
       }).join('');
     }).join('');
