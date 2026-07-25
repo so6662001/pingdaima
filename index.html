@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工作台 · DevFlow 研发管理平台</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="dashboard" data-crumb="工作台">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <!-- 欢迎区 -->
+      <div class="page-head">
+        <div>
+          <div class="page-title">早上好，沈知远 <span class="tag brand lg">研发中心 · 第 30 周</span></div>
+          <div class="page-desc">全中心共 <b>9</b> 个在研项目、<b>128</b> 条在研需求，本周有 <b class="pri pri-p0">3</b> 项风险需要你决策。</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn" id="btnReport"><span data-icon="file"></span>生成周报</button>
+          <button class="btn" id="btnRange">近 30 天</button>
+          <a class="btn btn-primary" href="metrics.html"><span data-icon="chart"></span>效能驾驶舱</a>
+        </div>
+      </div>
+
+      <!-- 核心指标 -->
+      <div class="grid g5 mb16" id="statRow"></div>
+
+      <div class="grid g-2-1 mb16">
+        <!-- 左列 -->
+        <div class="grid" style="gap:14px;align-content:start">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="activity"></span>研发交付趋势</div>
+              <div class="card-sub">需求吞吐 / 缺陷收敛（按周）</div>
+              <div class="card-head-actions">
+                <div class="btn-group">
+                  <button class="active">周</button><button>月</button><button>季</button>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="legend mb8">
+                <span><i style="background:#2b5cff"></i>需求交付</span>
+                <span><i style="background:#15a86b"></i>缺陷修复</span>
+                <span><i style="background:#e5484d"></i>缺陷新增</span>
+                <span><i style="background:#f59e0b"></i>需求流入</span>
+              </div>
+              <div id="trendChart"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="kanban"></span>项目健康度</div>
+              <div class="card-head-actions"><a class="btn btn-sm btn-ghost" href="project.html">全部项目<span data-icon="right"></span></a></div>
+            </div>
+            <div class="card-body flush">
+              <div class="table-wrap">
+                <table class="tbl" id="prjTable"></table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="inbox"></span>我的工作台</div>
+              <div class="card-head-actions"><a class="btn btn-sm btn-ghost" href="mywork.html">进入我的工作<span data-icon="right"></span></a></div>
+            </div>
+            <div class="card-body" style="padding-top:6px">
+              <div class="tabs" style="margin-bottom:10px">
+                <div class="tab active" data-tab="approve">待我审批 <span class="cnt">3</span></div>
+                <div class="tab" data-tab="review">待我评审 <span class="cnt">4</span></div>
+                <div class="tab" data-tab="assign">指派给我 <span class="cnt">5</span></div>
+                <div class="tab" data-tab="cc">抄送我的 <span class="cnt">7</span></div>
+              </div>
+              <div class="tab-pane active" data-pane="approve" id="paneApprove"></div>
+              <div class="tab-pane" data-pane="review" id="paneReview"></div>
+              <div class="tab-pane" data-pane="assign" id="paneAssign"></div>
+              <div class="tab-pane" data-pane="cc" id="paneCc"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右列 -->
+        <div class="grid" style="gap:14px;align-content:start">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="target"></span>季度目标（OKR）</div>
+              <div class="card-sub">2026 Q3</div>
+            </div>
+            <div class="card-body" id="okrBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title" style="color:var(--danger)"><span data-icon="warn"></span>风险与阻塞</div>
+              <div class="card-head-actions"><span class="tag danger">3 待决策</span></div>
+            </div>
+            <div class="card-body" style="padding:10px 12px" id="riskBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="calendar"></span>关键里程碑</div>
+            </div>
+            <div class="card-body" style="padding:12px 16px" id="msBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="history"></span>团队动态</div>
+              <div class="card-head-actions"><span class="fz11 muted">实时</span></div>
+            </div>
+            <div class="card-body" style="max-height:340px;overflow:auto"><div class="timeline" id="feedBox"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 效能速览 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><span data-icon="gauge"></span>研发效能速览 · DORA</div>
+          <div class="card-sub">对标行业精英水平</div>
+          <div class="card-head-actions"><a class="btn btn-sm" href="metrics.html">查看完整度量<span data-icon="right"></span></a></div>
+        </div>
+        <div class="card-body">
+          <div class="grid g4" id="doraBox"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* 1. 指标卡 */
+var stats = [
+  { label: '在研需求', val: 128, unit: '条', trend: 12.4, up: true, icon: 'bulb', color: '#2b5cff', bg: 'var(--brand-50)', foot: '本周新增 18 · 已交付 23', spark: [88, 96, 102, 99, 112, 118, 121, 128] },
+  { label: '进行中项目', val: 9, unit: '个', trend: 0, up: null, icon: 'kanban', color: '#7c5cff', bg: 'var(--purple-bg)', foot: '2 个延期风险 · 1 个待启动', spark: [7, 8, 8, 9, 9, 8, 9, 9] },
+  { label: '本迭代交付', val: 38, unit: '故事点', trend: 8.6, up: true, icon: 'rocket', color: '#15a86b', bg: 'var(--success-bg)', foot: '计划 42 点 · 完成率 90%', spark: [26, 31, 29, 34, 33, 36, 35, 38] },
+  { label: '线上缺陷', val: 7, unit: '个', trend: 22.0, up: false, icon: 'bug', color: '#e5484d', bg: 'var(--danger-bg)', foot: 'P0 1 个 · 平均修复 4.2h', spark: [14, 12, 13, 11, 10, 9, 9, 7] },
+  { label: '部署频率', val: '4.2', unit: '次/天', trend: 31.0, up: true, icon: 'zap', color: '#f59e0b', bg: 'var(--warning-bg)', foot: '变更失败率 3.1%', spark: [2.1, 2.6, 2.9, 3.2, 3.4, 3.8, 4.0, 4.2] }
+];
+document.getElementById('statRow').innerHTML = stats.map(function (s) {
+  var tr = s.up === null ? '<span class="trend flat">' + icon('minus', 12) + '持平</span>'
+    : '<span class="trend ' + (s.up ? 'up' : 'down') + '">' + icon(s.up ? 'arrowUp' : 'arrowDown', 12) + s.trend + '%</span>';
+  return '<div class="stat">' +
+    '<div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.color + '">' + icon(s.icon, 15) + '</span>' +
+    '<span class="stat-label">' + s.label + '</span></div>' +
+    '<div class="stat-val">' + s.val + '<small>' + s.unit + '</small></div>' +
+    '<div class="stat-foot">' + tr + '<span>' + s.foot + '</span></div>' +
+    '<div class="stat-spark">' + Charts.spark(s.spark, { color: s.color, width: 96, height: 34 }) + '</div>' +
+    '</div>';
+}).join('');
+
+/* 2. 趋势图 */
+Charts.line('#trendChart', {
+  height: 236,
+  labels: ['W22', 'W23', 'W24', 'W25', 'W26', 'W27', 'W28', 'W29', 'W30'],
+  series: [
+    { name: '需求交付', data: [14, 17, 15, 21, 19, 24, 22, 26, 23], color: '#2b5cff', area: true },
+    { name: '缺陷修复', data: [22, 26, 24, 31, 28, 35, 33, 38, 36], color: '#15a86b' },
+    { name: '缺陷新增', data: [26, 24, 27, 25, 23, 21, 19, 17, 14], color: '#e5484d' },
+    { name: '需求流入', data: [18, 22, 19, 25, 21, 26, 24, 28, 25], color: '#f59e0b', dashed: true, dots: false }
+  ]
+});
+
+/* 3. 项目健康度 */
+var projects = [
+  { id: 'PRJ-018', name: '统一支付网关 3.0 重构', owner: '李思远', sprint: 'Sprint 26-14', pct: 68, health: '健康', risk: 0, due: '09-30' },
+  { id: 'PRJ-021', name: '智能风控决策引擎 V2', owner: '郑宇', sprint: 'Sprint 26-07', pct: 42, health: '风险', risk: 2, due: '10-15' },
+  { id: 'PRJ-016', name: '商户运营中心体验升级', owner: '王倩', sprint: 'Sprint 26-22', pct: 85, health: '健康', risk: 0, due: '08-20' },
+  { id: 'PRJ-023', name: '开放平台 OpenAPI 网关', owner: '陈立', sprint: 'Sprint 26-05', pct: 24, health: '关注', risk: 1, due: '11-28' },
+  { id: 'PRJ-014', name: '数据资产中台一期', owner: '何俊', sprint: 'Sprint 26-18', pct: 91, health: '健康', risk: 0, due: '08-08' }
+];
+var healthTag = { '健康': 'success', '关注': 'warning', '风险': 'danger' };
+document.getElementById('prjTable').innerHTML =
+  '<thead><tr><th style="width:34%">项目</th><th>负责人</th><th>当前迭代</th><th style="width:20%">进度</th><th>风险</th><th>健康度</th><th>截止</th></tr></thead><tbody>' +
+  projects.map(function (p) {
+    return '<tr onclick="location.href=\'project-detail.html\'">' +
+      '<td><div class="row-flex"><span class="tico epic">' + icon('kanban', 11) + '</span>' +
+      '<div><div class="t-main">' + p.name + '</div><div class="id-link">' + p.id + '</div></div></div></td>' +
+      '<td><div class="row-flex">' + UI.avatar(p.owner, 'sm') + p.owner + '</div></td>' +
+      '<td class="dim">' + p.sprint + '</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(p.pct, p.pct > 80 ? 'green' : p.health === '风险' ? 'orange' : '') + '</div><span class="fz11 dim">' + p.pct + '%</span></div></td>' +
+      '<td>' + (p.risk ? '<span class="tag danger">' + p.risk + ' 项</span>' : '<span class="muted">—</span>') + '</td>' +
+      '<td><span class="tag ' + healthTag[p.health] + '">' + p.health + '</span></td>' +
+      '<td class="dim">' + p.due + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* 4. 我的工作台 */
+function itemRow(o) {
+  return '<div class="link-item" onclick="location.href=\'' + (o.href || 'requirement-detail.html') + '\'">' +
+    '<span class="tico ' + o.type + '">' + icon(o.ico, 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="ellipsis" style="color:var(--ink-800)">' + o.title + '</div>' +
+    '<div class="muted fz11 mt4">' + o.meta + '</div></div>' +
+    (o.tag || '') + '<span class="fz11 muted nowrap">' + o.time + '</span>' +
+    (o.btn ? '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();UI.toast(\'已' + o.btn + '\')">' + o.btn + '</button>' : '') +
+    '</div>';
+}
+document.getElementById('paneApprove').innerHTML = [
+  { type: 'req', ico: 'bulb', title: 'REQ-2041 支付网关多渠道智能路由能力', meta: '周雅 提交 · 需求立项审批 · 预估 21 人日', tag: UI.priority('P0'), time: '2 小时前', btn: '审批' },
+  { type: 'epic', ico: 'rocket', title: 'PRJ-023 开放平台 OpenAPI 网关 项目立项', meta: '陈立 提交 · 预算 186 万 · 周期 5 个月', tag: '<span class="tag purple">立项</span>', time: '昨天', btn: '审批' },
+  { type: 'doc', ico: 'file', title: '研发中心 2026 H2 技术架构演进规划', meta: '陈立 提交 · 知识库文档发布审批', tag: '<span class="tag">文档</span>', time: '2 天前', btn: '审批' }
+].map(itemRow).join('');
+document.getElementById('paneReview').innerHTML = [
+  { type: 'req', ico: 'bulb', title: 'REQ-2036 商户后台大额账单异步导出', meta: '孙悦 · 需求评审会 07-27 14:00', tag: UI.priority('P1'), time: '待评审' },
+  { type: 'epic', ico: 'pr', title: 'payment-gateway #482 feat: 路由策略引擎', meta: '陈立 请求评审 · +1,284 −316 · 12 文件', tag: '<span class="tag purple">PR</span>', time: '3 分钟前', href: 'devops.html' },
+  { type: 'doc', ico: 'file', title: '风控决策引擎 V2 技术方案评审', meta: '郑宇 · 架构评审委员会', tag: '<span class="tag info">方案</span>', time: '1 天前', href: 'wiki.html' },
+  { type: 'test', ico: 'flask', title: 'TP-2026-07 支付网关 3.0 回归测试计划', meta: '赵鹏 · 用例 486 条 · 覆盖率 92%', tag: '<span class="tag teal">测试</span>', time: '2 天前', href: 'testing.html' }
+].map(itemRow).join('');
+document.getElementById('paneAssign').innerHTML = [
+  { type: 'task', ico: 'kanban', title: '组织 Q3 研发效能复盘会并输出改进项', meta: '项目管理办公室 · 截止 07-31', tag: UI.priority('P1'), time: '还剩 6 天' },
+  { type: 'bug', ico: 'bug', title: 'BUG-771 生产环境对账任务超时（已升级 P0）', meta: '林小满 上报 · 影响商户 128 家', tag: UI.priority('P0'), time: '超时 2h', href: 'testing.html' },
+  { type: 'task', ico: 'kanban', title: '审定 2026 H2 研发人力预算方案', meta: '中心管理部 · 截止 08-05', tag: UI.priority('P2'), time: '还剩 11 天' },
+  { type: 'req', ico: 'bulb', title: 'REQ-2044 监管报送口径调整（合规必达）', meta: '合规部提出 · 需求澄清', tag: UI.priority('P0'), time: '今天' },
+  { type: 'task', ico: 'users', title: '完成交易平台组 3 名候选人终面', meta: 'HRBP · 本周内', tag: UI.priority('P2'), time: '还剩 3 天' }
+].map(itemRow).join('');
+document.getElementById('paneCc').innerHTML = [
+  { type: 'story', ico: 'circleCheck', title: 'Sprint 26-14 迭代验收通过，交付 38 故事点', meta: '徐磊 · 统一支付网关 3.0 重构', tag: '<span class="tag success">已完成</span>', time: '昨天', href: 'project-detail.html' },
+  { type: 'epic', ico: 'zap', title: '流水线 payment-gateway/release-3.0 构建失败', meta: 'CI · 单元测试 3 个用例未通过', tag: '<span class="tag danger">失败</span>', time: '1 小时前', href: 'devops.html' },
+  { type: 'req', ico: 'box', title: '智能风控平台 V2.8 已发布至生产环境', meta: '林小满 · 灰度 100% · 无异常', tag: '<span class="tag success">已发布</span>', time: '3 天前', href: 'product.html' },
+  { type: 'test', ico: 'flask', title: '自动化回归通过率回升至 96.8%', meta: '吴敏 · 质量保障部周报', tag: '<span class="tag teal">质量</span>', time: '3 天前', href: 'testing.html' },
+  { type: 'doc', ico: 'book', title: '新版《研发流程规范 V4.2》已生效', meta: '项目管理办公室', tag: '<span class="tag">规范</span>', time: '5 天前', href: 'wiki.html' },
+  { type: 'task', ico: 'users', title: '基础架构组完成 K8s 集群 1.29 升级', meta: '林小满', tag: '<span class="tag success">完成</span>', time: '6 天前', href: 'devops.html' },
+  { type: 'bug', ico: 'bug', title: '缺陷逃逸率环比下降 1.8pt', meta: '质量保障部', tag: '<span class="tag success">改善</span>', time: '上周', href: 'metrics.html' }
+].map(itemRow).join('');
+
+/* 5. OKR */
+var okrs = [
+  { o: 'O1 支付核心系统可用性达到 99.99%', krs: [{ k: 'KR1 全链路故障自愈覆盖率 ≥ 80%', v: 72 }, { k: 'KR2 P0 故障 MTTR ≤ 15 分钟', v: 88 }] },
+  { o: 'O2 研发交付效率提升 30%', krs: [{ k: 'KR1 需求交付周期 ≤ 12 天', v: 64 }, { k: 'KR2 自动化测试覆盖率 ≥ 75%', v: 81 }] }
+];
+document.getElementById('okrBox').innerHTML = okrs.map(function (o, i) {
+  return '<div' + (i ? ' style="margin-top:14px;padding-top:14px;border-top:1px solid var(--ink-100)"' : '') + '>' +
+    '<div class="flex items-center gap8 mb8"><span class="tag brand">O' + (i + 1) + '</span><b style="font-size:12.5px">' + o.o.replace(/^O\d\s/, '') + '</b></div>' +
+    o.krs.map(function (k) {
+      var c = k.v >= 80 ? 'green' : k.v >= 60 ? '' : 'orange';
+      return '<div style="margin-bottom:9px"><div class="flex items-center fz12 mb4"><span class="dim ellipsis">' + k.k + '</span>' +
+        '<b class="ml-auto">' + k.v + '%</b></div>' + UI.bar(k.v, c) + '</div>';
+    }).join('') + '</div>';
+}).join('');
+
+/* 6. 风险 */
+var risks = [
+  { lv: 'P0', t: '风控引擎 V2 依赖的第三方征信接口 SLA 不达标', d: '影响 PRJ-021 里程碑，需决策是否切换供应商', who: '郑宇', c: 'danger' },
+  { lv: 'P0', t: '支付网关 3.0 压测 TPS 未达标（实测 8.2k / 目标 12k）', d: '需增派 2 名性能优化人力', who: '李思远', c: 'danger' },
+  { lv: 'P1', t: '质量保障部测试人力缺口 3 人，回归排期顺延', d: '建议启用自动化外包或调整发布窗口', who: '赵鹏', c: 'warning' }
+];
+document.getElementById('riskBox').innerHTML = risks.map(function (r) {
+  return '<div style="padding:9px 10px;border-radius:8px;background:var(--' + (r.c === 'danger' ? 'danger' : 'warning') + '-bg);margin-bottom:8px">' +
+    '<div class="flex items-start gap6"><span class="tag ' + r.c + '">' + r.lv + '</span>' +
+    '<div style="flex:1"><div style="font-size:12.5px;color:var(--ink-800);font-weight:500;line-height:1.5">' + r.t + '</div>' +
+    '<div class="muted fz11 mt4">' + r.d + '</div>' +
+    '<div class="flex items-center gap6 mt8">' + UI.avatar(r.who, 'sm') + '<span class="fz11 dim">' + r.who + '</span>' +
+    '<button class="btn btn-sm ml-auto" data-toast="已发起风险决策会议">决策</button></div></div></div></div>';
+}).join('');
+
+/* 7. 里程碑 */
+var ms = [
+  { d: '07-28', t: '支付网关 3.0 灰度发布（10% 流量）', s: 'blue', tag: '本周' },
+  { d: '08-08', t: '数据资产中台一期上线验收', s: 'purple', tag: '2 周内' },
+  { d: '08-20', t: '商户运营中心体验升级 GA', s: 'green', tag: '4 周内' },
+  { d: '09-30', t: '支付网关 3.0 全量切流 + 老系统下线', s: 'orange', tag: 'Q3 关键' },
+  { d: '10-15', t: '智能风控决策引擎 V2 上线', s: 'gray', tag: 'Q4' }
+];
+document.getElementById('msBox').innerHTML = ms.map(function (m) {
+  return '<div class="flex items-center gap10" style="padding:7px 0">' +
+    '<div class="tc" style="width:44px;flex:none"><div class="strong fz13">' + m.d.split('-')[1] + '</div><div class="muted fz11">' + m.d.split('-')[0] + '月</div></div>' +
+    '<span class="dot-status ' + m.s + '"></span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12" style="color:var(--ink-800)">' + m.t + '</div></div>' +
+    '<span class="tag">' + m.tag + '</span></div>';
+}).join('');
+
+/* 8. 团队动态 */
+var feed = [
+  { c: 'brand', i: 'pr', t: '<b>陈立</b> 提交了 PR <b>#482</b> 到 payment-gateway', time: '3 分钟前', box: 'feat(router): 支持基于成本与成功率的动态路由策略' },
+  { c: 'red', i: 'bug', t: '<b>林小满</b> 上报生产缺陷 <b>BUG-771</b>', time: '22 分钟前' },
+  { c: 'green', i: 'circleCheck', t: '<b>吴敏</b> 完成 TP-2026-07 第 3 轮回归（通过率 96.8%）', time: '1 小时前' },
+  { c: 'orange', i: 'zap', t: 'CI 流水线 <b>release-3.0</b> 构建失败', time: '1 小时前' },
+  { c: 'brand', i: 'bulb', t: '<b>周雅</b> 将 <b>REQ-2041</b> 状态更新为「待评审」', time: '2 小时前' },
+  { c: '', i: 'commit', t: '<b>何俊</b> 推送 6 次提交到 feature/settle-v2', time: '3 小时前' },
+  { c: 'green', i: 'rocket', t: '<b>数据资产中台</b> 完成 V1.4.0 预发布部署', time: '5 小时前' },
+  { c: '', i: 'book', t: '<b>赵鹏</b> 更新了《质量门禁标准 V3》', time: '昨天 19:40' }
+];
+document.getElementById('feedBox').innerHTML = feed.map(function (f) {
+  return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+    '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div>' +
+    (f.box ? '<div class="tl-box mono">' + f.box + '</div>' : '') + '</div>';
+}).join('');
+
+/* 9. DORA */
+var dora = [
+  { t: '部署频率', v: '4.2 次/天', lv: '精英', pct: 86, c: '#2b5cff', d: '较上月 +31%', spark: [2.1, 2.6, 2.9, 3.2, 3.4, 3.8, 4.2] },
+  { t: '变更前置时间', v: '18.4 小时', lv: '高', pct: 71, c: '#15a86b', d: '较上月 −12%', spark: [30, 28, 26, 24, 22, 20, 18.4] },
+  { t: '变更失败率', v: '3.1%', lv: '精英', pct: 92, c: '#7c5cff', d: '较上月 −0.9pt', spark: [5.2, 4.8, 4.5, 4.0, 3.6, 3.3, 3.1] },
+  { t: '服务恢复时间', v: '26 分钟', lv: '高', pct: 68, c: '#f59e0b', d: '较上月 −8 分钟', spark: [62, 55, 48, 41, 36, 30, 26] }
+];
+document.getElementById('doraBox').innerHTML = dora.map(function (d) {
+  return '<div style="border:1px solid var(--ink-200);border-radius:10px;padding:12px 14px">' +
+    '<div class="flex items-center"><span class="dim fz12">' + d.t + '</span>' +
+    '<span class="tag ' + (d.lv === '精英' ? 'success' : 'brand') + ' ml-auto">' + d.lv + '</span></div>' +
+    '<div class="flex items-end gap8 mt8"><div class="fz20 fw6" style="color:var(--ink-900);letter-spacing:-.3px">' + d.v + '</div>' +
+    '<div class="ml-auto">' + Charts.spark(d.spark, { color: d.c, width: 78, height: 28 }) + '</div></div>' +
+    '<div class="mt8">' + UI.bar(d.pct, '', 'thin') + '</div>' +
+    '<div class="muted fz11 mt4">' + d.d + ' · 行业分位 ' + d.pct + '%</div></div>';
+}).join('');
+
+document.getElementById('btnReport').onclick = function () { UI.toast('研发周报已生成并推送至知识库'); };
+document.getElementById('btnRange').onclick = function () {
+  UI.menu(this, [{ label: '近 7 天' }, { label: '近 30 天' }, { label: '本季度' }, { label: '本年度' }]);
+};
+</script>
+</body>
+</html>

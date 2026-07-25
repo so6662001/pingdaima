@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>需求管理 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="requirement" data-crumb="交付管理/需求管理">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">需求管理</div>
+          <div class="page-desc">统一需求入口 · 价值评估 · 分级评审 · 排期交付全流程闭环</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn" id="btnImport"><span data-icon="upload"></span>批量导入</button>
+          <button class="btn" data-toast="需求池已导出为 Excel"><span data-icon="download"></span>导出</button>
+          <button class="btn btn-primary" data-modal="mNewReq"><span data-icon="plus"></span>提交需求</button>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="reqStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="pool"><span data-icon="list" data-size="14"></span>需求池 <span class="cnt">128</span></div>
+        <div class="tab" data-tab="board"><span data-icon="kanban" data-size="14"></span>需求看板</div>
+        <div class="tab" data-tab="tree"><span data-icon="layers" data-size="14"></span>需求分解</div>
+        <div class="tab" data-tab="review"><span data-icon="workflow" data-size="14"></span>评审流程 <span class="cnt">7</span></div>
+        <div class="tab" data-tab="insight"><span data-icon="pie" data-size="14"></span>需求分析</div>
+      </div>
+
+      <!-- 需求池 -->
+      <div class="tab-pane active" data-pane="pool">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索需求 ID / 标题 / 关键词"></div>
+          <div class="filter on"><span data-icon="box"></span>产品：<b>全部</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="circleDot"></span>状态<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="flag"></span>优先级<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="inbox"></span>来源<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="user"></span>负责人<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="rocket"></span>目标版本<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="plus"></span>更多筛选</div>
+          <div class="ml-auto flex items-center gap8">
+            <span class="fz12 muted">共 <b>128</b> 条 · 已选 <b id="selCount">0</b></span>
+            <div class="filter"><span data-icon="sort"></span>价值评分 ↓</div>
+            <button class="icon-btn tip" data-tip="保存为我的视图"><span data-icon="bookmark" data-size="16"></span></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap" style="max-height:calc(100vh - 330px);overflow:auto">
+            <table class="tbl" id="reqTable"></table>
+          </div>
+          <div class="card-foot flex items-center">
+            <span>显示 1-14 条，共 128 条</span>
+            <div class="ml-auto flex items-center gap6">
+              <button class="btn btn-sm" disabled><span data-icon="left" data-size="13"></span></button>
+              <button class="btn btn-sm btn-primary" style="width:26px;padding:0">1</button>
+              <button class="btn btn-sm" style="width:26px;padding:0">2</button>
+              <button class="btn btn-sm" style="width:26px;padding:0">3</button>
+              <span class="muted">…</span>
+              <button class="btn btn-sm" style="width:26px;padding:0">10</button>
+              <button class="btn btn-sm"><span data-icon="right" data-size="13"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 需求看板 -->
+      <div class="tab-pane" data-pane="board">
+        <div class="toolbar">
+          <div class="btn-group"><button class="active">按状态</button><button>按产品</button><button>按负责人</button><button>按优先级</button></div>
+          <div class="filter"><span data-icon="rocket"></span>版本：<b>V3.0</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="users"></span>团队<span data-icon="down"></span></div>
+          <span class="fz12 muted ml-auto">拖拽卡片可变更需求状态（支持流转规则校验）</span>
+        </div>
+        <div class="board" id="reqBoard"></div>
+      </div>
+
+      <!-- 需求分解 -->
+      <div class="tab-pane" data-pane="tree">
+        <div class="grid g-3-2">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="layers"></span>需求分解树</div>
+              <div class="card-sub">业务主题 → 需求 → 用户故事 → 任务</div>
+              <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="maximize" data-size="13"></span>展开全部</button></div>
+            </div>
+            <div class="card-body" id="reqTree"></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span data-icon="target"></span>价值 / 成本四象限</div></div>
+              <div class="card-body"><div id="quadrant"></div>
+                <div class="legend mt8"><span><i style="background:#15a86b"></i>高价值低成本（优先做）</span><span><i style="background:#f59e0b"></i>高价值高成本（拆分）</span><span><i style="background:#b3bfd0"></i>低价值（暂缓）</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span data-icon="award"></span>RICE 评分 TOP 5</div></div>
+              <div class="card-body"><div id="riceRank"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 评审流程 -->
+      <div class="tab-pane" data-pane="review">
+        <div class="card mb16">
+          <div class="card-head">
+            <div class="card-title"><span data-icon="workflow"></span>需求分级评审流程</div>
+            <div class="card-sub">P0/P1 需求走完整评审，P2 及以下由产品线自决</div>
+            <div class="card-head-actions"><a class="btn btn-sm" href="settings.html"><span data-icon="settings" data-size="13"></span>配置流程</a></div>
+          </div>
+          <div class="card-body"><div class="pipeline" id="reviewFlow"></div></div>
+        </div>
+        <div class="grid g-2-1">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="clock"></span>待评审需求</div>
+              <div class="card-head-actions"><span class="tag warning">7 条待处理</span><button class="btn btn-sm btn-primary" data-toast="已发起需求评审会">发起评审会</button></div>
+            </div>
+            <div class="card-body flush"><table class="tbl" id="reviewTable"></table></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="history"></span>近期评审记录</div></div>
+            <div class="card-body" style="max-height:420px;overflow:auto"><div class="timeline" id="reviewLog"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 需求分析 -->
+      <div class="tab-pane" data-pane="insight">
+        <div class="grid g3 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="inbox"></span>需求来源分布</div></div><div class="card-body"><div id="srcChart"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="circleDot"></span>需求状态分布</div></div><div class="card-body"><div id="stChart"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="box"></span>各产品需求分布</div></div><div class="card-body"><div id="prodChart"></div></div></div>
+        </div>
+        <div class="grid g-2-1">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="activity"></span>需求流入 / 交付与积压趋势</div>
+              <div class="card-sub">近 9 周</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#f59e0b"></i>流入</span><span><i style="background:#2b5cff"></i>交付</span><span><i style="background:#e5484d"></i>积压总量</span></div>
+              <div id="flowChart"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="timer"></span>需求交付周期</div></div>
+            <div class="card-body">
+              <div id="cycleGauge"></div>
+              <div class="divider"></div>
+              <div id="cycleBreak"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 需求详情抽屉 -->
+<div class="drawer" id="dReq">
+  <div class="drawer-head">
+    <span class="tico req" data-icon-holder>&nbsp;</span>
+    <div style="flex:1;min-width:0">
+      <div class="flex items-center gap8"><span class="id-link" id="dReqId">REQ-2041</span><span class="tag warning" id="dReqStatus">评审中</span></div>
+      <div class="fw6" style="font-size:14.5px;color:var(--ink-900)" id="dReqTitle">支付网关多渠道智能路由能力</div>
+    </div>
+    <a class="btn btn-sm" href="requirement-detail.html"><span data-icon="extLink" data-size="13"></span>详情页</a>
+    <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
+  </div>
+  <div class="drawer-body">
+    <div style="display:grid;grid-template-columns:1fr 250px;gap:0;min-height:100%">
+      <div style="padding:16px 18px;border-right:1px solid var(--ink-100)">
+        <div class="fw6 mb8">需求描述</div>
+        <div class="fz13" style="color:var(--ink-600);line-height:1.85" id="dReqDesc"></div>
+        <div class="fw6 mt20 mb8">验收标准</div>
+        <div id="dReqAc"></div>
+        <div class="fw6 mt20 mb8">关联工作项</div>
+        <div id="dReqLinks"></div>
+        <div class="fw6 mt20 mb8">活动记录</div>
+        <div class="timeline" id="dReqLog"></div>
+      </div>
+      <div style="padding:16px 14px">
+        <div class="props" id="dReqProps"></div>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" data-toast="已驳回并通知提出人">驳回</button>
+    <button class="btn" data-toast="已挂起">挂起</button>
+    <button class="btn btn-primary" data-toast="评审通过，已进入排期池">评审通过</button>
+  </div>
+</div>
+
+<!-- 新建需求弹窗 -->
+<div class="modal" id="mNewReq" style="width:680px">
+  <div class="modal-head"><span data-icon="bulb"></span><span class="modal-title">提交新需求</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>需求标题<span class="req">*</span></label><input class="input" placeholder="用一句话描述用户价值，例如：支持商户按渠道成本自动选路"></div>
+    <div class="form-row">
+      <div class="field"><label>所属产品<span class="req">*</span></label><select class="select"><option>统一支付网关</option><option>商户运营中心</option><option>智能风控平台</option><option>开放能力平台</option><option>数据资产中台</option></select></div>
+      <div class="field"><label>需求类型</label><select class="select"><option>功能需求</option><option>体验优化</option><option>技术需求</option><option>合规需求</option><option>运营需求</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>优先级</label><select class="select"><option>P1 高</option><option>P0 最高</option><option>P2 中</option><option>P3 低</option></select></div>
+      <div class="field"><label>需求来源</label><select class="select"><option>客户反馈</option><option>内部规划</option><option>监管合规</option><option>竞品对标</option><option>数据洞察</option></select></div>
+    </div>
+    <div class="field"><label>需求背景与价值</label><textarea class="textarea" placeholder="业务背景、目标用户、预期收益（建议量化：GMV / 成功率 / 成本 …）"></textarea></div>
+    <div class="form-row">
+      <div class="field"><label>期望交付版本</label><select class="select"><option>V3.0（2026-09-30）</option><option>V3.1（2026-11-15）</option><option>待定</option></select></div>
+      <div class="field"><label>产品负责人</label><select class="select"><option>周雅</option><option>孙悦</option></select></div>
+    </div>
+    <div class="field">
+      <label>RICE 价值评估</label>
+      <div class="grid g4" style="gap:8px">
+        <input class="input" placeholder="Reach 触达"><input class="input" placeholder="Impact 影响"><input class="input" placeholder="Confidence 信心"><input class="input" placeholder="Effort 成本">
+      </div>
+      <div class="hint">提交后系统自动计算 RICE 得分并进入价值排序</div>
+    </div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">提交后立即发起需求评审流程</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn" data-close data-toast="已保存为草稿">存为草稿</button><button class="btn btn-primary" data-close data-toast="需求已提交，评审流程已发起">提交需求</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* ---------- 数据 ---------- */
+var REQS = [
+  { id: 'REQ-2041', t: '支付网关多渠道智能路由能力', p: '统一支付网关', pri: 'P0', st: '评审中', src: '内部规划', rice: 92, from: '周雅', own: '李思远', ver: 'V3.0', eff: 21, pg: 15, up: '10 分钟前', type: '功能需求', tags: ['核心链路', '降本'] },
+  { id: 'REQ-2040', t: '收银台支持数字人民币支付', p: '统一支付网关', pri: 'P0', st: '开发中', src: '监管合规', rice: 88, from: '周雅', own: '何俊', ver: 'V3.0', eff: 34, pg: 62, up: '1 小时前', type: '合规需求', tags: ['合规必达'] },
+  { id: 'REQ-2039', t: '商户结算单据自助下载与批量归档', p: '商户运营中心', pri: 'P1', st: '开发中', src: '客户反馈', rice: 76, from: '孙悦', own: '王倩', ver: 'V2.6', eff: 13, pg: 78, up: '2 小时前', type: '功能需求', tags: ['商户体验'] },
+  { id: 'REQ-2038', t: '风控规则热更新与灰度发布能力', p: '智能风控平台', pri: 'P0', st: '测试中', src: '内部规划', rice: 85, from: '郑宇', own: '郑宇', ver: 'V2.9', eff: 26, pg: 90, up: '3 小时前', type: '技术需求', tags: ['稳定性'] },
+  { id: 'REQ-2037', t: '开放平台 API 限流策略可视化配置', p: '开放能力平台', pri: 'P1', st: '待排期', src: '内部规划', rice: 71, from: '陈立', own: '—', ver: 'V1.4', eff: 18, pg: 0, up: '5 小时前', type: '功能需求', tags: [] },
+  { id: 'REQ-2036', t: '商户后台大额账单异步导出', p: '商户运营中心', pri: 'P1', st: '评审中', src: '客户反馈', rice: 68, from: '孙悦', own: '—', ver: 'V2.6', eff: 8, pg: 0, up: '昨天', type: '体验优化', tags: ['性能'] },
+  { id: 'REQ-2035', t: '交易对账文件自动核销与差错处理', p: '统一支付网关', pri: 'P1', st: '开发中', src: '内部规划', rice: 74, from: '周雅', own: '何俊', ver: 'V3.0', eff: 29, pg: 45, up: '昨天', type: '功能需求', tags: ['降本'] },
+  { id: 'REQ-2034', t: '风控模型特征平台自助取数', p: '智能风控平台', pri: 'P2', st: '待排期', src: '数据洞察', rice: 62, from: '郑宇', own: '—', ver: 'V3.0', eff: 22, pg: 0, up: '2 天前', type: '技术需求', tags: [] },
+  { id: 'REQ-2033', t: '商户中心首页信息架构重构', p: '商户运营中心', pri: 'P2', st: '待发布', src: '竞品对标', rice: 58, from: '孙悦', own: '王倩', ver: 'V2.5', eff: 16, pg: 100, up: '2 天前', type: '体验优化', tags: ['体验'] },
+  { id: 'REQ-2032', t: '数据中台指标口径统一治理', p: '数据资产中台', pri: 'P1', st: '开发中', src: '内部规划', rice: 70, from: '陈立', own: '何俊', ver: 'V1.4', eff: 31, pg: 55, up: '3 天前', type: '技术需求', tags: ['治理'] },
+  { id: 'REQ-2031', t: '支付成功率实时大盘与自动告警', p: '统一支付网关', pri: 'P1', st: '已发布', src: '内部规划', rice: 79, from: '林小满', own: '林小满', ver: 'V2.9', eff: 12, pg: 100, up: '4 天前', type: '技术需求', tags: ['可观测'] },
+  { id: 'REQ-2030', t: '开放平台开发者沙箱环境', p: '开放能力平台', pri: 'P2', st: '待评审', src: '客户反馈', rice: 55, from: '孙悦', own: '—', ver: '待定', eff: 24, pg: 0, up: '4 天前', type: '功能需求', tags: ['生态'] },
+  { id: 'REQ-2029', t: '反洗钱名单库实时同步', p: '智能风控平台', pri: 'P0', st: '已发布', src: '监管合规', rice: 90, from: '郑宇', own: '郑宇', ver: 'V2.8', eff: 19, pg: 100, up: '6 天前', type: '合规需求', tags: ['合规必达'] },
+  { id: 'REQ-2028', t: '统一登录与多因子认证升级', p: '商户运营中心', pri: 'P2', st: '已挂起', src: '内部规划', rice: 44, from: '王倩', own: '—', ver: '待定', eff: 15, pg: 0, up: '上周', type: '技术需求', tags: ['安全'] }
+];
+var STC = { '待评审': 'gray', '评审中': 'orange', '待排期': 'purple', '开发中': 'blue', '测试中': 'orange', '待发布': 'purple', '已发布': 'green', '已挂起': 'gray' };
+var STAG = { '待评审': '', '评审中': 'warning', '待排期': 'purple', '开发中': 'brand', '测试中': 'warning', '待发布': 'info', '已发布': 'success', '已挂起': '' };
+
+/* ---------- 指标 ---------- */
+document.getElementById('reqStats').innerHTML = [
+  { l: '需求池总量', v: 128, u: '条', i: 'inbox', c: '#2b5cff', bg: 'var(--brand-50)', f: '本月新增 34 条' },
+  { l: '待评审', v: 7, u: '条', i: 'clock', c: '#f59e0b', bg: 'var(--warning-bg)', f: '平均等待 2.4 天' },
+  { l: '进行中', v: 46, u: '条', i: 'zap', c: '#7c5cff', bg: 'var(--purple-bg)', f: '覆盖 5 条产品线' },
+  { l: '本月已交付', v: 23, u: '条', i: 'circleCheck', c: '#15a86b', bg: 'var(--success-bg)', f: '按时交付率 91%' },
+  { l: '平均交付周期', v: '13.6', u: '天', i: 'timer', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '目标 ≤ 12 天' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+/* ---------- 需求池表格 ---------- */
+document.getElementById('reqTable').innerHTML =
+  '<thead><tr><th style="width:34px"><span class="checkbox"></span></th><th>需求</th><th>产品</th><th>优先级</th><th>状态</th>' +
+  '<th class="num">RICE</th><th>提出人</th><th>负责人</th><th>目标版本</th><th class="num">工作量</th><th style="width:110px">进度</th><th>更新</th><th style="width:34px"></th></tr></thead><tbody>' +
+  REQS.map(function (r) {
+    return '<tr onclick="openReq(\'' + r.id + '\')">' +
+      '<td><span class="checkbox"></span></td>' +
+      '<td><div class="row-flex"><span class="tico req">' + icon('bulb', 11) + '</span><div style="min-width:0">' +
+      '<div class="t-main ellipsis" style="max-width:330px">' + r.t + '</div>' +
+      '<div class="flex items-center gap6 mt4"><span class="id-link">' + r.id + '</span><span class="muted fz11">·</span><span class="muted fz11">' + r.type + '</span>' +
+      r.tags.map(function (t) { return '<span class="tag" style="height:16px;font-size:10.5px">' + t + '</span>'; }).join('') + '</div></div></div></td>' +
+      '<td class="dim nowrap">' + r.p + '</td>' +
+      '<td>' + UI.priority(r.pri) + '</td>' +
+      '<td><span class="tag ' + STAG[r.st] + '"><span class="dot-status ' + STC[r.st] + '"></span>' + r.st + '</span></td>' +
+      '<td class="num"><b style="color:' + (r.rice >= 80 ? 'var(--success)' : r.rice >= 60 ? 'var(--ink-800)' : 'var(--ink-400)') + '">' + r.rice + '</b></td>' +
+      '<td><div class="row-flex">' + UI.avatar(r.from, 'sm') + '<span class="fz12">' + r.from + '</span></div></td>' +
+      '<td>' + (r.own === '—' ? '<span class="muted">未分配</span>' : '<div class="row-flex">' + UI.avatar(r.own, 'sm') + '<span class="fz12">' + r.own + '</span></div>') + '</td>' +
+      '<td><span class="tag line">' + r.ver + '</span></td>' +
+      '<td class="num dim">' + r.eff + ' 人日</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(r.pg, r.pg === 100 ? 'green' : '', 'thin') + '</div><span class="fz11 muted">' + r.pg + '%</span></div></td>' +
+      '<td class="muted fz11 nowrap">' + r.up + '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="icon-btn" style="width:24px;height:24px" onclick="rowMenu(this)">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+function rowMenu(el) {
+  UI.menu(el, [{ label: '编辑需求', icon: 'edit' }, { label: '分配负责人', icon: 'user' }, { label: '加入迭代', icon: 'kanban' },
+    { label: '拆分为用户故事', icon: 'layers' }, { label: '关联代码分支', icon: 'branch' }, '-', { label: '挂起', icon: 'pause' }, { label: '删除', icon: 'trash', danger: true }], 'right');
+}
+document.querySelector('#reqTable').addEventListener('click', function (e) {
+  if (e.target.closest('.checkbox')) {
+    setTimeout(function () {
+      document.getElementById('selCount').textContent = document.querySelectorAll('#reqTable tbody .checkbox.checked').length;
+    }, 0);
+  }
+});
+
+/* ---------- 看板 ---------- */
+var COLS = ['待评审', '评审中', '待排期', '开发中', '测试中', '待发布', '已发布'];
+var COLC = { '待评审': '#b3bfd0', '评审中': '#f59e0b', '待排期': '#7c5cff', '开发中': '#2b5cff', '测试中': '#0fb5ba', '待发布': '#0ea5e9', '已发布': '#15a86b' };
+document.getElementById('reqBoard').innerHTML = COLS.map(function (c) {
+  var items = REQS.filter(function (r) { return r.st === c; });
+  return '<div class="board-col"><div class="board-col-head"><span class="dot-status ' + STC[c] + '"></span>' +
+    '<span class="name">' + c + '</span><span class="cnt">' + items.length + '</span>' +
+    '<span class="add">' + icon('plus', 14) + '</span></div>' +
+    '<div class="board-col-body">' + items.map(function (r) {
+      return '<div class="kcard" onclick="openReq(\'' + r.id + '\')">' +
+        '<div class="kcard-strip" style="background:' + COLC[c] + '"></div>' +
+        '<div class="kcard-top"><span class="id-link">' + r.id + '</span>' + UI.priority(r.pri) +
+        '<span class="ml-auto tag" style="height:17px">' + r.ver + '</span></div>' +
+        '<div class="kcard-title">' + r.t + '</div>' +
+        (r.pg ? '<div class="kcard-bar"><i style="width:' + r.pg + '%"></i></div>' : '') +
+        '<div class="kcard-meta"><span class="tag line">' + r.p + '</span>' +
+        '<span class="muted fz11 spacer">' + r.eff + ' 人日</span>' +
+        (r.own === '—' ? '<span class="avatar sm" style="background:var(--ink-200);color:var(--ink-500)">?</span>' : UI.avatar(r.own, 'sm')) + '</div></div>';
+    }).join('') + '</div></div>';
+}).join('');
+UI.initKanban();
+
+/* ---------- 需求分解树 ---------- */
+var TREE = [
+  { t: '业务主题：支付成功率与成本双优化', type: 'epic', ico: 'target', meta: '负责人 李思远 · 12 需求 · 68%', pg: 68, children: [
+    { t: 'REQ-2041 支付网关多渠道智能路由能力', type: 'req', ico: 'bulb', meta: 'P0 · 21 人日 · 评审中', pg: 15, children: [
+      { t: 'STORY-3312 路由策略配置界面', type: 'story', ico: 'file', meta: '王倩 · 5 点 · 开发中', pg: 40 },
+      { t: 'STORY-3313 成本与成功率实时计算引擎', type: 'story', ico: 'file', meta: '何俊 · 8 点 · 待开发', pg: 0 },
+      { t: 'STORY-3314 灰度切流与回滚机制', type: 'story', ico: 'file', meta: '林小满 · 5 点 · 待开发', pg: 0 }
+    ] },
+    { t: 'REQ-2035 交易对账文件自动核销与差错处理', type: 'req', ico: 'bulb', meta: 'P1 · 29 人日 · 开发中', pg: 45, children: [
+      { t: 'STORY-3298 对账文件解析与标准化', type: 'story', ico: 'file', meta: '何俊 · 8 点 · 已完成', pg: 100 },
+      { t: 'TASK-5521 差错工单自动派发', type: 'task', ico: 'kanban', meta: '何俊 · 3 点 · 开发中', pg: 60 }
+    ] }
+  ] },
+  { t: '业务主题：监管合规能力建设', type: 'epic', ico: 'shield', meta: '负责人 郑宇 · 6 需求 · 82%', pg: 82, children: [
+    { t: 'REQ-2040 收银台支持数字人民币支付', type: 'req', ico: 'bulb', meta: 'P0 · 34 人日 · 开发中', pg: 62, children: [
+      { t: 'STORY-3305 数字人民币受理协议对接', type: 'story', ico: 'file', meta: '何俊 · 13 点 · 开发中', pg: 70 },
+      { t: 'BUG-762 钱包签约回调重复通知', type: 'bug', ico: 'bug', meta: '吴敏 · P1 · 修复中', pg: 30 }
+    ] },
+    { t: 'REQ-2029 反洗钱名单库实时同步', type: 'req', ico: 'bulb', meta: 'P0 · 19 人日 · 已发布', pg: 100 }
+  ] },
+  { t: '业务主题：商户经营体验升级', type: 'epic', ico: 'users', meta: '负责人 王倩 · 9 需求 · 54%', pg: 54, children: [
+    { t: 'REQ-2039 商户结算单据自助下载与批量归档', type: 'req', ico: 'bulb', meta: 'P1 · 13 人日 · 开发中', pg: 78 },
+    { t: 'REQ-2036 商户后台大额账单异步导出', type: 'req', ico: 'bulb', meta: 'P1 · 8 人日 · 评审中', pg: 0 },
+    { t: 'REQ-2033 商户中心首页信息架构重构', type: 'req', ico: 'bulb', meta: 'P2 · 16 人日 · 待发布', pg: 100 }
+  ] }
+];
+function renderTree(nodes, lv) {
+  return nodes.map(function (n) {
+    var hasChild = n.children && n.children.length;
+    return '<div class="tree-node"><div class="doc-node" style="padding:7px 8px" onclick="this.parentElement.classList.toggle(\'closed\')">' +
+      (hasChild ? '<span class="caret open">' + icon('right', 12) + '</span>' : '<span style="width:12px"></span>') +
+      '<span class="tico ' + n.type + '">' + icon(n.ico, 11) + '</span>' +
+      '<span style="flex:1;color:var(--ink-800);font-weight:' + (lv === 0 ? 600 : 400) + '">' + n.t + '</span>' +
+      '<span class="muted fz11 nowrap">' + n.meta + '</span>' +
+      '<div style="width:70px">' + UI.bar(n.pg || 0, n.pg === 100 ? 'green' : '', 'thin') + '</div></div>' +
+      (hasChild ? '<div class="doc-children">' + renderTree(n.children, lv + 1) + '</div>' : '') + '</div>';
+  }).join('');
+}
+document.getElementById('reqTree').innerHTML = renderTree(TREE, 0);
+var st = document.createElement('style');
+st.textContent = '.tree-node.closed > .doc-children{display:none}.tree-node.closed .caret{transform:none}';
+document.head.appendChild(st);
+
+/* 四象限散点 */
+(function () {
+  var pts = REQS.map(function (r) { return { x: r.eff, y: r.rice, id: r.id, t: r.t }; });
+  var W = 380, H = 250, pl = 34, pb = 26, pt = 12, pr = 12;
+  var iw = W - pl - pr, ih = H - pt - pb;
+  var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" height="' + H + '">';
+  s += '<rect x="' + pl + '" y="' + pt + '" width="' + iw / 2 + '" height="' + ih / 2 + '" fill="#e6f7f0" opacity=".55"/>';
+  s += '<rect x="' + (pl + iw / 2) + '" y="' + pt + '" width="' + iw / 2 + '" height="' + ih / 2 + '" fill="#fef4e2" opacity=".55"/>';
+  s += '<line x1="' + (pl + iw / 2) + '" y1="' + pt + '" x2="' + (pl + iw / 2) + '" y2="' + (pt + ih) + '" stroke="#dde4ee" stroke-dasharray="4 3"/>';
+  s += '<line x1="' + pl + '" y1="' + (pt + ih / 2) + '" x2="' + (pl + iw) + '" y2="' + (pt + ih / 2) + '" stroke="#dde4ee" stroke-dasharray="4 3"/>';
+  s += '<text x="' + (pl + 6) + '" y="' + (pt + 14) + '" font-size="10" fill="#15a86b">优先交付</text>';
+  s += '<text x="' + (pl + iw - 6) + '" y="' + (pt + 14) + '" font-size="10" fill="#b8760a" text-anchor="end">拆分/评估</text>';
+  s += '<text x="' + (pl - 6) + '" y="' + (pt + 8) + '" font-size="9.5" fill="#8c9ab1" text-anchor="end">100</text>';
+  s += '<text x="' + (pl - 6) + '" y="' + (pt + ih) + '" font-size="9.5" fill="#8c9ab1" text-anchor="end">0</text>';
+  s += '<text x="' + (pl + iw / 2) + '" y="' + (H - 6) + '" font-size="10" fill="#8c9ab1" text-anchor="middle">投入（人日）→</text>';
+  pts.forEach(function (p) {
+    var x = pl + iw * Math.min(p.x, 40) / 40, y = pt + ih - ih * p.y / 100;
+    var c = p.y >= 65 && p.x <= 20 ? '#15a86b' : p.y >= 65 ? '#f59e0b' : '#b3bfd0';
+    s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="6" fill="' + c + '" fill-opacity=".75" stroke="#fff" stroke-width="1.5"><title>' + p.id + ' ' + p.t + '（RICE ' + p.y + '，' + p.x + ' 人日）</title></circle>';
+  });
+  document.getElementById('quadrant').innerHTML = s + '</svg>';
+})();
+
+Charts.hbar('#riceRank', {
+  data: REQS.slice().sort(function (a, b) { return b.rice - a.rice; }).slice(0, 5).map(function (r) { return { name: r.id + ' ' + r.t.slice(0, 12), value: r.rice }; }),
+  unit: ' 分'
+});
+
+/* ---------- 评审流程 ---------- */
+var FLOW = [
+  { n: '需求提出', s: 'ok', d: '业务/客户/内部', who: '全员' },
+  { n: '产品初审', s: 'ok', d: '价值与重复性判定', who: '周雅' },
+  { n: '架构评审', s: 'run', d: '技术可行性 / 依赖', who: '陈立' },
+  { n: '价值评审会', s: 'wait', d: 'RICE 排序 · 委员会', who: '沈知远' },
+  { n: '资源排期', s: 'wait', d: '版本与人力匹配', who: '徐磊' },
+  { n: '立项开发', s: 'wait', d: '进入迭代', who: '李思远' }
+];
+document.getElementById('reviewFlow').innerHTML = FLOW.map(function (f, i) {
+  var ic = { ok: 'check', run: 'refresh', wait: 'clock' }[f.s];
+  return (i ? '<div class="pconn"></div>' : '') +
+    '<div class="pstage ' + f.s + '"><span class="ico">' + icon(ic, 11) + '</span>' +
+    '<div><div class="fw5">' + f.n + '</div><div class="muted" style="font-size:10.5px">' + f.d + ' · ' + f.who + '</div></div></div>';
+}).join('');
+
+document.getElementById('reviewTable').innerHTML =
+  '<thead><tr><th>需求</th><th>提出人</th><th>当前节点</th><th>等待</th><th>评审会</th><th></th></tr></thead><tbody>' +
+  [['REQ-2041', '支付网关多渠道智能路由能力', '周雅', '架构评审', '1.2 天', '07-27 14:00', 'P0'],
+   ['REQ-2036', '商户后台大额账单异步导出', '孙悦', '产品初审', '2.4 天', '07-27 14:00', 'P1'],
+   ['REQ-2030', '开放平台开发者沙箱环境', '孙悦', '产品初审', '4.1 天', '待排期', 'P2'],
+   ['REQ-2044', '监管报送口径调整', '合规部', '价值评审会', '0.5 天', '07-26 10:00', 'P0'],
+   ['REQ-2043', '商户风险分级视图', '郑宇', '架构评审', '1.8 天', '07-27 14:00', 'P1'],
+   ['REQ-2042', 'SDK 支持鸿蒙 NEXT', '王倩', '产品初审', '3.2 天', '待排期', 'P2'],
+   ['REQ-2045', '资金池头寸预测模型', '何俊', '架构评审', '0.8 天', '07-29 15:00', 'P1']
+  ].map(function (r) {
+    return '<tr onclick="openReq(\'' + r[0] + '\')"><td><div class="row-flex"><span class="tico req">' + icon('bulb', 11) + '</span>' +
+      '<div><div class="t-main">' + r[1] + '</div><div class="id-link">' + r[0] + ' · ' + r[6] + '</div></div></div></td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[2], 'sm') + '<span class="fz12">' + r[2] + '</span></div></td>' +
+      '<td><span class="tag warning">' + r[3] + '</span></td><td class="dim">' + r[4] + '</td><td class="dim">' + r[5] + '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="btn btn-sm btn-primary" data-toast="已通过评审">通过</button></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('reviewLog').innerHTML = [
+  { c: 'green', i: 'check', t: '<b>REQ-2038</b> 风控规则热更新 通过价值评审会', s: '评审结论：Q3 必达，纳入 V2.9', time: '今天 09:30 · 沈知远' },
+  { c: 'red', i: 'x', t: '<b>REQ-2028</b> 统一登录与多因子认证升级 被驳回', s: '驳回原因：与安全中台规划重复，合并至 SEC-1102', time: '昨天 16:20 · 陈立' },
+  { c: 'brand', i: 'refresh', t: '<b>REQ-2041</b> 进入架构评审节点', s: '关注点：路由决策延迟需 < 15ms，需压测验证', time: '昨天 11:05 · 周雅' },
+  { c: 'green', i: 'check', t: '<b>REQ-2039</b> 商户结算单据自助下载 完成排期', s: '排入 V2.6，交付人 王倩', time: '07-22 15:40 · 徐磊' },
+  { c: 'orange', i: 'alert', t: '<b>REQ-2034</b> 被标记为「依赖未就绪」', s: '依赖数据中台指标治理（REQ-2032）完成', time: '07-21 10:12 · 郑宇' }
+].map(function (f) {
+  return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+    '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div>' +
+    '<div class="tl-box">' + f.s + '</div></div>';
+}).join('');
+
+/* ---------- 分析图表 ---------- */
+Charts.donut('#srcChart', { size: 150, thickness: 19, center: { value: '128', label: '需求总量' }, data: [
+  { name: '客户反馈', value: 42, color: '#2b5cff' }, { name: '内部规划', value: 38, color: '#7c5cff' },
+  { name: '监管合规', value: 21, color: '#e5484d' }, { name: '数据洞察', value: 15, color: '#15a86b' }, { name: '竞品对标', value: 12, color: '#f59e0b' }] });
+Charts.donut('#stChart', { size: 150, thickness: 19, center: { value: '46', label: '进行中' }, data: [
+  { name: '开发中', value: 28, color: '#2b5cff' }, { name: '测试中', value: 18, color: '#0fb5ba' },
+  { name: '待排期', value: 24, color: '#7c5cff' }, { name: '评审中', value: 7, color: '#f59e0b' },
+  { name: '已发布', value: 43, color: '#15a86b' }, { name: '已挂起', value: 8, color: '#b3bfd0' }] });
+Charts.hbar('#prodChart', { thickness: 8, gap: 13, data: [
+  { name: '统一支付网关', value: 41 }, { name: '智能风控平台', value: 29 }, { name: '商户运营中心', value: 26 },
+  { name: '数据资产中台', value: 18 }, { name: '开放能力平台', value: 14 }], unit: ' 条' });
+Charts.line('#flowChart', {
+  height: 232, labels: ['W22', 'W23', 'W24', 'W25', 'W26', 'W27', 'W28', 'W29', 'W30'],
+  series: [
+    { name: '流入', data: [18, 22, 19, 25, 21, 26, 24, 28, 25], color: '#f59e0b' },
+    { name: '交付', data: [14, 17, 15, 21, 19, 24, 22, 26, 23], color: '#2b5cff', area: true },
+    { name: '积压', data: [62, 67, 71, 75, 77, 79, 81, 83, 85], color: '#e5484d', dashed: true, dots: false }
+  ]
+});
+Charts.gauge('#cycleGauge', { value: 13.6, max: 25, text: '13.6 天', label: '平均需求交付周期', color: '#0fb5ba', size: 190 });
+Charts.hbar('#cycleBreak', { unit: ' 天', data: [
+  { name: '评审等待', value: 2.4, color: '#f59e0b' }, { name: '排期等待', value: 3.1, color: '#7c5cff' },
+  { name: '开发', value: 5.2, color: '#2b5cff' }, { name: '测试', value: 2.1, color: '#0fb5ba' },
+  { name: '发布', value: 0.8, color: '#15a86b' }] });
+
+/* ---------- 详情抽屉 ---------- */
+function openReq(id) {
+  var r = REQS.filter(function (x) { return x.id === id; })[0] || REQS[0];
+  document.getElementById('dReqId').textContent = r.id;
+  document.getElementById('dReqTitle').textContent = r.t;
+  var stEl = document.getElementById('dReqStatus');
+  stEl.textContent = r.st; stEl.className = 'tag ' + (STAG[r.st] || '');
+  document.getElementById('dReqDesc').innerHTML =
+    '<p><b>业务背景：</b>当前收银台按固定优先级选择支付渠道，无法根据渠道实时成功率与费率动态调整，' +
+    '大促期间单渠道拥塞导致成功率下降约 <b style="color:var(--danger)">2.3pt</b>，同时通道成本高于同业约 <b style="color:var(--danger)">8%</b>。</p>' +
+    '<p class="mt8"><b>需求目标：</b>建设多渠道智能路由能力，支持按成功率、费率、限额、商户偏好等维度动态选路，并具备秒级熔断与灰度回滚能力。</p>' +
+    '<p class="mt8"><b>预期收益：</b>支付成功率 +1.5pt、通道成本 −6%、大促单渠道故障影响面下降 70%。</p>';
+  document.getElementById('dReqAc').innerHTML = [
+    '支持按渠道成功率 / 费率 / 限额 / 商户白名单 4 类策略组合配置，配置生效 ≤ 30 秒',
+    '路由决策链路 P99 延迟 ≤ 15ms，不引入额外资金风险',
+    '单渠道异常时自动熔断并切换备用渠道，切换过程订单零丢失',
+    '提供路由决策明细可观测视图，支持按订单号追溯选路原因',
+    '支持按商户维度灰度，灰度比例可实时调整（1% → 100%）'
+  ].map(function (a, i) {
+    return '<div class="link-item"><span class="checkbox' + (i < 2 ? ' checked' : '') + '"></span><span class="fz12" style="flex:1">' + a + '</span></div>';
+  }).join('');
+  document.getElementById('dReqLinks').innerHTML = [
+    { i: 'kanban', c: 'task', t: 'PRJ-018 统一支付网关 3.0 重构', m: '所属项目 · 进行中' },
+    { i: 'file', c: 'story', t: 'STORY-3312 路由策略配置界面', m: '王倩 · 5 点 · 开发中' },
+    { i: 'file', c: 'story', t: 'STORY-3313 成本与成功率实时计算引擎', m: '何俊 · 8 点 · 待开发' },
+    { i: 'branch', c: 'epic', t: 'payment-gateway / feature/smart-router', m: '12 提交 · PR #482 待评审' },
+    { i: 'flask', c: 'test', t: 'TC-8821 ~ TC-8846 路由策略测试用例集', m: '26 条 · 覆盖率 88%' },
+    { i: 'book', c: 'doc', t: '《智能路由技术方案 V1.2》', m: '陈立 · 知识库' }
+  ].map(function (l) {
+    return '<div class="link-item"><span class="tico ' + l.c + '">' + icon(l.i, 11) + '</span>' +
+      '<div style="flex:1;min-width:0"><div class="fz12 ellipsis" style="color:var(--ink-800)">' + l.t + '</div><div class="muted fz11">' + l.m + '</div></div>' +
+      icon('right', 13) + '</div>';
+  }).join('');
+  document.getElementById('dReqProps').innerHTML = [
+    ['状态', '<span class="tag ' + (STAG[r.st] || '') + '">' + r.st + '</span>'],
+    ['优先级', UI.priority(r.pri)],
+    ['所属产品', r.p],
+    ['需求类型', r.type],
+    ['需求来源', r.src],
+    ['RICE 评分', '<b>' + r.rice + '</b> <span class="muted fz11">（排名 3/128）</span>'],
+    ['提出人', UI.avatar(r.from, 'sm') + ' ' + r.from],
+    ['产品负责人', UI.avatar('周雅', 'sm') + ' 周雅'],
+    ['研发负责人', r.own === '—' ? '<span class="muted">未分配</span>' : UI.avatar(r.own, 'sm') + ' ' + r.own],
+    ['目标版本', '<span class="tag line">' + r.ver + '</span>'],
+    ['预估工作量', r.eff + ' 人日'],
+    ['计划上线', '2026-09-30'],
+    ['关联项目', '<a style="color:var(--brand-600)" href="project-detail.html">PRJ-018</a>'],
+    ['标签', r.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join(' ') || '<span class="muted">无</span>']
+  ].map(function (p) {
+    return '<div class="prop"><span class="k">' + p[0] + '</span><span class="v editable">' + p[1] + '</span></div>';
+  }).join('') +
+    '<div class="divider"></div><div class="fz12 fw6 mb8">进度</div>' + UI.bar(r.pg, r.pg === 100 ? 'green' : '') +
+    '<div class="muted fz11 mt4">' + r.pg + '% · 3/8 子项完成</div>' +
+    '<div class="divider"></div><div class="fz12 fw6 mb8">关注者</div>' + UI.avatarGroup(['沈知远', '周雅', '陈立', '李思远', '赵鹏'], 5);
+  document.getElementById('dReqLog').innerHTML = [
+    { c: 'brand', i: 'refresh', t: '<b>周雅</b> 将状态由「待评审」更新为「评审中」', time: '今天 09:12' },
+    { c: '', i: 'comment', t: '<b>陈立</b> 评论', time: '昨天 17:30', box: '路由决策需要考虑与风控引擎的调用顺序，建议在方案中补充时序图与降级策略。' },
+    { c: 'green', i: 'link', t: '<b>李思远</b> 关联了分支 feature/smart-router', time: '昨天 14:02' },
+    { c: '', i: 'edit', t: '<b>周雅</b> 更新了验收标准（新增 2 条）', time: '07-22 10:20' },
+    { c: 'brand', i: 'plus', t: '<b>周雅</b> 创建了需求', time: '07-20 09:00' }
+  ].map(function (f) {
+    return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+      '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div>' + (f.box ? '<div class="tl-box">' + f.box + '</div>' : '') + '</div>';
+  }).join('');
+  UI.hydrateIcons(document.getElementById('dReq'));
+  UI.openDrawer('dReq');
+}
+document.querySelector('[data-icon-holder]').innerHTML = icon('bulb', 11);
+document.getElementById('btnImport').onclick = function () { UI.toast('支持从 Excel / Jira / TAPD 导入需求'); };
+if (location.search.indexOf('new=1') > -1) setTimeout(function () { UI.openModal('mNewReq'); }, 200);
+</script>
+</body>
+</html>

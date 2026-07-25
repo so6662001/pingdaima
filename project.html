@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>项目管理 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="project" data-crumb="交付管理/项目管理">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">项目管理</div>
+          <div class="page-desc">项目组合 · 迭代执行 · 资源与工时 · 风险管控</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn"><span data-icon="sliders"></span>项目集：研发中心</button>
+          <button class="btn" data-toast="项目周报已生成"><span data-icon="file"></span>项目周报</button>
+          <button class="btn btn-primary" data-modal="mNewPrj"><span data-icon="plus"></span>新建项目</button>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="prjStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="l1"><span data-icon="list" data-size="14"></span>项目列表 <span class="cnt">9</span></div>
+        <div class="tab" data-tab="l2"><span data-icon="chartArea" data-size="14"></span>项目组合甘特</div>
+        <div class="tab" data-tab="l3"><span data-icon="refresh" data-size="14"></span>迭代总览</div>
+        <div class="tab" data-tab="l4"><span data-icon="users" data-size="14"></span>资源与工时</div>
+        <div class="tab" data-tab="l5"><span data-icon="warn" data-size="14"></span>风险与问题 <span class="cnt">11</span></div>
+      </div>
+
+      <div class="tab-pane active" data-pane="l1">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索项目名称 / 编号"></div>
+          <div class="filter on"><span data-icon="circleDot"></span>状态：<b>进行中</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="box"></span>所属产品<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="user"></span>项目经理<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="shield"></span>健康度<span data-icon="down"></span></div>
+          <div class="ml-auto btn-group"><button class="active"><span data-icon="list" data-size="13"></span>列表</button><button><span data-icon="grid" data-size="13"></span>卡片</button></div>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="table-wrap"><table class="tbl" id="prjTable"></table></div></div></div>
+      </div>
+
+      <div class="tab-pane" data-pane="l2">
+        <div class="toolbar">
+          <div class="btn-group"><button>周</button><button class="active">月</button><button>季度</button></div>
+          <div class="filter"><span data-icon="layers"></span>展示：<b>项目 + 里程碑</b><span data-icon="down"></span></div>
+          <div class="ml-auto legend"><span><i style="background:#2b5cff"></i>正常</span><span><i style="background:#f59e0b"></i>关注</span><span><i style="background:#e5484d"></i>风险</span><span><i style="background:#15a86b"></i>已完成</span></div>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="gantt" id="prjGantt"></div></div></div>
+      </div>
+
+      <div class="tab-pane" data-pane="l3">
+        <div class="grid g3" id="sprintCards"></div>
+      </div>
+
+      <div class="tab-pane" data-pane="l4">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>团队资源负载</div>
+            <div class="card-sub">本月人力投入 / 容量（人日）</div></div>
+            <div class="card-body"><div id="loadChart"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>工时投入结构</div></div>
+            <div class="card-body"><div id="effortDonut"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="timer"></span>成员工时与负载明细</div>
+            <div class="card-head-actions"><button class="btn btn-sm" data-toast="工时报表已导出"><span data-icon="download" data-size="13"></span>导出</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="memberTable"></table></div></div>
+        </div>
+      </div>
+
+      <div class="tab-pane" data-pane="l5">
+        <div class="grid g4 mb16" id="riskStats"></div>
+        <div class="card"><div class="card-head"><div class="card-title"><span data-icon="warn"></span>风险登记册</div>
+          <div class="card-head-actions"><button class="btn btn-sm btn-primary"><span data-icon="plus" data-size="13"></span>登记风险</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="riskTable"></table></div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mNewPrj" style="width:640px">
+  <div class="modal-head"><span data-icon="kanban"></span><span class="modal-title">新建项目</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>项目名称<span class="req">*</span></label><input class="input" placeholder="例如：统一支付网关 3.0 重构"></div>
+    <div class="form-row">
+      <div class="field"><label>项目类型</label><select class="select"><option>敏捷迭代（Scrum）</option><option>看板（Kanban）</option><option>瀑布（阶段门）</option><option>混合模式</option></select></div>
+      <div class="field"><label>所属产品</label><select class="select"><option>统一支付网关</option><option>智能风控平台</option><option>商户运营中心</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>项目经理</label><select class="select"><option>徐磊</option><option>李思远</option></select></div>
+      <div class="field"><label>技术负责人</label><select class="select"><option>李思远</option><option>陈立</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>计划开始</label><input class="input" value="2026-08-01"></div>
+      <div class="field"><label>计划结束</label><input class="input" value="2026-12-31"></div>
+    </div>
+    <div class="field"><label>迭代周期</label>
+      <div class="pills"><span class="pill">1 周</span><span class="pill active">2 周</span><span class="pill">3 周</span><span class="pill">4 周</span></div></div>
+    <div class="field"><label>项目目标</label><textarea class="textarea" placeholder="项目要解决的问题与成功标准"></textarea></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="项目已创建，已生成默认迭代与看板">创建项目</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('prjStats').innerHTML = [
+  { l: '进行中项目', v: 9, u: '个', i: 'kanban', c: '#2b5cff', bg: 'var(--brand-50)', f: '本季新启动 3 个' },
+  { l: '按期交付率', v: 87, u: '%', i: 'target', c: '#15a86b', bg: 'var(--success-bg)', f: '目标 ≥ 90%' },
+  { l: '本月投入', v: 862, u: '人日', i: 'timer', c: '#7c5cff', bg: 'var(--purple-bg)', f: '容量 940 人日' },
+  { l: '平均迭代速率', v: 41, u: '点/迭代', i: 'zap', c: '#f59e0b', bg: 'var(--warning-bg)', f: '较上季 +9%' },
+  { l: '高风险项', v: 3, u: '项', i: 'warn', c: '#e5484d', bg: 'var(--danger-bg)', f: '2 项需管理层介入' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+var PRJS = [
+  { id: 'PRJ-018', n: '统一支付网关 3.0 重构', p: '统一支付网关', pm: '徐磊', tl: '李思远', team: ['李思远', '何俊', '王倩', '林小满', '吴敏', '陈立'], sp: 'Sprint 26-14', pg: 68, h: '健康', st: '进行中', s: '2026-04-01', e: '2026-09-30', budget: 86, used: 62, req: 18, bug: 6 },
+  { id: 'PRJ-021', n: '智能风控决策引擎 V2', p: '智能风控平台', pm: '徐磊', tl: '郑宇', team: ['郑宇', '何俊', '吴敏'], sp: 'Sprint 26-07', pg: 42, h: '风险', st: '进行中', s: '2026-05-15', e: '2026-10-15', budget: 64, used: 41, req: 12, bug: 3 },
+  { id: 'PRJ-016', n: '商户运营中心体验升级', p: '商户运营中心', pm: '徐磊', tl: '王倩', team: ['王倩', '孙悦', '吴敏'], sp: 'Sprint 26-22', pg: 85, h: '健康', st: '进行中', s: '2026-03-01', e: '2026-08-20', budget: 42, used: 36, req: 15, bug: 2 },
+  { id: 'PRJ-023', n: '开放平台 OpenAPI 网关', p: '开放能力平台', pm: '徐磊', tl: '陈立', team: ['陈立', '何俊'], sp: 'Sprint 26-05', pg: 24, h: '关注', st: '进行中', s: '2026-06-20', e: '2026-11-28', budget: 58, used: 14, req: 14, bug: 0 },
+  { id: 'PRJ-014', n: '数据资产中台一期', p: '数据资产中台', pm: '徐磊', tl: '何俊', team: ['何俊', '陈立', '郑宇'], sp: 'Sprint 26-18', pg: 91, h: '健康', st: '进行中', s: '2026-02-10', e: '2026-08-08', budget: 74, used: 68, req: 9, bug: 1 },
+  { id: 'PRJ-019', n: '核心链路稳定性专项', p: '统一支付网关', pm: '林小满', tl: '林小满', team: ['林小满', '李思远'], sp: 'Sprint 26-14', pg: 76, h: '健康', st: '进行中', s: '2026-05-06', e: '2026-09-06', budget: 28, used: 21, req: 7, bug: 4 },
+  { id: 'PRJ-024', n: '研发效能平台建设', p: '内部工具', pm: '徐磊', tl: '陈立', team: ['陈立', '林小满'], sp: 'Sprint 26-03', pg: 18, h: '关注', st: '进行中', s: '2026-07-01', e: '2026-12-20', budget: 36, used: 6, req: 11, bug: 0 },
+  { id: 'PRJ-025', n: '跨境支付能力建设', p: '统一支付网关', pm: '徐磊', tl: '李思远', team: ['李思远'], sp: '—', pg: 0, h: '未开始', st: '待启动', s: '2026-10-01', e: '2027-03-31', budget: 120, used: 0, req: 6, bug: 0 },
+  { id: 'PRJ-012', n: '反洗钱合规改造', p: '智能风控平台', pm: '徐磊', tl: '郑宇', team: ['郑宇', '吴敏'], sp: '—', pg: 100, h: '已完成', st: '已完成', s: '2026-01-05', e: '2026-07-18', budget: 44, used: 43, req: 11, bug: 5 }
+];
+var HT = { '健康': 'success', '关注': 'warning', '风险': 'danger', '已完成': 'brand', '未开始': '' };
+document.getElementById('prjTable').innerHTML =
+  '<thead><tr><th style="width:26%">项目</th><th>产品线</th><th>项目经理</th><th>团队</th><th>当前迭代</th><th style="width:120px">进度</th>' +
+  '<th class="num">需求/缺陷</th><th style="width:110px">预算消耗</th><th>健康度</th><th>周期</th><th style="width:34px"></th></tr></thead><tbody>' +
+  PRJS.map(function (p) {
+    return '<tr onclick="location.href=\'project-detail.html\'">' +
+      '<td><div class="row-flex"><span class="tico ' + (p.st === '已完成' ? 'story' : 'task') + '">' + icon('kanban', 11) + '</span>' +
+      '<div><div class="t-main">' + p.n + '</div><div class="id-link">' + p.id + ' · ' + p.st + '</div></div></div></td>' +
+      '<td class="dim nowrap fz12">' + p.p + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(p.pm, 'sm') + '<span class="fz12">' + p.pm + '</span></div></td>' +
+      '<td>' + UI.avatarGroup(p.team, 4) + '</td>' +
+      '<td class="dim fz12">' + p.sp + '</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(p.pg, p.pg === 100 ? 'green' : p.h === '风险' ? 'red' : p.h === '关注' ? 'orange' : '') + '</div><span class="fz11 dim">' + p.pg + '%</span></div></td>' +
+      '<td class="num fz12"><span style="color:var(--brand-600)">' + p.req + '</span> / <span style="color:var(--danger)">' + p.bug + '</span></td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(Math.round(p.used / p.budget * 100), p.used / p.budget > 0.9 ? 'red' : 'teal', 'thin') + '</div>' +
+      '<span class="fz11 muted">' + p.used + '/' + p.budget + '万</span></div></td>' +
+      '<td><span class="tag ' + HT[p.h] + '">' + p.h + '</span></td>' +
+      '<td class="muted fz11 nowrap">' + p.s.slice(5) + ' ~ ' + p.e.slice(5) + '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'项目设置\',icon:\'settings\'},{label:\'成员管理\',icon:\'users\'},{label:\'归档项目\',icon:\'folder\'}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 项目组合甘特 */
+(function () {
+  var months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+  function pos(d) { var p = d.split('-'); return (+p[1] - 1 + (+p[2]) / 30) / 12 * 100; }
+  var colorOf = { '健康': '#2b5cff', '关注': '#f59e0b', '风险': '#e5484d', '已完成': '#15a86b', '未开始': '#b3bfd0' };
+  var html = '<div class="gantt-grid"><div class="gantt-head"><div class="gantt-name">项目</div><div class="gantt-ticks">' +
+    months.map(function (m) { return '<div>' + m + '</div>'; }).join('') + '</div></div>';
+  PRJS.forEach(function (p) {
+    var l = pos(p.s), r = pos(p.e);
+    html += '<div class="gantt-row"><div class="gantt-name"><span class="dot-status" style="background:' + colorOf[p.h] + '"></span>' +
+      '<span class="fz12">' + p.n + '</span></div><div class="gantt-track">' +
+      '<div class="gantt-bar" style="left:' + l + '%;width:' + (r - l) + '%;background:' + colorOf[p.h] + '">' +
+      '<i class="fill" style="width:' + p.pg + '%"></i><span>' + p.pg + '% · ' + p.tl + '</span></div></div></div>';
+  });
+  html += '<div class="gantt-today" style="left:calc(230px + (100% - 230px) * 0.563)"></div></div>';
+  document.getElementById('prjGantt').innerHTML = html;
+})();
+
+/* 迭代总览 */
+var SPRINTS = [
+  { p: 'PRJ-018 统一支付网关 3.0', s: 'Sprint 26-14', d: '07-14 ~ 07-27', total: 42, done: 28, doing: 9, todo: 5, days: 3, risk: 0, team: ['李思远', '何俊', '王倩', '林小满'] },
+  { p: 'PRJ-021 智能风控决策引擎 V2', s: 'Sprint 26-07', d: '07-14 ~ 07-27', total: 34, done: 14, doing: 12, todo: 8, days: 3, risk: 2, team: ['郑宇', '何俊', '吴敏'] },
+  { p: 'PRJ-016 商户运营中心体验升级', s: 'Sprint 26-22', d: '07-14 ~ 07-27', total: 26, done: 22, doing: 3, todo: 1, days: 3, risk: 0, team: ['王倩', '孙悦'] },
+  { p: 'PRJ-014 数据资产中台一期', s: 'Sprint 26-18', d: '07-14 ~ 07-27', total: 21, done: 19, doing: 2, todo: 0, days: 3, risk: 0, team: ['何俊', '陈立'] },
+  { p: 'PRJ-023 开放平台 OpenAPI 网关', s: 'Sprint 26-05', d: '07-14 ~ 07-27', total: 29, done: 9, doing: 11, todo: 9, days: 3, risk: 1, team: ['陈立', '何俊'] },
+  { p: 'PRJ-019 核心链路稳定性专项', s: 'Sprint 26-14', d: '07-14 ~ 07-27', total: 18, done: 13, doing: 4, todo: 1, days: 3, risk: 0, team: ['林小满', '李思远'] }
+];
+document.getElementById('sprintCards').innerHTML = SPRINTS.map(function (s, i) {
+  var pct = Math.round(s.done / s.total * 100);
+  var actual = [], v = s.total;
+  for (var d = 0; d <= 10; d++) { actual.push(Math.max(0, Math.round(v))); v -= s.total / 10 * (0.6 + Math.random() * 0.9); }
+  return '<div class="card hover-card"><div class="card-body">' +
+    '<div class="flex items-center gap8"><span class="tico task">' + icon('refresh', 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fw6 fz13 ellipsis">' + s.s + '</div><div class="muted fz11">' + s.p + '</div></div>' +
+    (s.risk ? '<span class="tag danger">' + s.risk + ' 阻塞</span>' : '<span class="tag success">正常</span>') + '</div>' +
+    '<div class="flex items-center gap8 mt12 fz11 muted"><span>' + icon('calendar', 12) + ' ' + s.d + '</span>' +
+    '<span class="ml-auto">剩余 <b style="color:var(--warning)">' + s.days + '</b> 天</span></div>' +
+    '<div class="mt8"><div class="bar-multi">' +
+    '<i style="width:' + (s.done / s.total * 100) + '%;background:var(--success)"></i>' +
+    '<i style="width:' + (s.doing / s.total * 100) + '%;background:var(--brand-500)"></i>' +
+    '<i style="width:' + (s.todo / s.total * 100) + '%;background:var(--ink-200)"></i></div>' +
+    '<div class="flex mt8 fz11"><span class="dim">已完成 <b style="color:var(--success)">' + s.done + '</b></span>' +
+    '<span class="dim" style="margin-left:10px">进行中 <b style="color:var(--brand-600)">' + s.doing + '</b></span>' +
+    '<span class="dim" style="margin-left:10px">待办 <b>' + s.todo + '</b></span>' +
+    '<b class="ml-auto">' + pct + '%</b></div></div>' +
+    '<div class="mt12" id="bd' + i + '"></div>' +
+    '<div class="flex items-center mt8" style="padding-top:10px;border-top:1px solid var(--ink-100)">' + UI.avatarGroup(s.team, 4) +
+    '<a class="btn btn-sm ml-auto" href="project-detail.html">进入迭代</a></div>' +
+    '</div></div>';
+}).join('');
+SPRINTS.forEach(function (s, i) {
+  var actual = [s.total], v = s.total;
+  var per = s.total / 10;
+  for (var d = 1; d <= 10; d++) { v -= per * (0.5 + Math.random() * 1.0); actual.push(Math.max(s.total - s.done, Math.round(v))); }
+  Charts.line('#bd' + i, {
+    height: 78, padLeft: 22, ySteps: 2, xTicks: 3,
+    labels: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11'],
+    series: [
+      { name: '理想', data: Array.from({ length: 11 }, function (_, k) { return +(s.total - s.total * k / 10).toFixed(1); }), color: '#dde4ee', dashed: true, dots: false },
+      { name: '剩余', data: actual, color: '#2b5cff', area: true, dots: false }
+    ]
+  });
+});
+
+/* 资源 */
+Charts.bar('#loadChart', {
+  height: 260, stacked: true, labels: ['交易平台组', '风控算法组', '前端体验组', '基础架构组', '质量保障部', '产品部'],
+  series: [
+    { name: '需求交付', data: [186, 142, 128, 96, 88, 112], color: '#2b5cff' },
+    { name: '缺陷修复', data: [42, 38, 26, 18, 64, 8], color: '#e5484d' },
+    { name: '技术债/架构', data: [36, 22, 18, 62, 12, 4], color: '#7c5cff' },
+    { name: '运维值班', data: [18, 12, 8, 48, 16, 0], color: '#b3bfd0' }
+  ], unit: ' 人日'
+});
+Charts.donut('#effortDonut', { size: 170, thickness: 22, center: { value: '862', label: '本月人日' }, data: [
+  { name: '需求交付', value: 512, color: '#2b5cff' }, { name: '缺陷修复', value: 158, color: '#e5484d' },
+  { name: '技术债与架构', value: 108, color: '#7c5cff' }, { name: '运维与值班', value: 84, color: '#b3bfd0' }] });
+
+var MEMS = [
+  ['李思远', '交易平台组', '后端负责人', 3, 21, 20, 105, '过载'], ['何俊', '交易平台组', '高级研发', 4, 22, 20, 110, '过载'],
+  ['王倩', '前端体验组', '前端负责人', 2, 18, 20, 90, '饱和'], ['郑宇', '风控算法组', '研发工程师', 2, 19, 20, 95, '饱和'],
+  ['林小满', '基础架构组', 'SRE 负责人', 3, 16, 20, 80, '正常'], ['吴敏', '质量保障部', '测试工程师', 4, 20, 20, 100, '饱和'],
+  ['陈立', '技术架构组', '首席架构师', 5, 14, 20, 70, '正常'], ['孙悦', '产品部', '产品经理', 2, 15, 20, 75, '正常'],
+  ['赵鹏', '质量保障部', '测试经理', 3, 12, 20, 60, '空闲']
+];
+document.getElementById('memberTable').innerHTML =
+  '<thead><tr><th>成员</th><th>团队</th><th>角色</th><th class="num">在研项目</th><th class="num">已投入</th><th class="num">容量</th>' +
+  '<th style="width:160px">负载率</th><th>状态</th><th>本月主要投入</th></tr></thead><tbody>' +
+  MEMS.map(function (m) {
+    var c = m[6] > 100 ? 'red' : m[6] >= 90 ? 'orange' : m[6] >= 70 ? '' : 'green';
+    var tg = { '过载': 'danger', '饱和': 'warning', '正常': 'success', '空闲': '' }[m[7]];
+    return '<tr><td><div class="row-flex">' + UI.avatar(m[0], 'sm') + '<span class="t-main">' + m[0] + '</span></div></td>' +
+      '<td class="dim fz12">' + m[1] + '</td><td class="dim fz12">' + m[2] + '</td><td class="num">' + m[3] + '</td>' +
+      '<td class="num">' + m[4] + '</td><td class="num muted">' + m[5] + '</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(Math.min(m[6], 100), c) + '</div><b class="fz11">' + m[6] + '%</b></div></td>' +
+      '<td><span class="tag ' + tg + '">' + m[7] + '</span></td>' +
+      '<td class="fz12 dim">PRJ-018 智能路由 · 60%</td></tr>';
+  }).join('') + '</tbody>';
+
+/* 风险 */
+document.getElementById('riskStats').innerHTML = [
+  { l: '高风险', v: 3, c: '#e5484d' }, { l: '中风险', v: 5, c: '#f59e0b' }, { l: '低风险', v: 3, c: '#15a86b' }, { l: '本月已关闭', v: 8, c: '#2b5cff' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon('warn', 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>项</small></div></div>';
+}).join('');
+document.getElementById('riskTable').innerHTML =
+  '<thead><tr><th style="width:30%">风险描述</th><th>项目</th><th>类型</th><th>等级</th><th>影响</th><th>应对策略</th><th>责任人</th><th>状态</th><th>截止</th></tr></thead><tbody>' +
+  [['第三方征信接口 SLA 不达标（可用性 97.2%）', 'PRJ-021', '外部依赖', '高', '里程碑延期 2 周', '启动备用供应商接入 + 本地缓存降级', '郑宇', '处理中', '07-31'],
+   ['支付网关压测 TPS 未达标（8.2k / 12k）', 'PRJ-018', '技术', '高', '影响 V3.0 发布', '增派 2 名性能优化人力，8/3 二次压测', '李思远', '处理中', '08-03'],
+   ['测试人力缺口 3 人，回归排期顺延', 'PRJ-018', '资源', '高', '回归周期 +5 天', '启用自动化补齐 + 跨组借调', '赵鹏', '待决策', '07-29'],
+   ['数字人民币监管细则可能调整', 'PRJ-018', '合规', '中', '需求返工风险', '与监管保持沟通，方案预留扩展点', '周雅', '监控中', '08-15'],
+   ['数据中台指标口径与财务不一致', 'PRJ-014', '业务', '中', '验收受阻', '成立口径对齐专班，双周对账', '何俊', '处理中', '08-05'],
+   ['K8s 集群资源不足影响并行环境', 'PRJ-023', '基础设施', '中', '联调排队', '扩容 12 节点，已提交采购', '林小满', '处理中', '08-10'],
+   ['核心成员单点依赖（路由引擎仅 1 人熟悉）', 'PRJ-018', '组织', '中', '交付连续性风险', '结对开发 + 知识库沉淀', '李思远', '处理中', '08-20'],
+   ['前端框架升级引入兼容性问题', 'PRJ-016', '技术', '中', '部分商户浏览器异常', '灰度发布 + 兼容层', '王倩', '处理中', '08-08'],
+   ['开放平台安全合规评审未启动', 'PRJ-023', '合规', '低', '上线前置条件', '8 月初提交安全评审', '陈立', '未开始', '08-12'],
+   ['效能平台需求边界不清晰', 'PRJ-024', '需求', '低', '范围蔓延', '明确一期范围并冻结', '徐磊', '处理中', '08-01'],
+   ['跨境项目外汇政策不确定', 'PRJ-025', '外部依赖', '低', '启动时间待定', '持续跟踪政策', '李思远', '监控中', '09-30']
+  ].map(function (r) {
+    var lv = { '高': 'danger', '中': 'warning', '低': '' }[r[3]];
+    var st = { '处理中': 'brand', '待决策': 'danger', '监控中': 'warning', '未开始': '' }[r[7]];
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="id-link">' + r[1] + '</td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td><span class="tag ' + lv + '">' + r[3] + '</span></td><td class="dim fz12">' + r[4] + '</td>' +
+      '<td class="fz12 muted">' + r[5] + '</td><td><div class="row-flex">' + UI.avatar(r[6], 'sm') + '<span class="fz12">' + r[6] + '</span></div></td>' +
+      '<td><span class="tag ' + st + '">' + r[7] + '</span></td><td class="dim fz12">' + r[8] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+if (location.search.indexOf('new=1') > -1) setTimeout(function () { UI.openModal('mNewPrj'); }, 200);
+</script>
+</body>
+</html>

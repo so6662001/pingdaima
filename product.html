@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>产品管理 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="product" data-crumb="交付管理/产品管理">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">产品管理</div>
+          <div class="page-desc">产品全景 · 路线图规划 · 版本与发布管理 · 产品价值度量</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn"><span data-icon="calendar"></span>2026 年度</button>
+          <button class="btn" data-toast="路线图已导出为 PDF"><span data-icon="download"></span>导出路线图</button>
+          <button class="btn btn-primary" data-modal="mNewVer"><span data-icon="plus"></span>规划版本</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="p1"><span data-icon="box" data-size="14"></span>产品全景</div>
+        <div class="tab" data-tab="p2"><span data-icon="compass" data-size="14"></span>产品路线图</div>
+        <div class="tab" data-tab="p3"><span data-icon="rocket" data-size="14"></span>版本与发布 <span class="cnt">8</span></div>
+        <div class="tab" data-tab="p4"><span data-icon="chart" data-size="14"></span>产品度量</div>
+      </div>
+
+      <!-- 产品全景 -->
+      <div class="tab-pane active" data-pane="p1">
+        <div class="grid g5 mb16" id="prodStats"></div>
+        <div class="grid g3" id="prodCards"></div>
+        <div class="card mt16">
+          <div class="card-head"><div class="card-title"><span data-icon="layers"></span>产品能力矩阵</div>
+            <div class="card-sub">各产品线核心能力成熟度</div></div>
+          <div class="card-body"><div class="table-wrap"><table class="tbl" id="matrix"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 路线图 -->
+      <div class="tab-pane" data-pane="p2">
+        <div class="toolbar">
+          <div class="btn-group"><button class="active">按产品线</button><button>按业务主题</button><button>按团队</button></div>
+          <div class="filter on"><span data-icon="calendar"></span>时间：<b>2026 全年</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="flag"></span>仅看关键里程碑</div>
+          <div class="ml-auto legend">
+            <span><i style="background:#2b5cff"></i>已交付</span><span><i style="background:#15a86b"></i>进行中</span>
+            <span><i style="background:#7c5cff"></i>已规划</span><span><i style="background:#b3bfd0"></i>候选</span>
+            <span><i style="background:#f59e0b;transform:rotate(45deg);border-radius:1px"></i>里程碑</span>
+          </div>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="gantt" id="roadmap"></div></div></div>
+        <div class="grid g2 mt16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>年度产品战略主题</div></div>
+            <div class="card-body" id="themes"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="flag"></span>关键里程碑与门禁</div></div>
+            <div class="card-body flush"><table class="tbl" id="msTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 版本与发布 -->
+      <div class="tab-pane" data-pane="p3">
+        <div class="grid g-2-1">
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span data-icon="rocket"></span>版本计划</div>
+                <div class="card-head-actions">
+                  <div class="btn-group"><button class="active">进行中</button><button>已发布</button><button>规划中</button></div>
+                </div></div>
+              <div class="card-body flush"><table class="tbl" id="verTable"></table></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span data-icon="history"></span>发布记录</div>
+                <div class="card-sub">近 30 天 24 次发布 · 成功率 95.8%</div></div>
+              <div class="card-body flush"><table class="tbl" id="relTable"></table></div>
+            </div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span data-icon="shieldCheck"></span>发布就绪度检查</div>
+                <div class="card-sub">V3.0 · 统一支付网关</div></div>
+              <div class="card-body" id="readiness"></div>
+              <div class="card-foot"><button class="btn btn-primary btn-block" data-toast="发布评审已发起，通知相关负责人">发起发布评审</button></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title"><span data-icon="box"></span>V3.0 版本内容</div></div>
+              <div class="card-body" id="verContent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 产品度量 -->
+      <div class="tab-pane" data-pane="p4">
+        <div class="grid g4 mb16" id="bizStats"></div>
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>北极星指标趋势</div>
+            <div class="card-sub">月交易笔数（万笔）与支付成功率</div></div>
+            <div class="card-body"><div id="northStar"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>产品健康度评分</div></div>
+            <div class="card-body"><div id="healthRadar"></div></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="zap"></span>新功能采纳率</div></div>
+            <div class="card-body"><div id="adopt"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="comment"></span>客户反馈分类</div></div>
+            <div class="card-body"><div id="feedback"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="thumb"></span>NPS 与满意度</div></div>
+            <div class="card-body"><div id="nps"></div><div class="divider"></div><div id="npsList"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mNewVer">
+  <div class="modal-head"><span data-icon="rocket"></span><span class="modal-title">规划新版本</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>所属产品<span class="req">*</span></label><select class="select"><option>统一支付网关</option><option>商户运营中心</option><option>智能风控平台</option></select></div>
+      <div class="field"><label>版本号<span class="req">*</span></label><input class="input" value="V3.1"></div>
+    </div>
+    <div class="field"><label>版本主题</label><input class="input" placeholder="例如：智能路由与成本优化"></div>
+    <div class="form-row">
+      <div class="field"><label>计划发布日期</label><input class="input" value="2026-11-15"></div>
+      <div class="field"><label>发布负责人</label><select class="select"><option>林小满</option><option>李思远</option></select></div>
+    </div>
+    <div class="field"><label>版本目标</label><textarea class="textarea" placeholder="本版本要达成的业务与技术目标"></textarea></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">自动创建对应的发布检查清单与流水线</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="版本 V3.1 已创建">创建版本</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* 概览指标 */
+document.getElementById('prodStats').innerHTML = [
+  { l: '在营产品线', v: 5, u: '条', i: 'box', c: '#2b5cff', bg: 'var(--brand-50)', f: '覆盖 12.8 万商户' },
+  { l: '在研版本', v: 8, u: '个', i: 'rocket', c: '#7c5cff', bg: 'var(--purple-bg)', f: '3 个本季度发布' },
+  { l: '本季交付需求', v: 74, u: '条', i: 'circleCheck', c: '#15a86b', bg: 'var(--success-bg)', f: '完成率 88%' },
+  { l: '路线图达成率', v: 82, u: '%', i: 'compass', c: '#f59e0b', bg: 'var(--warning-bg)', f: '2 项延期' },
+  { l: '客户 NPS', v: 46, u: '', i: 'thumb', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '较上季 +7' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+/* 产品卡片 */
+var PRODUCTS = [
+  { n: '统一支付网关', code: 'PAY', c: '#2b5cff', pm: '周雅', tech: '李思远', ver: 'V2.9.3', next: 'V3.0（09-30）', req: 41, done: 62, stage: '成长期',
+    kpis: [['月交易额', '¥ 386 亿'], ['支付成功率', '97.4%'], ['P99 延迟', '86ms']], health: 92, sla: '99.982%' },
+  { n: '智能风控平台', code: 'RISK', c: '#e5484d', pm: '郑宇', tech: '郑宇', ver: 'V2.8.0', next: 'V2.9（08-22）', req: 29, done: 48, stage: '成长期',
+    kpis: [['日决策量', '1,240 万'], ['欺诈拦截率', '99.2%'], ['误杀率', '0.06%']], health: 88, sla: '99.995%' },
+  { n: '商户运营中心', code: 'MOC', c: '#15a86b', pm: '孙悦', tech: '王倩', ver: 'V2.5.1', next: 'V2.6（08-20）', req: 26, done: 71, stage: '成熟期',
+    kpis: [['月活商户', '8.6 万'], ['自助率', '78%'], ['工单量', '−32%']], health: 85, sla: '99.96%' },
+  { n: '数据资产中台', code: 'DATA', c: '#7c5cff', pm: '陈立', tech: '何俊', ver: 'V1.3.2', next: 'V1.4（08-08）', req: 18, done: 91, stage: '建设期',
+    kpis: [['接入数据源', '68 个'], ['指标复用率', '64%'], ['取数时效', '−45%']], health: 79, sla: '99.9%' },
+  { n: '开放能力平台', code: 'OPEN', c: '#f59e0b', pm: '孙悦', tech: '陈立', ver: 'V1.3.0', next: 'V1.4（11-28）', req: 14, done: 24, stage: '探索期',
+    kpis: [['接入开发者', '2,148'], ['API 调用量', '4.2 亿/月'], ['文档满意度', '4.6']], health: 71, sla: '99.92%' }
+];
+document.getElementById('prodCards').innerHTML = PRODUCTS.map(function (p) {
+  return '<div class="card hover-card pointer" onclick="UI.toast(\'进入产品：' + p.n + '\')">' +
+    '<div style="height:4px;border-radius:12px 12px 0 0;background:' + p.c + '"></div>' +
+    '<div class="card-body">' +
+    '<div class="flex items-center gap10">' +
+    '<div style="width:38px;height:38px;border-radius:10px;background:' + p.c + '18;color:' + p.c + ';display:grid;place-items:center;font-weight:700;font-size:11px">' + p.code + '</div>' +
+    '<div style="flex:1;min-width:0"><div class="fw6" style="font-size:14px;color:var(--ink-900)">' + p.n + '</div>' +
+    '<div class="muted fz11 mt4">当前 ' + p.ver + ' · 下一版本 ' + p.next + '</div></div>' +
+    '<span class="tag ' + (p.stage === '成熟期' ? 'success' : p.stage === '建设期' ? 'purple' : p.stage === '探索期' ? '' : 'brand') + '">' + p.stage + '</span></div>' +
+    '<div class="grid g3 mt12" style="gap:8px">' + p.kpis.map(function (k) {
+      return '<div style="background:var(--ink-50);border-radius:8px;padding:8px 9px"><div class="muted fz11">' + k[0] + '</div>' +
+        '<div class="fw6 mt4" style="font-size:13px;color:var(--ink-900)">' + k[1] + '</div></div>';
+    }).join('') + '</div>' +
+    '<div class="flex items-center gap8 mt12 fz12"><span class="muted">版本进度</span>' +
+    '<div style="flex:1">' + UI.bar(p.done, p.done > 80 ? 'green' : '') + '</div><b>' + p.done + '%</b></div>' +
+    '<div class="flex items-center gap8 mt12" style="padding-top:10px;border-top:1px solid var(--ink-100)">' +
+    UI.avatar(p.pm, 'sm') + '<span class="fz11 dim">' + p.pm + ' / 产品</span>' +
+    UI.avatar(p.tech, 'sm') + '<span class="fz11 dim">' + p.tech + ' / 研发</span>' +
+    '<span class="ml-auto tag ' + (p.health >= 85 ? 'success' : p.health >= 75 ? 'warning' : 'danger') + '">健康度 ' + p.health + '</span></div>' +
+    '<div class="flex items-center gap12 mt8 fz11 muted"><span>在研需求 <b style="color:var(--ink-700)">' + p.req + '</b></span>' +
+    '<span>可用性 <b style="color:var(--ink-700)">' + p.sla + '</b></span></div>' +
+    '</div></div>';
+}).join('');
+
+/* 能力矩阵 */
+var CAPS = ['交易受理', '渠道路由', '账务清结算', '风控决策', '商户运营', '数据服务', '开放接入'];
+var MAT = {
+  '统一支付网关': [5, 4, 5, 3, 2, 3, 4], '智能风控平台': [2, 1, 1, 5, 2, 4, 3],
+  '商户运营中心': [1, 0, 3, 1, 5, 3, 2], '数据资产中台': [0, 0, 2, 3, 2, 5, 3], '开放能力平台': [3, 2, 1, 2, 2, 3, 5]
+};
+var LVN = ['—', '规划中', '基础', '可用', '成熟', '领先'];
+var LVC = ['#f6f8fb', '#eef2f7', '#dbe4ff', '#b9c9ff', '#5d82ff', '#1d47e6'];
+document.getElementById('matrix').innerHTML =
+  '<thead><tr><th>产品线</th>' + CAPS.map(function (c) { return '<th class="tc">' + c + '</th>'; }).join('') + '<th class="tc">综合成熟度</th></tr></thead><tbody>' +
+  Object.keys(MAT).map(function (k) {
+    var arr = MAT[k];
+    var avg = (arr.reduce(function (a, b) { return a + b; }, 0) / arr.length).toFixed(1);
+    return '<tr><td class="t-main">' + k + '</td>' + arr.map(function (v) {
+      return '<td class="tc"><span style="display:inline-block;min-width:52px;padding:2px 8px;border-radius:6px;font-size:11px;' +
+        'background:' + LVC[v] + ';color:' + (v >= 4 ? '#fff' : v >= 2 ? '#1637b4' : '#8c9ab1') + '">' + LVN[v] + '</span></td>';
+    }).join('') + '<td class="tc"><b>' + avg + '</b> / 5</td></tr>';
+  }).join('') + '</tbody>';
+
+/* 路线图甘特 */
+var Q = ['Q1', 'Q2', 'Q3', 'Q4'];
+var ROAD = [
+  { p: '统一支付网关', items: [
+    { t: '支付核心 2.9 稳定性专项', s: 0, e: 1.6, st: 'done' },
+    { t: '支付网关 3.0 架构重构', s: 1.4, e: 3.0, st: 'doing' },
+    { t: '智能路由与成本优化', s: 2.0, e: 3.2, st: 'doing' },
+    { t: '跨境支付能力建设', s: 3.1, e: 4, st: 'plan' }
+  ], ms: [{ x: 3.0, t: 'V3.0 GA' }] },
+  { p: '智能风控平台', items: [
+    { t: '规则引擎 V2 重构', s: 0.3, e: 2.2, st: 'done' },
+    { t: '实时特征平台', s: 2.0, e: 3.4, st: 'doing' },
+    { t: '风控决策引擎 V2', s: 2.6, e: 4, st: 'doing' },
+    { t: '联邦学习反欺诈模型', s: 3.4, e: 4, st: 'idea' }
+  ], ms: [{ x: 3.8, t: 'V3.0' }] },
+  { p: '商户运营中心', items: [
+    { t: '商户自助服务体系', s: 0, e: 1.8, st: 'done' },
+    { t: '经营分析看板', s: 1.6, e: 2.8, st: 'done' },
+    { t: '体验升级（信息架构重构）', s: 2.4, e: 3.3, st: 'doing' },
+    { t: '商户增长营销工具', s: 3.2, e: 4, st: 'plan' }
+  ], ms: [{ x: 2.65, t: 'V2.6' }] },
+  { p: '数据资产中台', items: [
+    { t: '数据接入与治理一期', s: 0.6, e: 3.0, st: 'doing' },
+    { t: '指标口径统一', s: 2.2, e: 3.1, st: 'doing' },
+    { t: '自助分析与取数', s: 3.0, e: 4, st: 'plan' }
+  ], ms: [{ x: 3.05, t: '一期验收' }] },
+  { p: '开放能力平台', items: [
+    { t: 'OpenAPI 网关建设', s: 2.3, e: 3.9, st: 'doing' },
+    { t: '开发者门户与沙箱', s: 3.2, e: 4, st: 'plan' },
+    { t: '生态伙伴计划', s: 3.6, e: 4, st: 'idea' }
+  ], ms: [] }
+];
+var STC2 = { done: '#2b5cff', doing: '#15a86b', plan: '#7c5cff', idea: '#b3bfd0' };
+(function () {
+  var html = '<div class="gantt-grid"><div class="gantt-head"><div class="gantt-name">产品线 / 举措</div><div class="gantt-ticks">' +
+    Q.map(function (q) { return '<div>2026 ' + q + '</div>'; }).join('') + '</div></div>';
+  ROAD.forEach(function (g) {
+    html += '<div class="gantt-row" style="background:var(--ink-50)"><div class="gantt-name"><b style="font-size:12.5px">' + g.p + '</b></div>' +
+      '<div class="gantt-track">' + g.ms.map(function (m) {
+        return '<div class="milestone" style="left:' + (m.x / 4 * 100) + '%" title="' + m.t + '"></div>' +
+          '<span style="position:absolute;left:calc(' + (m.x / 4 * 100) + '% + 10px);top:50%;transform:translateY(-50%);font-size:10.5px;color:#b8760a">' + m.t + '</span>';
+      }).join('') + '</div></div>';
+    g.items.forEach(function (it) {
+      html += '<div class="gantt-row"><div class="gantt-name" style="padding-left:26px"><span class="dot-status" style="background:' + STC2[it.st] + '"></span><span class="fz12">' + it.t + '</span></div>' +
+        '<div class="gantt-track"><div class="gantt-bar" style="left:' + (it.s / 4 * 100) + '%;width:' + ((it.e - it.s) / 4 * 100) + '%;background:' + STC2[it.st] + '">' +
+        '<span>' + it.t + '</span></div></div></div>';
+    });
+  });
+  html += '<div class="gantt-today" style="left:calc(230px + (100% - 230px) * 0.56)"></div></div>';
+  document.getElementById('roadmap').innerHTML = html;
+})();
+
+document.getElementById('themes').innerHTML = [
+  { t: '降本：支付通道综合成本下降 8%', p: 62, d: '智能路由 · 通道议价 · 失败重试优化', o: '李思远' },
+  { t: '增效：研发交付周期缩短至 12 天', p: 74, d: '需求拆分标准化 · 自动化测试 · 流水线提速', o: '徐磊' },
+  { t: '合规：监管新规 100% 按期落地', p: 88, d: '数字人民币 · 反洗钱 · 数据出境', o: '郑宇' },
+  { t: '生态：开放平台接入开发者 5,000+', p: 43, d: 'OpenAPI 网关 · 沙箱 · 伙伴计划', o: '孙悦' }
+].map(function (t) {
+  return '<div style="padding:9px 0;border-bottom:1px solid var(--ink-100)"><div class="flex items-center gap8 mb4">' +
+    '<b class="fz13">' + t.t + '</b><span class="ml-auto fz12 fw6">' + t.p + '%</span></div>' +
+    UI.bar(t.p, t.p >= 80 ? 'green' : t.p < 50 ? 'orange' : '') +
+    '<div class="flex items-center gap6 mt8"><span class="muted fz11">' + t.d + '</span>' +
+    '<span class="ml-auto">' + UI.avatar(t.o, 'sm') + '</span></div></div>';
+}).join('');
+
+document.getElementById('msTable').innerHTML =
+  '<thead><tr><th>里程碑</th><th>产品</th><th>计划日期</th><th>门禁</th><th>状态</th></tr></thead><tbody>' +
+  [['V3.0 灰度发布', '统一支付网关', '07-28', '压测达标 + 安全评审', '进行中', 'brand'],
+   ['数据中台一期验收', '数据资产中台', '08-08', 'UAT 通过率 ≥ 98%', '进行中', 'brand'],
+   ['V2.6 GA', '商户运营中心', '08-20', '缺陷清零 + 灰度 7 天', '未开始', ''],
+   ['风控 V2.9 上线', '智能风控平台', '08-22', '模型 AUC ≥ 0.92', '未开始', ''],
+   ['V3.0 全量切流', '统一支付网关', '09-30', '灰度无 P0 + 回滚演练', '未开始', ''],
+   ['OpenAPI 网关公测', '开放能力平台', '11-28', '开发者文档完备度 100%', '规划中', 'purple']
+  ].map(function (m) {
+    return '<tr><td class="t-main">' + m[0] + '</td><td class="dim">' + m[1] + '</td><td class="dim">' + m[2] + '</td>' +
+      '<td class="fz12 muted">' + m[3] + '</td><td><span class="tag ' + m[5] + '">' + m[4] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 版本 */
+document.getElementById('verTable').innerHTML =
+  '<thead><tr><th>版本</th><th>产品</th><th>主题</th><th>计划发布</th><th>需求/缺陷</th><th style="width:110px">就绪度</th><th>状态</th><th>负责人</th></tr></thead><tbody>' +
+  [['V3.0', '统一支付网关', '架构重构与智能路由', '2026-09-30', '18 / 6', 68, '开发中', 'brand', '林小满'],
+   ['V2.9', '智能风控平台', '规则热更新与特征平台', '2026-08-22', '12 / 3', 84, '测试中', 'warning', '郑宇'],
+   ['V2.6', '商户运营中心', '体验升级与自助能力', '2026-08-20', '15 / 2', 91, '待发布', 'purple', '王倩'],
+   ['V1.4', '数据资产中台', '指标治理与自助取数', '2026-08-08', '9 / 1', 95, '待发布', 'purple', '何俊'],
+   ['V1.4', '开放能力平台', 'OpenAPI 网关', '2026-11-28', '14 / 0', 22, '规划中', '', '陈立'],
+   ['V3.1', '统一支付网关', '跨境与多币种', '2026-11-15', '11 / 0', 8, '规划中', '', '李思远'],
+   ['V2.9.3', '统一支付网关', '稳定性补丁', '2026-07-24', '3 / 8', 100, '已发布', 'success', '林小满'],
+   ['V2.8.0', '智能风控平台', '反洗钱名单实时同步', '2026-07-18', '6 / 2', 100, '已发布', 'success', '郑宇']
+  ].map(function (v) {
+    return '<tr><td><div class="row-flex"><span class="tico req">' + icon('rocket', 11) + '</span><b>' + v[0] + '</b></div></td>' +
+      '<td class="dim nowrap">' + v[1] + '</td><td class="fz12">' + v[2] + '</td><td class="dim">' + v[3] + '</td>' +
+      '<td class="fz12"><span style="color:var(--brand-600)">' + v[4].split(' / ')[0] + '</span> / <span style="color:var(--danger)">' + v[4].split(' / ')[1] + '</span></td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(v[5], v[5] >= 90 ? 'green' : '', 'thin') + '</div><span class="fz11 muted">' + v[5] + '%</span></div></td>' +
+      '<td><span class="tag ' + v[7] + '">' + v[6] + '</span></td><td><div class="row-flex">' + UI.avatar(v[8], 'sm') + '<span class="fz12">' + v[8] + '</span></div></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('relTable').innerHTML =
+  '<thead><tr><th>发布单</th><th>环境</th><th>版本</th><th>方式</th><th>耗时</th><th>结果</th><th>时间</th></tr></thead><tbody>' +
+  [['REL-20260724-03', '生产', 'V2.9.3', '滚动发布', '12m 40s', '成功', 'success', '今天 02:10'],
+   ['REL-20260723-08', '预发', 'V3.0-rc2', '蓝绿发布', '8m 05s', '成功', 'success', '昨天 21:30'],
+   ['REL-20260723-05', '生产', 'V2.5.1', '灰度 20%', '6m 12s', '已回滚', 'danger', '昨天 15:02'],
+   ['REL-20260722-11', '生产', 'V2.8.0', '滚动发布', '15m 22s', '成功', 'success', '07-22 01:40'],
+   ['REL-20260721-02', '测试', 'V1.4-rc1', '直接部署', '3m 51s', '成功', 'success', '07-21 10:15']
+  ].map(function (r) {
+    return '<tr><td class="mono fz11">' + r[0] + '</td><td><span class="tag ' + (r[1] === '生产' ? 'danger' : r[1] === '预发' ? 'warning' : '') + '">' + r[1] + '</span></td>' +
+      '<td class="fz12">' + r[2] + '</td><td class="dim fz12">' + r[3] + '</td><td class="dim mono fz11">' + r[4] + '</td>' +
+      '<td><span class="tag ' + r[6] + '">' + r[5] + '</span></td><td class="muted fz11">' + r[7] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('readiness').innerHTML = [
+  ['需求全部验收通过', 1, '18/18'], ['测试用例通过率 ≥ 98%', 1, '99.2%'], ['遗留缺陷 P0/P1 清零', 0, '剩 2 个 P1'],
+  ['性能压测达标（12k TPS）', 0, '实测 8.2k'], ['安全扫描无高危漏洞', 1, '0 高危'], ['灰度与回滚方案评审', 1, '已评审'],
+  ['监控告警与预案就绪', 1, '已配置'], ['发布公告与客服培训', 0, '进行中']
+].map(function (c) {
+  return '<div class="flex items-center gap8" style="padding:6px 0">' +
+    '<span class="checkbox' + (c[1] ? ' checked' : '') + '"></span>' +
+    '<span class="fz12" style="flex:1;' + (c[1] ? '' : 'color:var(--ink-800);font-weight:500') + '">' + c[0] + '</span>' +
+    '<span class="tag ' + (c[1] ? 'success' : 'warning') + '">' + c[2] + '</span></div>';
+}).join('') + '<div class="divider"></div><div class="flex items-center gap8"><span class="fz12 dim">整体就绪度</span>' +
+  '<div style="flex:1">' + UI.bar(68, 'orange') + '</div><b>68%</b></div>';
+
+document.getElementById('verContent').innerHTML = [
+  ['bulb', 'req', 'REQ-2041 多渠道智能路由能力', 'P0 · 评审中'],
+  ['bulb', 'req', 'REQ-2040 数字人民币支付', 'P0 · 开发中'],
+  ['bulb', 'req', 'REQ-2035 对账自动核销', 'P1 · 开发中'],
+  ['bulb', 'req', 'REQ-2031 成功率实时大盘', 'P1 · 已完成'],
+  ['bug', 'bug', 'BUG-762 钱包签约回调重复通知', 'P1 · 修复中'],
+  ['bug', 'bug', 'BUG-770 备用通道限额校验缺失', 'P1 · 已修复']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:6px 0;cursor:pointer">' +
+    '<span class="tico ' + r[1] + '">' + icon(r[0], 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + r[2] + '</div><div class="muted fz11">' + r[3] + '</div></div></div>';
+}).join('') + '<a class="btn btn-sm btn-block mt8" href="requirement.html">查看全部 18 项</a>';
+
+/* 产品度量 */
+document.getElementById('bizStats').innerHTML = [
+  { l: '月交易额', v: '¥386', u: '亿', t: '+12.4%', up: 1, i: 'trendUp', c: '#2b5cff' },
+  { l: '支付成功率', v: '97.4', u: '%', t: '+0.6pt', up: 1, i: 'target', c: '#15a86b' },
+  { l: '月活商户', v: '8.6', u: '万', t: '+4.2%', up: 1, i: 'users', c: '#7c5cff' },
+  { l: '客诉率', v: '0.032', u: '%', t: '−18%', up: 0, i: 'comment', c: '#f59e0b' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span class="trend ' + (s.up ? 'up' : 'down') + '">' + icon(s.up ? 'arrowUp' : 'arrowDown', 12) + s.t + '</span><span>环比</span></div></div>';
+}).join('');
+
+Charts.bar('#northStar', {
+  height: 250, labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '交易笔数', data: [2180, 2260, 2420, 2510, 2680, 2960, 3120], color: '#2b5cff' }],
+  lineSeries: { name: '支付成功率(%)', data: [96.2, 96.5, 96.4, 96.9, 97.0, 97.2, 97.4], color: '#15a86b' }, lineMax: 100, unit: ' 万笔'
+});
+Charts.radar('#healthRadar', {
+  size: 250, axes: ['功能完备', '性能', '稳定性', '易用性', '安全合规', '可扩展'],
+  series: [{ name: '支付网关', data: [92, 78, 95, 82, 90, 76], color: '#2b5cff' },
+    { name: '风控平台', data: [85, 88, 92, 70, 95, 82], color: '#e5484d' }]
+});
+Charts.hbar('#adopt', { unit: '%', data: [
+  { name: '数字人民币收银台', value: 34, color: '#2b5cff' }, { name: '结算单自助下载', value: 71, color: '#15a86b' },
+  { name: '风控规则热更新', value: 88, color: '#7c5cff' }, { name: '经营分析看板', value: 56, color: '#f59e0b' },
+  { name: '开放 API 沙箱', value: 23, color: '#b3bfd0' }] });
+Charts.donut('#feedback', { size: 140, thickness: 18, center: { value: '486', label: '本月反馈' }, data: [
+  { name: '功能建议', value: 186, color: '#2b5cff' }, { name: '体验问题', value: 142, color: '#f59e0b' },
+  { name: '性能反馈', value: 88, color: '#7c5cff' }, { name: '缺陷报告', value: 70, color: '#e5484d' }] });
+Charts.gauge('#nps', { value: 46, max: 100, text: '46', label: 'NPS 净推荐值', color: '#0fb5ba', size: 170 });
+document.getElementById('npsList').innerHTML = [['推荐者', 58, 'green'], ['中立者', 30, 'orange'], ['贬损者', 12, 'red']].map(function (r) {
+  return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2], 'thin') + '</div>';
+}).join('');
+</script>
+</body>
+</html>
