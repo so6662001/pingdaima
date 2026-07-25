@@ -103,6 +103,15 @@
 
           <div class="card">
             <div class="card-head">
+              <div class="card-title"><span data-icon="inbox"></span>客户之声</div>
+              <div class="card-sub">工单 / 客户诉求</div>
+              <div class="card-head-actions"><a class="btn btn-sm btn-ghost" href="ticket.html">工单台<span data-icon="right"></span></a></div>
+            </div>
+            <div class="card-body" style="padding:12px 16px" id="voiceBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
               <div class="card-title"><span data-icon="calendar"></span>关键里程碑</div>
             </div>
             <div class="card-body" style="padding:12px 16px" id="msBox"></div>
@@ -221,7 +230,8 @@ document.getElementById('paneAssign').innerHTML = [
   { type: 'bug', ico: 'bug', title: 'BUG-771 生产环境对账任务超时（已升级 P0）', meta: '林小满 上报 · 影响商户 128 家', tag: UI.priority('P0'), time: '超时 2h', href: 'testing.html' },
   { type: 'task', ico: 'kanban', title: '审定 2026 H2 研发人力预算方案', meta: '中心管理部 · 截止 08-05', tag: UI.priority('P2'), time: '还剩 11 天' },
   { type: 'req', ico: 'bulb', title: 'REQ-2044 监管报送口径调整（合规必达）', meta: '合规部提出 · 需求澄清', tag: UI.priority('P0'), time: '今天' },
-  { type: 'task', ico: 'users', title: '完成交易平台组 3 名候选人终面', meta: 'HRBP · 本周内', tag: UI.priority('P2'), time: '还剩 3 天' }
+  { type: 'task', ico: 'users', title: '完成交易平台组 3 名候选人终面', meta: 'HRBP · 本周内', tag: UI.priority('P2'), time: '还剩 3 天' },
+  { type: 'req', ico: 'inbox', title: 'TK-3821 战略客户账单导出超时（SLA 剩余 1.5h）', meta: '华南连锁商超集团 · 影响 32 家门店', tag: UI.priority('P1'), time: '今天', href: 'ticket.html' }
 ].map(itemRow).join('');
 document.getElementById('paneCc').innerHTML = [
   { type: 'story', ico: 'circleCheck', title: 'Sprint 26-14 迭代验收通过，交付 38 故事点', meta: '徐磊 · 统一支付网关 3.0 重构', tag: '<span class="tag success">已完成</span>', time: '昨天', href: 'project-detail.html' },
@@ -262,6 +272,24 @@ document.getElementById('riskBox').innerHTML = risks.map(function (r) {
     '<div class="flex items-center gap6 mt8">' + UI.avatar(r.who, 'sm') + '<span class="fz11 dim">' + r.who + '</span>' +
     '<button class="btn btn-sm ml-auto" data-toast="已发起风险决策会议">决策</button></div></div></div></div>';
 }).join('');
+
+/* 6.5 客户之声 */
+document.getElementById('voiceBox').innerHTML =
+  '<div class="grid g3 mb12" style="gap:8px">' +
+  [['未关闭工单', '23', 'var(--brand-600)'], ['SLA 超时', '3', 'var(--danger)'], ['满意度', '4.6', 'var(--success)']]
+    .map(function (k) {
+      return '<div style="background:var(--ink-50);border-radius:8px;padding:8px 10px"><div class="muted fz11">' + k[0] + '</div>' +
+        '<div class="fw6" style="font-size:16px;color:' + k[2] + '">' + k[1] + '</div></div>';
+    }).join('') + '</div>' +
+  '<div class="fz12 fw6 mb8">客户呼声最高的需求</div>' +
+  [['REQ-2036 商户账单异步导出', 8, '评审中', 'warning'], ['REQ-2019 门店维度分账能力', 6, '待排期', 'purple'],
+   ['REQ-2037 API 限流可视化配置', 5, '待排期', 'purple']].map(function (v) {
+    return '<div class="flex items-center gap8" style="padding:6px 0"><span class="tico req">' + icon('bulb', 11) + '</span>' +
+      '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + v[0] + '</div>' +
+      '<div class="muted fz11">' + v[1] + ' 家客户提出</div></div>' +
+      '<span class="tag ' + v[3] + '">' + v[2] + '</span></div>';
+  }).join('') +
+  '<a class="btn btn-sm btn-block mt8" href="customer.html">查看客户跟踪</a>';
 
 /* 7. 里程碑 */
 var ms = [

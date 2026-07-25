@@ -10,30 +10,44 @@
       ]
     },
     {
-      group: '交付管理', items: [
+      group: '需求与客户', items: [
         { key: 'requirement', name: '需求管理', icon: 'bulb', href: 'requirement.html', badge: '12' },
+        { key: 'ticket', name: '工单管理', icon: 'inbox', href: 'ticket.html', badge: '23' },
+        { key: 'customer', name: '客户跟踪', icon: 'building', href: 'customer.html' }
+      ]
+    },
+    {
+      group: '交付管理', items: [
         { key: 'product', name: '产品管理', icon: 'box', href: 'product.html' },
         { key: 'project', name: '项目管理', icon: 'kanban', href: 'project.html' },
+        { key: 'agile', name: '敏捷迭代', icon: 'refresh', href: 'agile.html' },
         { key: 'testing', name: '测试管理', icon: 'flask', href: 'testing.html' }
       ]
     },
     {
       group: '工程效能', items: [
         { key: 'devops', name: '代码与 CI', icon: 'branch', href: 'devops.html' },
+        { key: 'worklog', name: '智能工时', icon: 'timer', href: 'worklog.html' },
         { key: 'metrics', name: '效能度量', icon: 'chart', href: 'metrics.html' }
       ]
     },
     {
       group: '组织协同', items: [
+        { key: 'retro', name: '复盘中心', icon: 'history', href: 'retro.html' },
         { key: 'wiki', name: '知识库', icon: 'book', href: 'wiki.html' },
+        { key: 'portal', name: '业务方门户', icon: 'share', href: 'portal.html' },
         { key: 'settings', name: '系统设置', icon: 'settings', href: 'settings.html' }
       ]
     }
   ];
 
   var SEARCH_INDEX = [
-    { t: 'REQ-2041 支付网关多渠道路由能力', d: '需求 · 交易平台', href: 'requirement-detail.html', ico: 'bulb' },
+    { t: 'REQ-2041 支付网关多渠道路由能力', d: '需求 · 交易平台 · 来源 TK-3821', href: 'requirement-detail.html', ico: 'bulb' },
     { t: 'REQ-2036 商户后台账单导出优化', d: '需求 · 商户中心', href: 'requirement.html', ico: 'bulb' },
+    { t: 'TK-3821 大额账单导出超时，影响门店对账', d: '工单 · 华南连锁商超集团 · P1', href: 'ticket.html', ico: 'inbox' },
+    { t: '华南连锁商超集团', d: '客户 · 战略客户 · 在跟需求 6 条', href: 'customer.html', ico: 'building' },
+    { t: 'Sprint 26-14 迭代回顾', d: '复盘 · 交易平台组 · 改进项 5 项', href: 'retro.html', ico: 'history' },
+    { t: '我的工时（自动采集）', d: '智能工时 · 本周 32.5 小时', href: 'worklog.html', ico: 'timer' },
     { t: 'PRJ-018 支付网关 3.0 重构', d: '项目 · 进行中', href: 'project-detail.html', ico: 'kanban' },
     { t: 'PROD-03 智能风控平台', d: '产品 · V2.8', href: 'product.html', ico: 'box' },
     { t: 'TP-2026-07 支付网关 3.0 回归测试计划', d: '测试计划 · 执行中', href: 'testing.html', ico: 'flask' },

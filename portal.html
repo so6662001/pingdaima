@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>业务方门户 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  body { background: #f4f7fb; }
+  .p-top {
+    height: 58px; background: #fff; border-bottom: 1px solid var(--ink-200);
+    display: flex; align-items: center; gap: 18px; padding: 0 28px; position: sticky; top: 0; z-index: 30;
+  }
+  .p-nav { display: flex; gap: 4px; margin-left: 14px; }
+  .p-nav a {
+    padding: 7px 14px; border-radius: 8px; font-size: 13px; color: var(--ink-500); cursor: pointer;
+  }
+  .p-nav a:hover { background: var(--ink-100); color: var(--ink-800); }
+  .p-nav a.active { background: var(--brand-50); color: var(--brand-600); font-weight: 600; }
+  .p-wrap { max-width: 1180px; margin: 0 auto; padding: 22px 24px 60px; }
+  .hero {
+    background: linear-gradient(115deg, #1f3a8a 0%, #2b5cff 45%, #6b4cff 100%);
+    border-radius: 16px; padding: 24px 28px; color: #fff; position: relative; overflow: hidden;
+  }
+  .hero::after {
+    content: ''; position: absolute; right: -60px; top: -80px; width: 320px; height: 320px;
+    border-radius: 50%; background: rgba(255, 255, 255, .09);
+  }
+  .hero-stat { background: rgba(255, 255, 255, .14); border-radius: 12px; padding: 12px 16px; backdrop-filter: blur(4px); }
+  /* 需求进度步骤条 */
+  .steps { display: flex; align-items: center; gap: 0; margin: 14px 0 4px; }
+  .step { flex: 1; text-align: center; position: relative; }
+  .step .dot {
+    width: 22px; height: 22px; border-radius: 50%; margin: 0 auto 6px; display: grid; place-items: center;
+    background: var(--ink-100); color: var(--ink-400); border: 2px solid #fff; position: relative; z-index: 2;
+  }
+  .step.done .dot { background: var(--success); color: #fff; }
+  .step.cur .dot { background: var(--brand-500); color: #fff; box-shadow: 0 0 0 4px var(--brand-100); }
+  .step .lb { font-size: 11px; color: var(--ink-400); }
+  .step.done .lb, .step.cur .lb { color: var(--ink-700); font-weight: 500; }
+  .step::before {
+    content: ''; position: absolute; top: 11px; left: -50%; width: 100%; height: 2px; background: var(--ink-100); z-index: 1;
+  }
+  .step:first-child::before { display: none; }
+  .step.done::before, .step.cur::before { background: var(--success); }
+</style>
+</head>
+<body>
+
+<header class="p-top">
+  <div class="flex items-center gap10">
+    <div class="brand-mark">DF</div>
+    <div><div style="font-size:14.5px;font-weight:600;color:var(--ink-900)">DevFlow 业务方门户</div>
+      <div class="muted" style="font-size:10.5px;letter-spacing:.5px">研发进度实时同步</div></div>
+  </div>
+  <nav class="p-nav">
+    <a class="active" data-p="v1">需求进度</a>
+    <a data-p="v2">我的工单</a>
+    <a data-p="v3">版本发布</a>
+    <a data-p="v4">研发进展</a>
+  </nav>
+  <div class="ml-auto flex items-center gap10">
+    <div class="topbar-search" style="width:240px"><span data-icon="search" data-size="15"></span>
+      <input placeholder="搜索我的需求 / 工单" style="padding-left:32px"></div>
+    <button class="btn btn-primary btn-sm" data-modal="mSubmit"><span data-icon="plus" data-size="14"></span>提交需求</button>
+    <button class="icon-btn"><span data-icon="bell" data-size="17"></span><i class="dot"></i></button>
+    <div class="user-chip"><span class="avatar" style="background:#0fb5ba">ZM</span>
+      <div><div class="u-name">张敏</div><div class="u-role">市场运营部</div></div>
+      <span data-icon="down" data-size="13"></span></div>
+  </div>
+</header>
+
+<div class="p-wrap">
+
+  <!-- Hero -->
+  <div class="hero mb16">
+    <div style="position:relative;z-index:1">
+      <div class="flex items-center gap8">
+        <span style="font-size:20px;font-weight:650">你好，张敏</span>
+        <span class="tag" style="background:rgba(255,255,255,.2);color:#fff">市场运营部</span>
+      </div>
+      <div style="opacity:.85;font-size:13px;margin-top:6px">
+        你提交的 <b>8</b> 条需求中，<b>5</b> 条正在研发中，<b>2</b> 条将在本月上线；有 <b>1</b> 条需要你确认验收。
+      </div>
+      <div class="grid g4 mt16" style="gap:12px" id="heroStats"></div>
+    </div>
+  </div>
+
+  <!-- 需求进度 -->
+  <div class="p-pane" data-p="v1">
+    <div class="flex items-center gap8 mb12">
+      <b style="font-size:15px">我提交的需求</b>
+      <span class="tag brand">8 条</span>
+      <div class="pills ml-auto"><span class="pill active">全部</span><span class="pill">研发中</span><span class="pill">待我确认</span><span class="pill">已上线</span></div>
+    </div>
+    <div id="reqCards"></div>
+  </div>
+
+  <!-- 我的工单 -->
+  <div class="p-pane" data-p="v2" style="display:none">
+    <div class="grid g4 mb16" id="tkStats"></div>
+    <div class="card">
+      <div class="card-head"><div class="card-title"><span data-icon="inbox"></span>我提交的工单</div>
+        <div class="card-head-actions"><button class="btn btn-sm btn-primary" data-toast="工单已提交，客服将在 30 分钟内响应"><span data-icon="plus" data-size="13"></span>提交工单</button></div></div>
+      <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="tkTable"></table></div></div>
+    </div>
+    <div class="grid g2 mt16">
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>服务时效承诺</div></div>
+        <div class="card-body" id="slaBox"></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="help"></span>常见问题自助</div></div>
+        <div class="card-body" id="faq"></div></div>
+    </div>
+  </div>
+
+  <!-- 版本发布 -->
+  <div class="p-pane" data-p="v3" style="display:none">
+    <div class="card mb16">
+      <div class="card-head"><div class="card-title"><span data-icon="rocket"></span>近期版本发布计划</div>
+        <div class="card-sub">与你相关的内容已高亮</div>
+        <div class="card-head-actions"><button class="btn btn-sm" data-toast="已订阅版本发布通知"><span data-icon="bell" data-size="13"></span>订阅发布通知</button></div></div>
+      <div class="card-body" id="releaseTimeline"></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>已发布版本</div></div>
+        <div class="card-body flush"><table class="tbl" id="relTable"></table></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="calendar"></span>发布节奏说明</div></div>
+        <div class="card-body" id="cadenceNote"></div></div>
+    </div>
+  </div>
+
+  <!-- 研发进展 -->
+  <div class="p-pane" data-p="v4" style="display:none">
+    <div class="grid g-2-1 mb16">
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="refresh"></span>本期研发进展（07-14 ~ 07-27）</div>
+        <div class="card-sub">研发团队本周期正在交付的内容</div></div>
+        <div class="card-body" id="sprintNow"></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>整体交付情况</div></div>
+        <div class="card-body"><div id="deliverChart"></div>
+          <div class="divider"></div><div id="deliverStats"></div></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="calendar"></span>下期计划（07-28 ~ 08-10）</div></div>
+        <div class="card-body" id="sprintNext"></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="comment"></span>研发团队公告</div></div>
+        <div class="card-body" id="notices"></div></div>
+    </div>
+  </div>
+
+  <div class="tc muted fz11 mt20">
+    数据每 15 分钟自动同步自研发系统 · 本视图为只读 · 如需调整需求优先级请联系产品负责人 周雅
+  </div>
+</div>
+
+<!-- 提交需求 -->
+<div class="modal" id="mSubmit" style="width:620px">
+  <div class="modal-head"><span data-icon="bulb"></span><span class="modal-title">提交需求</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16">提交后会由产品经理在 <b>2 个工作日</b>内完成初审并与你确认；通过后进入价值评审会排序，你可在本页面随时查看进度。</div>
+    <div class="field"><label>你希望解决什么问题？<span class="req">*</span></label>
+      <input class="input" placeholder="用一句话描述，例如：希望商户账单能一次性导出全月数据"></div>
+    <div class="field"><label>详细说明<span class="req">*</span></label>
+      <textarea class="textarea" placeholder="现在是怎么做的？遇到什么困难？期望达到什么效果？涉及多少人/多少业务量？"></textarea></div>
+    <div class="form-row">
+      <div class="field"><label>涉及业务系统</label><select class="select"><option>商户运营中心</option><option>统一支付网关</option><option>数据报表</option><option>不确定</option></select></div>
+      <div class="field"><label>期望完成时间</label><input class="input" placeholder="例如：8 月底前"></div>
+    </div>
+    <div class="field"><label>紧急程度（请如实评估）</label>
+      <div class="pills"><span class="pill">不急，有排期即可</span><span class="pill active">较急，本季度需要</span><span class="pill">非常急，影响业务开展</span></div></div>
+    <div class="field"><label>业务影响（有助于优先级评估）</label>
+      <div class="grid g3" style="gap:8px">
+        <input class="input" placeholder="涉及人数/门店数"><input class="input" placeholder="涉及金额"><input class="input" placeholder="每月耗时">
+      </div></div>
+    <div class="field"><label>附件</label>
+      <div style="border:1.5px dashed var(--ink-200);border-radius:8px;padding:16px;text-align:center;color:var(--ink-400)">
+        <span data-icon="upload" data-size="20"></span><div class="fz12 mt4">上传截图、表格等辅助材料</div></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="需求已提交，产品经理将在 2 个工作日内与你确认">提交需求</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('heroStats').innerHTML = [
+  ['我提交的需求', '8 条', '本季度累计'], ['研发中', '5 条', '含 2 条本月上线'],
+  ['待我确认验收', '1 条', '请尽快处理'], ['我的工单', '3 条', '1 条处理中']
+].map(function (s) {
+  return '<div class="hero-stat"><div style="font-size:11.5px;opacity:.8">' + s[0] + '</div>' +
+    '<div style="font-size:21px;font-weight:650;margin-top:4px">' + s[1] + '</div>' +
+    '<div style="font-size:11px;opacity:.7;margin-top:2px">' + s[2] + '</div></div>';
+}).join('');
+
+/* 需求进度卡片 */
+var STAGES = ['已提交', '需求评审', '已排期', '研发中', '测试中', '已上线'];
+var MY_REQS = [
+  { id: 'REQ-2036', t: '商户后台大额账单异步导出与进度提醒', stage: 1, eta: '2026-08-20', owner: '周雅', dev: '王倩',
+    st: '需求评审中', c: 'warning', why: '已通过产品初审，7 月 27 日提交价值评审会排序',
+    news: [['07-25', '产品经理已完成需求澄清，补充了 3 条验收标准'], ['07-22', '已合并另外 7 家客户的同类诉求，价值评分提升至 76']],
+    val: 76, urg: 82, cust: 8, from: '工单 TK-3821' },
+  { id: 'REQ-2039', t: '商户结算单据自助下载与批量归档', stage: 3, eta: '2026-08-20', owner: '孙悦', dev: '王倩',
+    st: '研发中（78%）', c: 'brand', why: '预计 8 月 12 日进入测试，8 月 20 日随版本上线',
+    news: [['07-24', '前端页面开发完成，正在联调下载服务'], ['07-18', '已进入 07-14 开始的研发周期']],
+    val: 68, urg: 55, cust: 4, from: '客户反馈' },
+  { id: 'REQ-2044', t: '营销活动核销数据实时看板', stage: 2, eta: '2026-09-15', owner: '孙悦', dev: '何俊',
+    st: '已排期（下期开始）', c: 'purple', why: '已排入 7 月 28 日开始的研发周期',
+    news: [['07-23', '技术方案评审通过，预估投入 16 人日'], ['07-15', '价值评审会通过，优先级 P2']],
+    val: 62, urg: 48, cust: 2, from: '产品规划' },
+  { id: 'REQ-2031', t: '支付成功率实时大盘与自动告警', stage: 5, eta: '已上线 07-18', owner: '周雅', dev: '林小满',
+    st: '已上线', c: 'success', why: '上线 7 天，支付成功率提升 1.8pt，已超出预期目标',
+    news: [['07-25', '价值复盘完成：成功率 +1.8pt（目标 +1.5pt），结论「超预期」'], ['07-18', '已上线生产环境，灰度 100% 无异常']],
+    val: 79, urg: 72, cust: 3, from: '客户经理转达', done: 1 },
+  { id: 'REQ-2028', t: '统一登录与多因子认证升级', stage: 0, eta: '待定', owner: '周雅', dev: '—',
+    st: '已挂起', c: '', why: '与安全中台规划重复，已合并至 SEC-1102 统一实施',
+    news: [['07-10', '需求评审未通过，原因：与安全中台规划重复']],
+    val: 44, urg: 30, cust: 1, from: '内部反馈' }
+];
+document.getElementById('reqCards').innerHTML = MY_REQS.map(function (r) {
+  return '<div class="card mb12"><div class="card-body">' +
+    '<div class="flex items-start gap10">' +
+    '<span class="tico req" style="width:26px;height:26px">' + icon('bulb', 13) + '</span>' +
+    '<div style="flex:1;min-width:0">' +
+    '<div class="flex items-center gap8"><b style="font-size:14.5px;color:var(--ink-900)">' + r.t + '</b>' +
+    '<span class="tag ' + r.c + '">' + r.st + '</span>' +
+    (r.done ? '<span class="tag success">价值超预期</span>' : '') + '</div>' +
+    '<div class="flex items-center gap12 mt4 fz12 muted"><span>编号 ' + r.id + '</span>' +
+    '<span>来源：' + r.from + '</span><span>产品负责人 ' + r.owner + '</span>' +
+    (r.dev !== '—' ? '<span>研发负责人 ' + r.dev + '</span>' : '') + '</div></div>' +
+    '<div class="tc" style="flex:none"><div class="muted fz11">预计上线</div>' +
+    '<div class="fw6 fz13" style="color:' + (r.done ? 'var(--success)' : 'var(--ink-900)') + '">' + r.eta + '</div></div>' +
+    '</div>' +
+
+    '<div class="steps">' + STAGES.map(function (s, i) {
+      var cls = r.stage > i ? 'done' : r.stage === i ? 'cur' : '';
+      return '<div class="step ' + cls + '"><div class="dot">' + (r.stage > i ? icon('check', 12) : (i + 1)) + '</div>' +
+        '<div class="lb">' + s + '</div></div>';
+    }).join('') + '</div>' +
+
+    '<div class="tl-box" style="margin-top:12px">' + icon('bulb', 12) + ' ' + r.why + '</div>' +
+
+    '<div class="grid g-2-1 mt12" style="gap:14px">' +
+    '<div><div class="fz12 fw6 mb8">最近进展</div>' + r.news.map(function (n) {
+      return '<div class="flex items-start gap8" style="padding:4px 0"><span class="muted fz11" style="width:42px;flex:none">' + n[0] + '</span>' +
+        '<span class="fz12" style="color:var(--ink-600)">' + n[1] + '</span></div>';
+    }).join('') + '</div>' +
+    '<div><div class="fz12 fw6 mb8">评估结果</div>' +
+    '<div class="flex items-center gap8 fz12 mb4"><span class="dim" style="width:56px">业务价值</span>' +
+    '<div style="flex:1">' + UI.bar(r.val, r.val >= 70 ? 'green' : '', 'thin') + '</div><b>' + r.val + '</b></div>' +
+    '<div class="flex items-center gap8 fz12 mb4"><span class="dim" style="width:56px">紧急程度</span>' +
+    '<div style="flex:1">' + UI.bar(r.urg, r.urg >= 70 ? 'orange' : '', 'thin') + '</div><b>' + r.urg + '</b></div>' +
+    '<div class="muted fz11 mt4">共 ' + r.cust + ' 个部门/客户提出同类诉求</div></div></div>' +
+
+    '<div class="flex items-center gap8 mt12" style="padding-top:12px;border-top:1px solid var(--ink-100)">' +
+    (r.done ? '<button class="btn btn-sm btn-primary" data-toast="感谢你的评价！">' + icon('thumb', 13) + '评价交付效果</button>'
+      : '<button class="btn btn-sm" data-toast="已向产品负责人发送催办提醒">' + icon('bell', 13) + '催办</button>') +
+    '<button class="btn btn-sm" data-toast="已发送补充说明">' + icon('comment', 13) + '补充说明</button>' +
+    '<span class="ml-auto muted fz11">最近更新 ' + r.news[0][0] + '</span></div>' +
+    '</div></div>';
+}).join('');
+
+/* 工单 */
+document.getElementById('tkStats').innerHTML = [
+  ['我的工单', '3 条', 'inbox', '#2b5cff'], ['处理中', '1 条', 'refresh', '#f59e0b'],
+  ['已解决', '2 条', 'circleCheck', '#15a86b'], ['平均解决时长', '5.2 小时', 'timer', '#7c5cff']
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s[3] + '16;color:' + s[3] + '">' + icon(s[2], 15) + '</span>' +
+    '<span class="stat-label">' + s[0] + '</span></div><div class="stat-val">' + s[1] + '</div></div>';
+}).join('');
+document.getElementById('tkTable').innerHTML =
+  '<thead><tr><th>工单</th><th>类型</th><th>提交时间</th><th>处理人</th><th>预计解决</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
+  [['TK-3826', '活动核销数据导出后金额不一致', '数据订正', '今天 10:20', '何俊', '今天 18:00', '处理中', 'brand'],
+   ['TK-3798', '商户后台批量上传门店信息失败', '故障报障', '07-18', '王倩', '已解决', '已解决', 'success'],
+   ['TK-3765', '希望增加活动效果对比功能', '需求建议', '07-08', '孙悦', '已转需求 REQ-2044', '已转需求', 'purple']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[1] + '<div class="id-link">' + r[0] + '</div></td>' +
+      '<td class="dim fz12">' + r[2] + '</td><td class="dim fz12">' + r[3] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[4], 'sm') + '<span class="fz12">' + r[4] + '</span></div></td>' +
+      '<td class="fz12">' + r[5] + '</td><td><span class="tag ' + r[7] + '">' + r[6] + '</span></td>' +
+      '<td><button class="btn btn-sm" data-toast="已发送催办">催办</button></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('slaBox').innerHTML = [
+  ['非常紧急（业务停摆）', '15 分钟响应', '1 小时内解决'], ['紧急（影响业务）', '30 分钟响应', '4 小时内解决'],
+  ['一般问题', '2 小时响应', '1 个工作日'], ['咨询与建议', '1 个工作日', '3 个工作日']
+].map(function (s) {
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="fz12 fw5" style="flex:1">' + s[0] + '</span>' +
+    '<span class="tag brand">' + s[1] + '</span><span class="tag success">' + s[2] + '</span></div>';
+}).join('');
+document.getElementById('faq').innerHTML = [
+  '账单导出失败怎么办？（可先按周分批导出）', '如何申请商户后台的新权限？', '数据报表口径在哪里查询？',
+  '需求提交后多久能得到答复？', '如何查看我提交需求的排期情况？'
+].map(function (f) {
+  return '<div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100);cursor:pointer">' +
+    icon('help', 14) + '<span class="fz12" style="flex:1">' + f + '</span>' + icon('right', 13) + '</div>';
+}).join('');
+
+/* 版本发布 */
+document.getElementById('releaseTimeline').innerHTML = [
+  { v: 'V2.6 商户运营中心', d: '2026-08-20', days: '26 天后', st: '研发中', c: 'brand', mine: 2,
+    items: ['商户结算单据自助下载与批量归档（你提交）', '商户后台大额账单异步导出（你提交）', '商户中心首页信息架构重构', '批量退款进度提示'] },
+  { v: 'V2.9 智能风控平台', d: '2026-08-22', days: '28 天后', st: '测试中', c: 'warning', mine: 0,
+    items: ['风控规则热更新与灰度发布', '反洗钱名单库实时同步优化'] },
+  { v: 'V3.0 统一支付网关', d: '2026-09-30', days: '67 天后', st: '研发中', c: 'brand', mine: 1,
+    items: ['支付网关多渠道智能路由', '收银台支持数字人民币支付', '交易对账文件自动核销', '营销活动核销数据实时看板（你提交）'] },
+  { v: 'V1.4 数据资产中台', d: '2026-08-08', days: '14 天后', st: '待发布', c: 'purple', mine: 0,
+    items: ['指标口径统一治理', '自助取数能力一期'] }
+].sort(function (a, b) { return a.d.localeCompare(b.d); }).map(function (r) {
+  return '<div class="flex items-start gap12" style="padding:12px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div class="tc" style="width:74px;flex:none"><div class="fw6 fz15">' + r.d.slice(5) + '</div>' +
+    '<div class="muted fz11">' + r.days + '</div></div>' +
+    '<div style="width:3px;align-self:stretch;border-radius:3px;background:var(--' + (r.c === 'brand' ? 'brand-500' : r.c === 'warning' ? 'warning' : 'purple') + ')"></div>' +
+    '<div style="flex:1;min-width:0"><div class="flex items-center gap8"><b class="fz13">' + r.v + '</b>' +
+    '<span class="tag ' + r.c + '">' + r.st + '</span>' +
+    (r.mine ? '<span class="tag success">含你的 ' + r.mine + ' 条需求</span>' : '') + '</div>' +
+    '<div class="mt8">' + r.items.map(function (it) {
+      var mine = it.indexOf('你提交') > -1;
+      return '<div class="flex items-center gap6" style="padding:3px 0">' +
+        '<span class="dot-status ' + (mine ? 'blue' : 'gray') + '"></span>' +
+        '<span class="fz12" style="color:' + (mine ? 'var(--brand-600);font-weight:500' : 'var(--ink-600)') + '">' + it + '</span></div>';
+    }).join('') + '</div></div></div>';
+}).join('');
+document.getElementById('relTable').innerHTML =
+  '<thead><tr><th>版本</th><th>发布时间</th><th>主要内容</th><th>与我相关</th></tr></thead><tbody>' +
+  [['V2.9.3 支付网关', '07-24', '稳定性补丁与性能优化', '—'],
+   ['V2.8.0 智能风控', '07-18', '反洗钱名单实时同步', '—'],
+   ['V2.9 支付网关', '07-18', '支付成功率实时大盘与自动告警', 'REQ-2031'],
+   ['V2.5.1 商户中心', '07-05', '首页信息架构重构', '—']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td><td class="fz12">' + r[2] + '</td>' +
+      '<td>' + (r[3] === '—' ? '<span class="muted">—</span>' : '<span class="tag brand">' + r[3] + '</span>') + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('cadenceNote').innerHTML = [
+  ['研发周期', '研发团队以 2 周为一个周期滚动交付，每周期末进行成果演示，业务方可参加'],
+  ['版本发布', '各产品线每月 1 ~ 2 个版本，重大版本提前 2 周公布发布计划'],
+  ['紧急修复', '影响业务的问题走紧急通道，最快当天修复上线'],
+  ['需求排期', '需求通过评审后按「业务价值 + 紧急程度」排序，每两周滚动调整一次']
+].map(function (n) {
+  return '<div style="padding:9px 0;border-bottom:1px solid var(--ink-100)"><div class="fz12 fw6">' + n[0] + '</div>' +
+    '<div class="muted fz12 mt4" style="line-height:1.7">' + n[1] + '</div></div>';
+}).join('');
+
+/* 研发进展 */
+document.getElementById('sprintNow').innerHTML =
+  '<div class="flex items-center gap12 mb12"><div><div class="muted fz11">当前研发周期</div>' +
+  '<div class="fw6 fz15">07-14 ~ 07-27（第 14 期）</div></div>' +
+  '<div><div class="muted fz11">整体进度</div><div class="fw6 fz15">67%</div></div>' +
+  '<div><div class="muted fz11">剩余</div><div class="fw6 fz15" style="color:var(--warning)">3 天</div></div>' +
+  '<div style="flex:1">' + UI.bar(67, '', 'lg') + '</div></div>' +
+  [['商户结算单据自助下载', '研发中', 78, 'brand', '你提交'],
+   ['支付网关智能路由能力', '研发中', 15, 'brand', ''],
+   ['收银台数字人民币支付', '测试中', 62, 'warning', ''],
+   ['风控规则热更新', '测试中', 90, 'warning', ''],
+   ['数据中台指标口径治理', '研发中', 55, 'brand', ''],
+   ['商户中心首页重构', '待发布', 100, 'purple', '']
+  ].map(function (s) {
+    return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+      '<span class="fz12" style="flex:1;color:var(--ink-700)">' + s[0] +
+      (s[4] ? ' <span class="tag brand" style="height:17px">' + s[4] + '</span>' : '') + '</span>' +
+      '<span class="tag ' + s[3] + '">' + s[1] + '</span>' +
+      '<div style="width:110px">' + UI.bar(s[2], s[2] === 100 ? 'green' : '', 'thin') + '</div>' +
+      '<b class="fz11" style="width:32px;text-align:right">' + s[2] + '%</b></div>';
+  }).join('');
+Charts.bar('#deliverChart', {
+  height: 200, padLeft: 30, labels: ['3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '交付需求数', data: [12, 14, 15, 17, 19], color: '#2b5cff' }], unit: ' 条'
+});
+document.getElementById('deliverStats').innerHTML = [
+  ['本月已上线需求', '19 条'], ['业务方需求占比', '46%'], ['平均交付周期', '13.6 天'], ['按承诺时间交付率', '91%']
+].map(function (s) {
+  return '<div class="flex items-center" style="padding:5px 0"><span class="fz12 dim" style="flex:1">' + s[0] + '</span>' +
+    '<b class="fz12">' + s[1] + '</b></div>';
+}).join('');
+document.getElementById('sprintNext').innerHTML = [
+  ['支付网关灰度发布（10% 流量）', '07-28', 'brand'], ['商户账单异步导出开发启动', '07-28', 'brand'],
+  ['营销活动核销看板开发启动', '07-28', 'purple'], ['数据中台一期上线验收', '08-08', 'success'],
+  ['V2.6 商户中心版本发布', '08-20', 'success']
+].map(function (s) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="dot-status ' + (s[2] === 'brand' ? 'blue' : s[2] === 'purple' ? 'purple' : 'green') + '"></span>' +
+    '<span class="fz12" style="flex:1">' + s[0] + '</span><span class="tag">' + s[1] + '</span></div>';
+}).join('');
+document.getElementById('notices').innerHTML = [
+  ['07-25', '账单导出问题临时方案', '账单导出超时的临时方案已提供（按周分批导出），产品化方案预计 8 月 20 日上线，感谢各位耐心等待。'],
+  ['07-22', '需求评审会时间调整', '为缩短需求等待时间，评审会调整为每周二、周四固定召开，提交后最长等待 3 个工作日。'],
+  ['07-18', '支付成功率大盘已上线', '新版实时大盘已上线，运营同学可在商户后台「监控中心」查看，使用问题可提交工单。']
+].map(function (n) {
+  return '<div style="padding:10px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div class="flex items-center gap8"><b class="fz12">' + n[1] + '</b><span class="muted fz11 ml-auto">' + n[0] + '</span></div>' +
+    '<div class="muted fz12 mt4" style="line-height:1.7">' + n[2] + '</div></div>';
+}).join('');
+
+/* 导航切换 */
+document.querySelectorAll('.p-nav a').forEach(function (a) {
+  a.onclick = function () {
+    document.querySelectorAll('.p-nav a').forEach(function (x) { x.classList.remove('active'); });
+    a.classList.add('active');
+    document.querySelectorAll('.p-pane').forEach(function (p) {
+      p.style.display = p.dataset.p === a.dataset.p ? '' : 'none';
+    });
+    window.dispatchEvent(new Event('resize'));
+  };
+});
+</script>
+</body>
+</html>

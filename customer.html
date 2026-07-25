@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>客户跟踪 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="customer" data-crumb="需求与客户/客户跟踪">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">客户跟踪</div>
+          <div class="page-desc">客户声音归集 · 需求影响面量化 · 交付承诺跟踪 · 上线后回访闭环</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn"><span data-icon="refresh"></span>同步 CRM</button>
+          <button class="btn" data-toast="客户交付月报已发送给客户经理"><span data-icon="send"></span>客户交付月报</button>
+          <button class="btn btn-primary" data-toast="已开启客户进度共享链接（有效期 30 天）"><span data-icon="share"></span>共享进度给客户</button>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="cStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="u1"><span data-icon="building" data-size="14"></span>客户列表 <span class="cnt">36</span></div>
+        <div class="tab" data-tab="u2"><span data-icon="user" data-size="14"></span>客户 360 视图</div>
+        <div class="tab" data-tab="u3"><span data-icon="grid" data-size="14"></span>需求呼声矩阵</div>
+        <div class="tab" data-tab="u4"><span data-icon="flag" data-size="14"></span>交付承诺跟踪 <span class="cnt">14</span></div>
+        <div class="tab" data-tab="u5"><span data-icon="thumb" data-size="14"></span>上线回访</div>
+      </div>
+
+      <!-- 客户列表 -->
+      <div class="tab-pane active" data-pane="u1">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索客户名称 / 客户经理"></div>
+          <div class="filter on"><span data-icon="crown"></span>等级：<b>全部</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="box"></span>使用产品<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="warn"></span>仅看有风险客户</div>
+          <span class="ml-auto fz12 muted">战略客户 <b>6</b> · KA <b>12</b> · 普通 <b>18</b></span>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="table-wrap"><table class="tbl" id="custTable"></table></div></div></div>
+      </div>
+
+      <!-- 客户 360 -->
+      <div class="tab-pane" data-pane="u2">
+        <div class="card mb16">
+          <div class="card-body" style="padding:16px 18px">
+            <div class="flex items-center gap12">
+              <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#2b5cff,#7c5cff);display:grid;place-items:center;color:#fff;font-weight:700">HN</div>
+              <div>
+                <div class="flex items-center gap8"><span class="page-title" style="font-size:18px">华南连锁商超集团</span>
+                  <span class="tag danger">战略客户</span><span class="tag success">健康度 良好</span></div>
+                <div class="muted fz12 mt4">零售连锁 · 328 家门店 · 合作 4 年 · 客户经理 李经理 · 使用产品：统一支付网关 / 商户运营中心 / 数据资产中台</div>
+              </div>
+              <div class="ml-auto flex gap6">
+                <button class="btn btn-sm"><span data-icon="mail" data-size="13"></span>发送进度简报</button>
+                <button class="btn btn-sm"><span data-icon="calendar" data-size="13"></span>安排双周沟通</button>
+                <button class="btn btn-sm btn-primary" data-modal="mPromise"><span data-icon="flag" data-size="13"></span>登记交付承诺</button>
+              </div>
+            </div>
+            <div class="grid g5 mt16" style="gap:10px" id="custKpi"></div>
+          </div>
+        </div>
+        <div class="grid g-2-1">
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="bulb"></span>该客户提出的需求</div>
+              <div class="card-sub">6 条在跟 · 4 条已交付</div>
+              <div class="card-head-actions"><a class="btn btn-sm" href="requirement.html">在需求池中查看</a></div></div>
+              <div class="card-body flush"><table class="tbl" id="custReq"></table></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="inbox"></span>工单历史</div>
+              <div class="card-sub">累计 86 条 · 满意度 4.5</div></div>
+              <div class="card-body flush"><table class="tbl" id="custTk"></table></div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="warn"></span>风险提示</div></div>
+              <div class="card-body" id="custRisk"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>客户健康度趋势</div></div>
+              <div class="card-body"><div id="healthTrend"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>互动时间线</div></div>
+              <div class="card-body" style="max-height:340px;overflow:auto"><div class="timeline" id="custLog"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 呼声矩阵 -->
+      <div class="tab-pane" data-pane="u3">
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="grid"></span>需求 × 客户呼声矩阵</div>
+            <div class="card-sub">同一需求被多少客户提出，直接决定「客户影响面」得分，用于价值评估</div>
+            <div class="card-head-actions"><div class="btn-group"><button class="active">按呼声排序</button><button>按客户等级加权</button></div></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="voiceTable"></table></div></div>
+        </div>
+        <div class="grid g2">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="trendUp"></span>客户呼声 TOP 需求</div></div>
+            <div class="card-body"><div id="voiceBar"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>需求来源渠道构成</div>
+            <div class="card-sub">客户声音占比 52%</div></div>
+            <div class="card-body"><div id="srcDonut"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 承诺跟踪 -->
+      <div class="tab-pane" data-pane="u4">
+        <div class="grid g4 mb16" id="promiseStats"></div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="flag"></span>对客交付承诺</div>
+            <div class="card-sub">承诺时间与研发计划自动比对，偏差自动预警</div>
+            <div class="card-head-actions"><div class="btn-group"><button class="active">进行中</button><button>已兑现</button><button>已延期</button></div></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="promiseTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 上线回访 -->
+      <div class="tab-pane" data-pane="u5">
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="thumb"></span>上线后客户回访</div>
+            <div class="card-sub">需求上线自动触发回访，验证价值是否真实兑现</div></div>
+            <div class="card-body flush"><table class="tbl" id="visitTable"></table></div></div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>交付价值兑现</div></div>
+              <div class="card-body"><div id="valueDone"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="comment"></span>客户原声</div></div>
+              <div class="card-body" id="quotes"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mPromise">
+  <div class="modal-head"><span data-icon="flag"></span><span class="modal-title">登记对客交付承诺</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>客户</label><input class="input" value="华南连锁商超集团" readonly></div>
+    <div class="field"><label>承诺内容 / 关联需求</label><select class="select"><option>REQ-2036 商户后台大额账单异步导出</option><option>REQ-2035 交易对账文件自动核销</option></select></div>
+    <div class="form-row">
+      <div class="field"><label>承诺交付时间</label><input class="input" value="2026-08-20"></div>
+      <div class="field"><label>研发计划时间</label><input class="input" value="2026-08-20（V2.6）" readonly></div>
+    </div>
+    <div class="field"><label>承诺人 / 见证人</label>
+      <div class="flex gap8"><select class="select"><option>李经理（客户经理）</option></select><select class="select"><option>周雅（产品总监）</option></select></div></div>
+    <div class="field"><label>承诺等级</label>
+      <div class="pills"><span class="pill active">合同承诺（强约束）</span><span class="pill">口头承诺</span><span class="pill">意向沟通</span></div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">研发计划变更导致偏离承诺时，自动预警客户经理与产品总监</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="承诺已登记并纳入偏差监控">登记承诺</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('cStats').innerHTML = [
+  { l: '服务客户', v: 36, u: '家', i: 'building', c: '#2b5cff', bg: 'var(--brand-50)', f: '战略 6 · KA 12' },
+  { l: '客户提出需求', v: 67, u: '条', i: 'bulb', c: '#7c5cff', bg: 'var(--purple-bg)', f: '占需求池 52%' },
+  { l: '在跟交付承诺', v: 14, u: '项', i: 'flag', c: '#f59e0b', bg: 'var(--warning-bg)', f: '2 项存在延期风险' },
+  { l: '承诺兑现率', v: 89, u: '%', i: 'circleCheck', c: '#15a86b', bg: 'var(--success-bg)', f: '目标 ≥ 95%' },
+  { l: '客户满意度', v: '4.6', u: '/5', i: 'thumb', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '上线回访 32 次' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+var LVTAG = { '战略': 'danger', 'KA': 'purple', '普通': '' };
+var CUSTS = [
+  ['华南连锁商超集团', '零售连锁', '战略', '¥42.6 亿', '李经理', 6, 4, 3, 4.5, '良好', 'success', '今天'],
+  ['星辰出行科技', '出行服务', '战略', '¥38.2 亿', '张经理', 5, 2, 2, 4.7, '优秀', 'success', '今天'],
+  ['云上餐饮连锁', '餐饮', 'KA', '¥16.8 亿', '李经理', 8, 5, 4, 4.2, '关注', 'warning', '昨天'],
+  ['悦享连锁酒店', '酒旅', 'KA', '¥12.4 亿', '王经理', 4, 2, 1, 4.6, '良好', 'success', '昨天'],
+  ['优鲜生活超市', '零售', '普通', '¥6.2 亿', '王经理', 3, 3, 2, 4.0, '关注', 'warning', '2 天前'],
+  ['数智物流科技', '物流', '普通', '¥4.8 亿', '张经理', 2, 1, 1, 4.4, '良好', 'success', '3 天前'],
+  ['万联便利', '零售', 'KA', '¥9.6 亿', '李经理', 4, 2, 2, 3.8, '风险', 'danger', '4 天前'],
+  ['鲜丰果业', '零售', '普通', '¥3.1 亿', '王经理', 1, 0, 0, 4.5, '良好', 'success', '上周']
+];
+document.getElementById('custTable').innerHTML =
+  '<thead><tr><th style="width:20%">客户</th><th>行业</th><th>等级</th><th>年交易额</th><th>客户经理</th><th class="num">在跟需求</th>' +
+  '<th class="num">未关闭工单</th><th class="num">交付承诺</th><th>满意度</th><th>健康度</th><th>最近互动</th><th style="width:34px"></th></tr></thead><tbody>' +
+  CUSTS.map(function (c) {
+    return '<tr onclick="document.querySelector(\'[data-tab=u2]\').click()">' +
+      '<td><div class="row-flex"><span class="tico req" style="background:' + (c[2] === '战略' ? '#e5484d' : c[2] === 'KA' ? '#7c5cff' : '#b3bfd0') + '">' + icon('building', 11) + '</span>' +
+      '<span class="t-main">' + c[0] + '</span></div></td>' +
+      '<td class="dim fz12">' + c[1] + '</td><td><span class="tag ' + LVTAG[c[2]] + '">' + c[2] + '</span></td>' +
+      '<td class="fz12">' + c[3] + '</td><td class="dim fz12">' + c[4] + '</td>' +
+      '<td class="num"><b style="color:var(--brand-600)">' + c[5] + '</b></td>' +
+      '<td class="num">' + c[6] + '</td><td class="num">' + c[7] + '</td>' +
+      '<td><span class="tag ' + (c[8] >= 4.5 ? 'success' : c[8] >= 4 ? 'warning' : 'danger') + '">' + c[8] + '</span></td>' +
+      '<td><span class="tag ' + c[10] + '">' + c[9] + '</span></td>' +
+      '<td class="muted fz11">' + c[11] + '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'查看 360 视图\',icon:\'eye\'},{label:\'共享进度链接\',icon:\'share\'},{label:\'登记承诺\',icon:\'flag\'},{label:\'发起回访\',icon:\'thumb\'}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 客户 360 */
+document.getElementById('custKpi').innerHTML = [
+  ['年交易额', '¥ 42.6 亿', '同比 +18%', ''], ['在跟需求', '6 条', '2 条本月交付', ''],
+  ['未关闭工单', '4 条', '1 条 SLA 风险', 'red'], ['交付承诺', '3 项', '1 项延期风险', 'orange'],
+  ['满意度', '4.5 / 5', '较上季 −0.2', 'orange']
+].map(function (k) {
+  return '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">' + k[0] + '</div>' +
+    '<div class="fw6 mt4" style="font-size:15px;color:' + (k[3] === 'red' ? 'var(--danger)' : k[3] === 'orange' ? 'var(--warning)' : 'var(--ink-900)') + '">' + k[1] + '</div>' +
+    '<div class="muted fz11 mt4">' + k[2] + '</div></div>';
+}).join('');
+
+document.getElementById('custReq').innerHTML =
+  '<thead><tr><th>需求</th><th>来源</th><th>价值</th><th>紧迫</th><th>状态</th><th style="width:110px">进度</th><th>承诺时间</th></tr></thead><tbody>' +
+  [['REQ-2036', '商户后台大额账单异步导出', 'TK-3821 工单', 76, 82, '评审中', 0, '08-20', 'warning'],
+   ['REQ-2035', '交易对账文件自动核销与差错处理', 'TK-3808 工单', 74, 68, '开发中', 45, '09-30', 'brand'],
+   ['REQ-2039', '商户结算单据自助下载与批量归档', '客户反馈', 68, 55, '开发中', 78, '08-20', 'brand'],
+   ['REQ-2031', '支付成功率实时大盘与自动告警', '客户经理转达', 79, 72, '已发布', 100, '已交付', 'success'],
+   ['REQ-2028', '统一登录与多因子认证升级', '客户反馈', 44, 30, '已挂起', 0, '待定', ''],
+   ['REQ-2019', '门店维度分账能力', '产品规划', 62, 48, '待排期', 0, 'Q4', 'purple']
+  ].map(function (r) {
+    return '<tr onclick="location.href=\'requirement-detail.html\'"><td><div><div class="t-main">' + r[1] + '</div>' +
+      '<div class="id-link">' + r[0] + '</div></div></td>' +
+      '<td><span class="tag line">' + r[2] + '</span></td>' +
+      '<td><b style="color:' + (r[3] >= 70 ? 'var(--success)' : 'var(--ink-700)') + '">' + r[3] + '</b></td>' +
+      '<td><b style="color:' + (r[4] >= 70 ? 'var(--danger)' : 'var(--ink-700)') + '">' + r[4] + '</b></td>' +
+      '<td><span class="tag ' + r[8] + '">' + r[5] + '</span></td>' +
+      '<td>' + UI.bar(r[6], r[6] === 100 ? 'green' : '', 'thin') + '</td>' +
+      '<td class="dim fz12">' + r[7] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('custTk').innerHTML =
+  '<thead><tr><th>工单</th><th>类型</th><th>状态</th><th>处理人</th><th>满意度</th><th>时间</th></tr></thead><tbody>' +
+  [['TK-3821', '大额账单导出超时，影响 32 家门店对账', '故障报障', '处理中', '王倩', '—', '今天'],
+   ['TK-3815', '结算到账时间比承诺晚 2 小时', '投诉', '已解决', '何俊', '4', '昨天'],
+   ['TK-3808', '希望增加对账差错的自动补单能力', '需求建议', '已转需求', '周雅', '5', '4 天前'],
+   ['TK-3792', '门店收银终端签购单打印异常', '故障报障', '已关闭', '王倩', '5', '上周']
+  ].map(function (r) {
+    return '<tr onclick="location.href=\'ticket.html#' + r[0] + '\'"><td><div><div class="t-main ellipsis" style="max-width:260px">' + r[1] + '</div>' +
+      '<div class="id-link">' + r[0] + '</div></div></td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td><span class="tag ' + (r[3] === '处理中' ? 'brand' : r[3] === '已转需求' ? 'purple' : 'success') + '">' + r[3] + '</span></td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[4], 'sm') + '</div></td>' +
+      '<td>' + (r[5] === '—' ? '<span class="muted">—</span>' : '<span class="tag success">' + r[5] + ' 星</span>') + '</td>' +
+      '<td class="muted fz11">' + r[6] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('custRisk').innerHTML = [
+  ['danger', '账单导出问题已连续 3 个月被投诉，客户财务总监已向我方总经理反馈', '需求 REQ-2036 需在 8 月 20 日前上线，当前仍在评审中'],
+  ['warning', '满意度较上季下降 0.2，主要扣分项为「问题解决时效」', '建议将该客户工单 SLA 提升为战略客户折半标准'],
+  ['brand', '客户计划 Q4 上线 120 家新门店，将带来交易量 +35%', '需提前评估容量与分账能力，建议纳入 Q4 规划']
+].map(function (r) {
+  return '<div style="padding:10px 12px;border-radius:9px;background:var(--' + (r[0] === 'brand' ? 'brand' : r[0]) + (r[0] === 'brand' ? '-50' : '-bg') + ');margin-bottom:8px">' +
+    '<div class="fz12 fw5" style="color:var(--ink-800);line-height:1.6">' + r[1] + '</div>' +
+    '<div class="muted fz11 mt4">' + r[2] + '</div></div>';
+}).join('');
+Charts.line('#healthTrend', {
+  height: 180, yMax: 100, labels: ['2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '健康度', data: [88, 86, 84, 82, 79, 76], color: '#f59e0b', area: true },
+    { name: '满意度×20', data: [96, 94, 92, 92, 90, 90], color: '#15a86b', dots: false }]
+});
+document.getElementById('custLog').innerHTML = [
+  { c: 'red', i: 'inbox', t: '<b>李经理</b> 代客户提交工单 TK-3821（账单导出超时）', time: '今天 09:12' },
+  { c: 'brand', i: 'send', t: '向客户同步 REQ-2036 进度：预计 8 月 20 日随 V2.6 上线', time: '今天 10:40' },
+  { c: '', i: 'users', t: '双周沟通会：客户提出门店分账与账单两项诉求', time: '07-22' },
+  { c: 'green', i: 'rocket', t: 'REQ-2031 支付成功率大盘已交付，客户回访评分 5 星', time: '07-18' },
+  { c: 'orange', i: 'warn', t: '客户财务总监投诉结算到账延迟（TK-3815）', time: '07-15' },
+  { c: '', i: 'flag', t: '登记交付承诺：账单异步导出 8 月 20 日前上线', time: '07-12' }
+].map(function (f) {
+  return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+    '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div></div>';
+}).join('');
+
+/* 呼声矩阵 */
+var VOICE = [
+  ['REQ-2036', '商户后台大额账单异步导出', 8, ['战略', 'KA', 'KA', '普通'], 92, '评审中', 'warning'],
+  ['REQ-2019', '门店维度分账能力', 6, ['KA', 'KA', '普通'], 74, '待排期', 'purple'],
+  ['REQ-2037', '开放平台 API 限流策略可视化配置', 5, ['战略', 'KA'], 68, '待排期', 'purple'],
+  ['REQ-2035', '交易对账文件自动核销', 5, ['战略', 'KA', '普通'], 71, '开发中', 'brand'],
+  ['REQ-2042', '批量退款进度提示', 4, ['KA', '普通'], 52, '待评审', ''],
+  ['REQ-2043', '账单导出支持 PDF 格式', 3, ['普通', '普通'], 38, '待评审', ''],
+  ['REQ-2044', '交易数据开放查询接口', 3, ['普通', 'KA'], 56, '待评审', '']
+];
+document.getElementById('voiceTable').innerHTML =
+  '<thead><tr><th style="width:26%">需求</th><th class="num">客户呼声</th><th>客户构成</th><th>代表客户</th><th class="num">加权影响面</th>' +
+  '<th class="num">涉及交易额</th><th>状态</th><th style="width:120px">价值得分</th></tr></thead><tbody>' +
+  VOICE.map(function (v) {
+    var names = ['华南连锁商超集团', '云上餐饮连锁', '星辰出行科技', '悦享连锁酒店', '优鲜生活超市', '万联便利'];
+    return '<tr onclick="location.href=\'requirement-detail.html\'">' +
+      '<td><div><div class="t-main">' + v[1] + '</div><div class="id-link">' + v[0] + '</div></div></td>' +
+      '<td class="num"><b style="font-size:15px;color:var(--brand-600)">' + v[2] + '</b> <span class="muted fz11">家</span></td>' +
+      '<td>' + v[3].map(function (l) { return '<span class="tag ' + LVTAG[l] + '" style="height:17px">' + l + '</span> '; }).join('') + '</td>' +
+      '<td class="dim fz12">' + names.slice(0, Math.min(2, v[2])).join('、') + (v[2] > 2 ? ' 等' : '') + '</td>' +
+      '<td class="num">' + (v[2] * 12 + 8) + '</td>' +
+      '<td class="num dim">¥ ' + (v[2] * 8.4).toFixed(1) + ' 亿</td>' +
+      '<td><span class="tag ' + v[6] + '">' + v[5] + '</span></td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(v[4], v[4] >= 70 ? 'green' : '', 'thin') + '</div><b class="fz11">' + v[4] + '</b></div></td></tr>';
+  }).join('') + '</tbody>';
+Charts.hbar('#voiceBar', { unit: ' 家客户', data: VOICE.slice(0, 6).map(function (v) { return { name: v[0] + ' ' + v[1].slice(0, 10), value: v[2] }; }) });
+Charts.donut('#srcDonut', { size: 150, thickness: 19, center: { value: '128', label: '需求总量' }, data: [
+  { name: '工单转化', value: 32, color: '#2b5cff' }, { name: '客户反馈', value: 35, color: '#0fb5ba' },
+  { name: '产品规划', value: 38, color: '#7c5cff' }, { name: '监管合规', value: 15, color: '#e5484d' },
+  { name: '内部技术', value: 8, color: '#b3bfd0' }] });
+
+/* 承诺跟踪 */
+document.getElementById('promiseStats').innerHTML = [
+  { l: '在跟承诺', v: 14, c: '#2b5cff', i: 'flag' }, { l: '按期兑现', v: 8, c: '#15a86b', i: 'circleCheck' },
+  { l: '延期风险', v: 4, c: '#f59e0b', i: 'warn' }, { l: '已延期', v: 2, c: '#e5484d', i: 'alert' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>项</small></div></div>';
+}).join('');
+document.getElementById('promiseTable').innerHTML =
+  '<thead><tr><th>客户</th><th style="width:24%">承诺内容</th><th>承诺等级</th><th>承诺时间</th><th>研发计划</th><th>偏差</th>' +
+  '<th style="width:110px">当前进度</th><th>承诺人</th><th>状态</th><th style="width:34px"></th></tr></thead><tbody>' +
+  [['华南连锁商超集团', 'REQ-2036 账单异步导出', '合同承诺', '08-20', '08-20 (V2.6)', 0, 0, '李经理', '按计划', 'brand'],
+   ['云上餐饮连锁', 'REQ-2019 门店维度分账', '口头承诺', '09-15', 'Q4 待排期', 45, 0, '李经理', '延期风险', 'danger'],
+   ['星辰出行科技', 'REQ-2037 API 限流可视化', '合同承诺', '09-30', '11-28 (V1.4)', 59, 0, '张经理', '已延期', 'danger'],
+   ['悦享连锁酒店', 'REQ-2039 结算单自助下载', '合同承诺', '08-20', '08-20 (V2.6)', 0, 78, '王经理', '按计划', 'brand'],
+   ['华南连锁商超集团', 'REQ-2035 对账自动核销', '意向沟通', '09-30', '09-30 (V3.0)', 0, 45, '李经理', '按计划', 'brand'],
+   ['万联便利', '交易数据开放查询接口', '口头承诺', '10-31', '未排期', 30, 0, '李经理', '延期风险', 'warning'],
+   ['数智物流科技', 'REQ-2031 成功率大盘', '合同承诺', '07-20', '07-18 已上线', -2, 100, '张经理', '已兑现', 'success'],
+   ['优鲜生活超市', '账单 PDF 导出', '意向沟通', '11-30', '待评审', 0, 0, '王经理', '按计划', 'brand']
+  ].map(function (p) {
+    return '<tr><td class="t-main">' + p[0] + '</td><td class="fz12">' + p[1] + '</td>' +
+      '<td><span class="tag ' + (p[2] === '合同承诺' ? 'danger' : p[2] === '口头承诺' ? 'warning' : '') + '">' + p[2] + '</span></td>' +
+      '<td class="fz12">' + p[3] + '</td><td class="dim fz12">' + p[4] + '</td>' +
+      '<td>' + (p[5] > 0 ? '<span class="tag danger">+' + p[5] + ' 天</span>' : p[5] < 0 ? '<span class="tag success">' + p[5] + ' 天</span>' : '<span class="muted">—</span>') + '</td>' +
+      '<td>' + UI.bar(p[6], p[6] === 100 ? 'green' : '', 'thin') + '</td>' +
+      '<td class="dim fz12">' + p[7] + '</td>' +
+      '<td><span class="tag ' + p[9] + '">' + p[8] + '</span></td>' +
+      '<td><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'同步进度给客户\',icon:\'send\'},{label:\'调整承诺时间\',icon:\'calendar\'},{label:\'升级为管理层协调\',icon:\'arrowUp\'}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 上线回访 */
+document.getElementById('visitTable').innerHTML =
+  '<thead><tr><th>需求</th><th>客户</th><th>上线时间</th><th>回访结果</th><th>评分</th><th>价值达成</th><th>后续</th></tr></thead><tbody>' +
+  [['REQ-2031 支付成功率实时大盘', '华南连锁商超集团', '07-18', '问题已彻底解决，运营效率明显提升', 5, '超预期', 'success'],
+   ['REQ-2031 支付成功率实时大盘', '数智物流科技', '07-18', '功能可用，希望增加自定义告警阈值', 4, '达成', 'success'],
+   ['REQ-2029 反洗钱名单实时同步', '星辰出行科技', '07-10', '合规检查一次通过', 5, '达成', 'success'],
+   ['REQ-2033 商户中心首页重构', '云上餐饮连锁', '07-05', '界面更清晰，但部分老员工需重新适应', 4, '部分达成', 'warning'],
+   ['REQ-2026 批量退款优化', '优鲜生活超市', '06-28', '速度提升明显，仍缺少进度提示', 3, '部分达成', 'warning']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td class="fz12" style="color:var(--ink-600)">' + r[3] + '</td>' +
+      '<td><span class="tag ' + (r[4] >= 5 ? 'success' : r[4] >= 4 ? 'brand' : 'warning') + '">' + r[4] + ' 星</span></td>' +
+      '<td><span class="tag ' + r[6] + '">' + r[5] + '</span></td>' +
+      '<td><a class="fz11" style="color:var(--brand-600)" href="retro.html">查看需求复盘</a></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('valueDone').innerHTML = [['超预期达成', 32, 'green'], ['符合预期', 48, ''], ['部分达成', 16, 'orange'], ['未达成', 4, 'red']]
+  .map(function (r) {
+    return '<div class="mb12"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2]) + '</div>';
+  }).join('') + '<div class="tl-box mt8">近 6 个月共回访 32 次，<b>80%</b> 的需求价值达到或超过预期；未达成的 2 条需求已进入复盘并形成 4 项改进措施。</div>';
+document.getElementById('quotes').innerHTML = [
+  ['华南连锁商超集团 · 财务总监', '账单导出这个问题拖了三个月，希望这次能真正解决。看到你们把它排进 8 月版本，我们财务同事都在等。', 'warning'],
+  ['星辰出行科技 · 技术负责人', '成功率大盘上线后，我们自己的运维也能第一时间看到通道异常，非常实用。', 'success'],
+  ['云上餐饮连锁 · 运营经理', '分账能力对我们多品牌门店很关键，希望能尽快明确排期。', 'brand']
+].map(function (q) {
+  return '<div style="padding:10px 12px;border-left:3px solid var(--' + (q[2] === 'success' ? 'success' : q[2] === 'warning' ? 'warning' : 'brand-400') + ');background:var(--ink-50);border-radius:0 8px 8px 0;margin-bottom:10px">' +
+    '<div class="fz12" style="color:var(--ink-700);line-height:1.75">「' + q[1] + '」</div>' +
+    '<div class="muted fz11 mt4">— ' + q[0] + '</div></div>';
+}).join('');
+</script>
+</body>
+</html>

@@ -40,7 +40,8 @@
           <div class="filter on"><span data-icon="box"></span>产品：<b>全部</b><span data-icon="down"></span></div>
           <div class="filter"><span data-icon="circleDot"></span>状态<span data-icon="down"></span></div>
           <div class="filter"><span data-icon="flag"></span>优先级<span data-icon="down"></span></div>
-          <div class="filter"><span data-icon="inbox"></span>来源<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="share"></span>来源渠道<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="building"></span>客户<span data-icon="down"></span></div>
           <div class="filter"><span data-icon="user"></span>负责人<span data-icon="down"></span></div>
           <div class="filter"><span data-icon="rocket"></span>目标版本<span data-icon="down"></span></div>
           <div class="filter"><span data-icon="plus"></span>更多筛选</div>
@@ -94,13 +95,14 @@
           </div>
           <div class="grid" style="gap:14px;align-content:start">
             <div class="card">
-              <div class="card-head"><div class="card-title"><span data-icon="target"></span>价值 / 成本四象限</div></div>
+              <div class="card-head"><div class="card-title"><span data-icon="target"></span>价值 × 紧迫度矩阵</div></div>
               <div class="card-body"><div id="quadrant"></div>
-                <div class="legend mt8"><span><i style="background:#15a86b"></i>高价值低成本（优先做）</span><span><i style="background:#f59e0b"></i>高价值高成本（拆分）</span><span><i style="background:#b3bfd0"></i>低价值（暂缓）</span></div>
+                <div class="legend mt8"><span><i style="background:#e5484d"></i>立即做（高价值·高紧迫）</span><span><i style="background:#2b5cff"></i>计划做（高价值·低紧迫）</span><span><i style="background:#f59e0b"></i>快速做（低价值·高紧迫）</span><span><i style="background:#b3bfd0"></i>暂缓（低价值·低紧迫）</span></div>
+                <div class="muted fz11 mt8">气泡大小表示预估投入（人日），点击可查看需求详情</div>
               </div>
             </div>
             <div class="card">
-              <div class="card-head"><div class="card-title"><span data-icon="award"></span>RICE 评分 TOP 5</div></div>
+              <div class="card-head"><div class="card-title"><span data-icon="award"></span>价值评分 TOP 5</div></div>
               <div class="card-body"><div id="riceRank"></div></div>
             </div>
           </div>
@@ -135,7 +137,7 @@
       <!-- 需求分析 -->
       <div class="tab-pane" data-pane="insight">
         <div class="grid g3 mb16">
-          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="inbox"></span>需求来源分布</div></div><div class="card-body"><div id="srcChart"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="share"></span>需求来源渠道</div></div><div class="card-body"><div id="srcChart"></div></div></div>
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="circleDot"></span>需求状态分布</div></div><div class="card-body"><div id="stChart"></div></div></div>
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="box"></span>各产品需求分布</div></div><div class="card-body"><div id="prodChart"></div></div></div>
         </div>
@@ -236,21 +238,23 @@
 <script>
 /* ---------- 数据 ---------- */
 var REQS = [
-  { id: 'REQ-2041', t: '支付网关多渠道智能路由能力', p: '统一支付网关', pri: 'P0', st: '评审中', src: '内部规划', rice: 92, from: '周雅', own: '李思远', ver: 'V3.0', eff: 21, pg: 15, up: '10 分钟前', type: '功能需求', tags: ['核心链路', '降本'] },
-  { id: 'REQ-2040', t: '收银台支持数字人民币支付', p: '统一支付网关', pri: 'P0', st: '开发中', src: '监管合规', rice: 88, from: '周雅', own: '何俊', ver: 'V3.0', eff: 34, pg: 62, up: '1 小时前', type: '合规需求', tags: ['合规必达'] },
-  { id: 'REQ-2039', t: '商户结算单据自助下载与批量归档', p: '商户运营中心', pri: 'P1', st: '开发中', src: '客户反馈', rice: 76, from: '孙悦', own: '王倩', ver: 'V2.6', eff: 13, pg: 78, up: '2 小时前', type: '功能需求', tags: ['商户体验'] },
-  { id: 'REQ-2038', t: '风控规则热更新与灰度发布能力', p: '智能风控平台', pri: 'P0', st: '测试中', src: '内部规划', rice: 85, from: '郑宇', own: '郑宇', ver: 'V2.9', eff: 26, pg: 90, up: '3 小时前', type: '技术需求', tags: ['稳定性'] },
-  { id: 'REQ-2037', t: '开放平台 API 限流策略可视化配置', p: '开放能力平台', pri: 'P1', st: '待排期', src: '内部规划', rice: 71, from: '陈立', own: '—', ver: 'V1.4', eff: 18, pg: 0, up: '5 小时前', type: '功能需求', tags: [] },
-  { id: 'REQ-2036', t: '商户后台大额账单异步导出', p: '商户运营中心', pri: 'P1', st: '评审中', src: '客户反馈', rice: 68, from: '孙悦', own: '—', ver: 'V2.6', eff: 8, pg: 0, up: '昨天', type: '体验优化', tags: ['性能'] },
-  { id: 'REQ-2035', t: '交易对账文件自动核销与差错处理', p: '统一支付网关', pri: 'P1', st: '开发中', src: '内部规划', rice: 74, from: '周雅', own: '何俊', ver: 'V3.0', eff: 29, pg: 45, up: '昨天', type: '功能需求', tags: ['降本'] },
-  { id: 'REQ-2034', t: '风控模型特征平台自助取数', p: '智能风控平台', pri: 'P2', st: '待排期', src: '数据洞察', rice: 62, from: '郑宇', own: '—', ver: 'V3.0', eff: 22, pg: 0, up: '2 天前', type: '技术需求', tags: [] },
-  { id: 'REQ-2033', t: '商户中心首页信息架构重构', p: '商户运营中心', pri: 'P2', st: '待发布', src: '竞品对标', rice: 58, from: '孙悦', own: '王倩', ver: 'V2.5', eff: 16, pg: 100, up: '2 天前', type: '体验优化', tags: ['体验'] },
-  { id: 'REQ-2032', t: '数据中台指标口径统一治理', p: '数据资产中台', pri: 'P1', st: '开发中', src: '内部规划', rice: 70, from: '陈立', own: '何俊', ver: 'V1.4', eff: 31, pg: 55, up: '3 天前', type: '技术需求', tags: ['治理'] },
-  { id: 'REQ-2031', t: '支付成功率实时大盘与自动告警', p: '统一支付网关', pri: 'P1', st: '已发布', src: '内部规划', rice: 79, from: '林小满', own: '林小满', ver: 'V2.9', eff: 12, pg: 100, up: '4 天前', type: '技术需求', tags: ['可观测'] },
-  { id: 'REQ-2030', t: '开放平台开发者沙箱环境', p: '开放能力平台', pri: 'P2', st: '待评审', src: '客户反馈', rice: 55, from: '孙悦', own: '—', ver: '待定', eff: 24, pg: 0, up: '4 天前', type: '功能需求', tags: ['生态'] },
-  { id: 'REQ-2029', t: '反洗钱名单库实时同步', p: '智能风控平台', pri: 'P0', st: '已发布', src: '监管合规', rice: 90, from: '郑宇', own: '郑宇', ver: 'V2.8', eff: 19, pg: 100, up: '6 天前', type: '合规需求', tags: ['合规必达'] },
-  { id: 'REQ-2028', t: '统一登录与多因子认证升级', p: '商户运营中心', pri: 'P2', st: '已挂起', src: '内部规划', rice: 44, from: '王倩', own: '—', ver: '待定', eff: 15, pg: 0, up: '上周', type: '技术需求', tags: ['安全'] }
+  { id: 'REQ-2041', t: '支付网关多渠道智能路由能力', p: '统一支付网关', pri: 'P0', st: '评审中', ch: '产品规划', srcId: 'PLAN-Q3-02', cust: 3, custName: '星辰出行科技 等', val: 92, urg: 88, from: '周雅', own: '李思远', ver: 'V3.0', eff: 21, pg: 15, up: '10 分钟前', type: '功能需求', tags: ['核心链路', '降本'] },
+  { id: 'REQ-2040', t: '收银台支持数字人民币支付', p: '统一支付网关', pri: 'P0', st: '开发中', ch: '监管合规', srcId: '监管函 2026-114', cust: 0, custName: '全量商户', val: 88, urg: 95, from: '周雅', own: '何俊', ver: 'V3.0', eff: 34, pg: 62, up: '1 小时前', type: '合规需求', tags: ['合规必达'] },
+  { id: 'REQ-2039', t: '商户结算单据自助下载与批量归档', p: '商户运营中心', pri: 'P1', st: '开发中', ch: '客户反馈', srcId: 'FB-1042', cust: 4, custName: '悦享连锁酒店 等', val: 76, urg: 55, from: '孙悦', own: '王倩', ver: 'V2.6', eff: 13, pg: 78, up: '2 小时前', type: '功能需求', tags: ['商户体验'] },
+  { id: 'REQ-2038', t: '风控规则热更新与灰度发布能力', p: '智能风控平台', pri: 'P0', st: '测试中', ch: '产品规划', srcId: 'PLAN-Q3-05', cust: 2, custName: '云上餐饮连锁 等', val: 85, urg: 80, from: '郑宇', own: '郑宇', ver: 'V2.9', eff: 26, pg: 90, up: '3 小时前', type: '技术需求', tags: ['稳定性'] },
+  { id: 'REQ-2037', t: '开放平台 API 限流策略可视化配置', p: '开放能力平台', pri: 'P1', st: '待排期', ch: '工单', srcId: 'TK-3816', cust: 5, custName: '星辰出行科技 等', val: 71, urg: 74, from: '陈立', own: '—', ver: 'V1.4', eff: 18, pg: 0, up: '5 小时前', type: '功能需求', tags: ['开放生态'] },
+  { id: 'REQ-2036', t: '商户后台大额账单异步导出', p: '商户运营中心', pri: 'P1', st: '评审中', ch: '工单', srcId: 'TK-3821', cust: 8, custName: '华南连锁商超集团 等', val: 76, urg: 82, from: '孙悦', own: '—', ver: 'V2.6', eff: 8, pg: 0, up: '昨天', type: '体验优化', tags: ['性能', '客户承诺'] },
+  { id: 'REQ-2035', t: '交易对账文件自动核销与差错处理', p: '统一支付网关', pri: 'P1', st: '开发中', ch: '工单', srcId: 'TK-3808', cust: 5, custName: '华南连锁商超集团 等', val: 74, urg: 68, from: '周雅', own: '何俊', ver: 'V3.0', eff: 29, pg: 45, up: '昨天', type: '功能需求', tags: ['降本'] },
+  { id: 'REQ-2034', t: '风控模型特征平台自助取数', p: '智能风控平台', pri: 'P2', st: '待排期', ch: '数据洞察', srcId: 'DATA-0207', cust: 0, custName: '内部', val: 62, urg: 40, from: '郑宇', own: '—', ver: 'V3.0', eff: 22, pg: 0, up: '2 天前', type: '技术需求', tags: [] },
+  { id: 'REQ-2033', t: '商户中心首页信息架构重构', p: '商户运营中心', pri: 'P2', st: '待发布', ch: '竞品对标', srcId: 'BM-0416', cust: 2, custName: '优鲜生活超市 等', val: 58, urg: 45, from: '孙悦', own: '王倩', ver: 'V2.5', eff: 16, pg: 100, up: '2 天前', type: '体验优化', tags: ['体验'] },
+  { id: 'REQ-2032', t: '数据中台指标口径统一治理', p: '数据资产中台', pri: 'P1', st: '开发中', ch: '产品规划', srcId: 'PLAN-Q2-11', cust: 0, custName: '内部', val: 70, urg: 62, from: '陈立', own: '何俊', ver: 'V1.4', eff: 31, pg: 55, up: '3 天前', type: '技术需求', tags: ['治理'] },
+  { id: 'REQ-2031', t: '支付成功率实时大盘与自动告警', p: '统一支付网关', pri: 'P1', st: '已发布', ch: '客户反馈', srcId: 'FB-0988', cust: 3, custName: '华南连锁商超集团 等', val: 79, urg: 72, from: '林小满', own: '林小满', ver: 'V2.9', eff: 12, pg: 100, up: '4 天前', type: '技术需求', tags: ['可观测'] },
+  { id: 'REQ-2030', t: '开放平台开发者沙箱环境', p: '开放能力平台', pri: 'P2', st: '待评审', ch: '客户反馈', srcId: 'FB-1055', cust: 3, custName: '数智物流科技 等', val: 55, urg: 38, from: '孙悦', own: '—', ver: '待定', eff: 24, pg: 0, up: '4 天前', type: '功能需求', tags: ['生态'] },
+  { id: 'REQ-2029', t: '反洗钱名单库实时同步', p: '智能风控平台', pri: 'P0', st: '已发布', ch: '监管合规', srcId: '监管函 2026-088', cust: 0, custName: '全量商户', val: 90, urg: 96, from: '郑宇', own: '郑宇', ver: 'V2.8', eff: 19, pg: 100, up: '6 天前', type: '合规需求', tags: ['合规必达'] },
+  { id: 'REQ-2028', t: '统一登录与多因子认证升级', p: '商户运营中心', pri: 'P2', st: '已挂起', ch: '内部技术', srcId: 'TECH-0312', cust: 1, custName: '万联便利', val: 44, urg: 30, from: '王倩', own: '—', ver: '待定', eff: 15, pg: 0, up: '上周', type: '技术需求', tags: ['安全'] }
 ];
+var CHTAG = { '工单': 'brand', '客户反馈': 'teal', '产品规划': 'purple', '监管合规': 'danger', '数据洞察': 'warning', '竞品对标': '', '内部技术': '' };
+var CHICON = { '工单': 'inbox', '客户反馈': 'comment', '产品规划': 'compass', '监管合规': 'shield', '数据洞察': 'chart', '竞品对标': 'target', '内部技术': 'cpu' };
 var STC = { '待评审': 'gray', '评审中': 'orange', '待排期': 'purple', '开发中': 'blue', '测试中': 'orange', '待发布': 'purple', '已发布': 'green', '已挂起': 'gray' };
 var STAG = { '待评审': '', '评审中': 'warning', '待排期': 'purple', '开发中': 'brand', '测试中': 'warning', '待发布': 'info', '已发布': 'success', '已挂起': '' };
 
@@ -269,8 +273,8 @@ document.getElementById('reqStats').innerHTML = [
 
 /* ---------- 需求池表格 ---------- */
 document.getElementById('reqTable').innerHTML =
-  '<thead><tr><th style="width:34px"><span class="checkbox"></span></th><th>需求</th><th>产品</th><th>优先级</th><th>状态</th>' +
-  '<th class="num">RICE</th><th>提出人</th><th>负责人</th><th>目标版本</th><th class="num">工作量</th><th style="width:110px">进度</th><th>更新</th><th style="width:34px"></th></tr></thead><tbody>' +
+  '<thead><tr><th style="width:34px"><span class="checkbox"></span></th><th>需求</th><th>来源渠道</th><th>客户呼声</th><th>产品</th><th>优先级</th><th>状态</th>' +
+  '<th class="num">价值</th><th class="num">紧迫</th><th>负责人</th><th>目标版本</th><th class="num">工作量</th><th style="width:100px">进度</th><th>更新</th><th style="width:34px"></th></tr></thead><tbody>' +
   REQS.map(function (r) {
     return '<tr onclick="openReq(\'' + r.id + '\')">' +
       '<td><span class="checkbox"></span></td>' +
@@ -278,11 +282,15 @@ document.getElementById('reqTable').innerHTML =
       '<div class="t-main ellipsis" style="max-width:330px">' + r.t + '</div>' +
       '<div class="flex items-center gap6 mt4"><span class="id-link">' + r.id + '</span><span class="muted fz11">·</span><span class="muted fz11">' + r.type + '</span>' +
       r.tags.map(function (t) { return '<span class="tag" style="height:16px;font-size:10.5px">' + t + '</span>'; }).join('') + '</div></div></div></td>' +
+      '<td><span class="tag ' + CHTAG[r.ch] + '">' + icon(CHICON[r.ch], 11) + r.ch + '</span>' +
+      '<div class="id-link mt4">' + r.srcId + '</div></td>' +
+      '<td>' + (r.cust ? '<div class="row-flex"><b style="color:var(--brand-600)">' + r.cust + '</b><span class="muted fz11">家</span></div>' +
+        '<div class="muted fz11 ellipsis" style="max-width:120px">' + r.custName + '</div>' : '<span class="muted fz11">' + r.custName + '</span>') + '</td>' +
       '<td class="dim nowrap">' + r.p + '</td>' +
       '<td>' + UI.priority(r.pri) + '</td>' +
       '<td><span class="tag ' + STAG[r.st] + '"><span class="dot-status ' + STC[r.st] + '"></span>' + r.st + '</span></td>' +
-      '<td class="num"><b style="color:' + (r.rice >= 80 ? 'var(--success)' : r.rice >= 60 ? 'var(--ink-800)' : 'var(--ink-400)') + '">' + r.rice + '</b></td>' +
-      '<td><div class="row-flex">' + UI.avatar(r.from, 'sm') + '<span class="fz12">' + r.from + '</span></div></td>' +
+      '<td class="num"><b style="color:' + (r.val >= 80 ? 'var(--success)' : r.val >= 60 ? 'var(--ink-800)' : 'var(--ink-400)') + '">' + r.val + '</b></td>' +
+      '<td class="num"><b style="color:' + (r.urg >= 80 ? 'var(--danger)' : r.urg >= 60 ? 'var(--warning)' : 'var(--ink-400)') + '">' + r.urg + '</b></td>' +
       '<td>' + (r.own === '—' ? '<span class="muted">未分配</span>' : '<div class="row-flex">' + UI.avatar(r.own, 'sm') + '<span class="fz12">' + r.own + '</span></div>') + '</td>' +
       '<td><span class="tag line">' + r.ver + '</span></td>' +
       '<td class="num dim">' + r.eff + ' 人日</td>' +
@@ -318,7 +326,8 @@ document.getElementById('reqBoard').innerHTML = COLS.map(function (c) {
         '<span class="ml-auto tag" style="height:17px">' + r.ver + '</span></div>' +
         '<div class="kcard-title">' + r.t + '</div>' +
         (r.pg ? '<div class="kcard-bar"><i style="width:' + r.pg + '%"></i></div>' : '') +
-        '<div class="kcard-meta"><span class="tag line">' + r.p + '</span>' +
+        '<div class="kcard-meta"><span class="tag ' + CHTAG[r.ch] + '" style="height:17px">' + icon(CHICON[r.ch], 10) + r.ch + '</span>' +
+        (r.cust ? '<span class="tag" style="height:17px">' + icon('building', 10) + r.cust + ' 家</span>' : '') +
         '<span class="muted fz11 spacer">' + r.eff + ' 人日</span>' +
         (r.own === '—' ? '<span class="avatar sm" style="background:var(--ink-200);color:var(--ink-500)">?</span>' : UI.avatar(r.own, 'sm')) + '</div></div>';
     }).join('') + '</div></div>';
@@ -368,31 +377,36 @@ var st = document.createElement('style');
 st.textContent = '.tree-node.closed > .doc-children{display:none}.tree-node.closed .caret{transform:none}';
 document.head.appendChild(st);
 
-/* 四象限散点 */
+/* 价值 × 紧迫度矩阵 */
 (function () {
-  var pts = REQS.map(function (r) { return { x: r.eff, y: r.rice, id: r.id, t: r.t }; });
-  var W = 380, H = 250, pl = 34, pb = 26, pt = 12, pr = 12;
+  var W = 380, H = 250, pl = 36, pb = 30, pt = 14, pr = 14;
   var iw = W - pl - pr, ih = H - pt - pb;
   var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" height="' + H + '">';
-  s += '<rect x="' + pl + '" y="' + pt + '" width="' + iw / 2 + '" height="' + ih / 2 + '" fill="#e6f7f0" opacity=".55"/>';
-  s += '<rect x="' + (pl + iw / 2) + '" y="' + pt + '" width="' + iw / 2 + '" height="' + ih / 2 + '" fill="#fef4e2" opacity=".55"/>';
+  s += '<rect x="' + (pl + iw / 2) + '" y="' + pt + '" width="' + iw / 2 + '" height="' + ih / 2 + '" fill="#fdecec" opacity=".7"/>';
+  s += '<rect x="' + pl + '" y="' + pt + '" width="' + iw / 2 + '" height="' + ih / 2 + '" fill="#eef3ff" opacity=".8"/>';
+  s += '<rect x="' + (pl + iw / 2) + '" y="' + (pt + ih / 2) + '" width="' + iw / 2 + '" height="' + ih / 2 + '" fill="#fef4e2" opacity=".7"/>';
   s += '<line x1="' + (pl + iw / 2) + '" y1="' + pt + '" x2="' + (pl + iw / 2) + '" y2="' + (pt + ih) + '" stroke="#dde4ee" stroke-dasharray="4 3"/>';
   s += '<line x1="' + pl + '" y1="' + (pt + ih / 2) + '" x2="' + (pl + iw) + '" y2="' + (pt + ih / 2) + '" stroke="#dde4ee" stroke-dasharray="4 3"/>';
-  s += '<text x="' + (pl + 6) + '" y="' + (pt + 14) + '" font-size="10" fill="#15a86b">优先交付</text>';
-  s += '<text x="' + (pl + iw - 6) + '" y="' + (pt + 14) + '" font-size="10" fill="#b8760a" text-anchor="end">拆分/评估</text>';
+  s += '<text x="' + (pl + iw - 6) + '" y="' + (pt + 14) + '" font-size="10" fill="#c23b3f" text-anchor="end">立即做</text>';
+  s += '<text x="' + (pl + 6) + '" y="' + (pt + 14) + '" font-size="10" fill="#1d47e6">计划做</text>';
+  s += '<text x="' + (pl + iw - 6) + '" y="' + (pt + ih - 6) + '" font-size="10" fill="#b8760a" text-anchor="end">快速做</text>';
+  s += '<text x="' + (pl + 6) + '" y="' + (pt + ih - 6) + '" font-size="10" fill="#8c9ab1">暂缓</text>';
   s += '<text x="' + (pl - 6) + '" y="' + (pt + 8) + '" font-size="9.5" fill="#8c9ab1" text-anchor="end">100</text>';
   s += '<text x="' + (pl - 6) + '" y="' + (pt + ih) + '" font-size="9.5" fill="#8c9ab1" text-anchor="end">0</text>';
-  s += '<text x="' + (pl + iw / 2) + '" y="' + (H - 6) + '" font-size="10" fill="#8c9ab1" text-anchor="middle">投入（人日）→</text>';
-  pts.forEach(function (p) {
-    var x = pl + iw * Math.min(p.x, 40) / 40, y = pt + ih - ih * p.y / 100;
-    var c = p.y >= 65 && p.x <= 20 ? '#15a86b' : p.y >= 65 ? '#f59e0b' : '#b3bfd0';
-    s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="6" fill="' + c + '" fill-opacity=".75" stroke="#fff" stroke-width="1.5"><title>' + p.id + ' ' + p.t + '（RICE ' + p.y + '，' + p.x + ' 人日）</title></circle>';
+  s += '<text x="' + (pl - 22) + '" y="' + (pt + ih / 2) + '" font-size="10" fill="#8c9ab1" transform="rotate(-90 ' + (pl - 22) + ' ' + (pt + ih / 2) + ')" text-anchor="middle">业务价值 →</text>';
+  s += '<text x="' + (pl + iw / 2) + '" y="' + (H - 6) + '" font-size="10" fill="#8c9ab1" text-anchor="middle">研发紧迫性 →</text>';
+  REQS.forEach(function (p) {
+    var x = pl + iw * p.urg / 100, y = pt + ih - ih * p.val / 100;
+    var c = p.val >= 65 && p.urg >= 65 ? '#e5484d' : p.val >= 65 ? '#2b5cff' : p.urg >= 65 ? '#f59e0b' : '#b3bfd0';
+    var r = 4 + Math.min(p.eff, 36) / 9;
+    s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + c + '" fill-opacity=".72" stroke="#fff" stroke-width="1.5" style="cursor:pointer">' +
+      '<title>' + p.id + ' ' + p.t + '\n价值 ' + p.val + ' · 紧迫 ' + p.urg + ' · 投入 ' + p.eff + ' 人日' + (p.cust ? ' · ' + p.cust + ' 家客户' : '') + '</title></circle>';
   });
   document.getElementById('quadrant').innerHTML = s + '</svg>';
 })();
 
 Charts.hbar('#riceRank', {
-  data: REQS.slice().sort(function (a, b) { return b.rice - a.rice; }).slice(0, 5).map(function (r) { return { name: r.id + ' ' + r.t.slice(0, 12), value: r.rice }; }),
+  data: REQS.slice().sort(function (a, b) { return b.val - a.val; }).slice(0, 5).map(function (r) { return { name: r.id + ' ' + r.t.slice(0, 12), value: r.val }; }),
   unit: ' 分'
 });
 
@@ -443,8 +457,9 @@ document.getElementById('reviewLog').innerHTML = [
 
 /* ---------- 分析图表 ---------- */
 Charts.donut('#srcChart', { size: 150, thickness: 19, center: { value: '128', label: '需求总量' }, data: [
-  { name: '客户反馈', value: 42, color: '#2b5cff' }, { name: '内部规划', value: 38, color: '#7c5cff' },
-  { name: '监管合规', value: 21, color: '#e5484d' }, { name: '数据洞察', value: 15, color: '#15a86b' }, { name: '竞品对标', value: 12, color: '#f59e0b' }] });
+  { name: '工单转化', value: 32, color: '#2b5cff' }, { name: '客户反馈', value: 35, color: '#0fb5ba' },
+  { name: '产品规划', value: 38, color: '#7c5cff' }, { name: '监管合规', value: 15, color: '#e5484d' },
+  { name: '数据洞察 / 竞品', value: 8, color: '#f59e0b' }] });
 Charts.donut('#stChart', { size: 150, thickness: 19, center: { value: '46', label: '进行中' }, data: [
   { name: '开发中', value: 28, color: '#2b5cff' }, { name: '测试中', value: 18, color: '#0fb5ba' },
   { name: '待排期', value: 24, color: '#7c5cff' }, { name: '评审中', value: 7, color: '#f59e0b' },
@@ -488,6 +503,7 @@ function openReq(id) {
     return '<div class="link-item"><span class="checkbox' + (i < 2 ? ' checked' : '') + '"></span><span class="fz12" style="flex:1">' + a + '</span></div>';
   }).join('');
   document.getElementById('dReqLinks').innerHTML = [
+    { i: 'inbox', c: 'req', t: '来源工单 ' + r.srcId + (r.cust ? '（合并 ' + r.cust + ' 家客户同类诉求）' : ''), m: '需求上线后自动回访关联客户' },
     { i: 'kanban', c: 'task', t: 'PRJ-018 统一支付网关 3.0 重构', m: '所属项目 · 进行中' },
     { i: 'file', c: 'story', t: 'STORY-3312 路由策略配置界面', m: '王倩 · 5 点 · 开发中' },
     { i: 'file', c: 'story', t: 'STORY-3313 成本与成功率实时计算引擎', m: '何俊 · 8 点 · 待开发' },
@@ -504,8 +520,10 @@ function openReq(id) {
     ['优先级', UI.priority(r.pri)],
     ['所属产品', r.p],
     ['需求类型', r.type],
-    ['需求来源', r.src],
-    ['RICE 评分', '<b>' + r.rice + '</b> <span class="muted fz11">（排名 3/128）</span>'],
+    ['来源渠道', '<span class="tag ' + CHTAG[r.ch] + '">' + r.ch + '</span> <span class="id-link">' + r.srcId + '</span>'],
+    ['客户呼声', r.cust ? '<b style="color:var(--brand-600)">' + r.cust + '</b> 家 · ' + r.custName : r.custName],
+    ['业务价值', '<b style="color:var(--success)">' + r.val + '</b> <span class="muted fz11">（排名 3/128）</span>'],
+    ['研发紧迫性', '<b style="color:var(--danger)">' + r.urg + '</b> <span class="muted fz11">（' + (r.urg >= 80 ? '立即做' : r.urg >= 60 ? '本季内' : '可延后') + '）</span>'],
     ['提出人', UI.avatar(r.from, 'sm') + ' ' + r.from],
     ['产品负责人', UI.avatar('周雅', 'sm') + ' 周雅'],
     ['研发负责人', r.own === '—' ? '<span class="muted">未分配</span>' : UI.avatar(r.own, 'sm') + ' ' + r.own],

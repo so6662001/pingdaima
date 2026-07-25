@@ -19,6 +19,8 @@
             <span class="tag warning"><span class="dot-status orange"></span>评审中</span>
             <span class="pri pri-p0" data-pri></span>
             <span class="tag line">统一支付网关 / V3.0</span>
+            <span class="tag brand"><span data-icon="compass" data-size="11"></span>来源：产品规划 PLAN-Q3-02</span>
+            <span class="tag teal"><span data-icon="building" data-size="11"></span>3 家客户呼声</span>
             <div class="ml-auto flex gap6">
               <button class="btn btn-sm"><span data-icon="star" data-size="13"></span>关注</button>
               <button class="btn btn-sm"><span data-icon="share" data-size="13"></span>分享</button>
@@ -50,6 +52,7 @@
             <div class="tab" data-tab="d3">测试与质量 <span class="cnt">26</span></div>
             <div class="tab" data-tab="d4">代码与发布 <span class="cnt">14</span></div>
             <div class="tab" data-tab="d5">活动 <span class="cnt">32</span></div>
+            <div class="tab" data-tab="d6">价值与复盘</div>
           </div>
 
           <div class="tab-pane active" data-pane="d1">
@@ -137,14 +140,31 @@
           <div class="tab-pane" data-pane="d5">
             <div class="card"><div class="card-body"><div class="timeline" id="actLog"></div></div></div>
           </div>
+
+          <div class="tab-pane" data-pane="d6">
+            <div class="card mb16">
+              <div class="card-head"><div class="card-title"><span data-icon="target"></span>价值度量口径（上线前约定）</div>
+                <div class="card-sub">上线 30 天后系统自动对照实际数据生成复盘</div>
+                <div class="card-head-actions"><span class="tag warning">待上线复盘</span></div></div>
+              <div class="card-body flush"><table class="tbl" id="kpiTable"></table></div>
+            </div>
+            <div class="grid g-2-1">
+              <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>复盘计划</div></div>
+                <div class="card-body"><div class="timeline" id="retroPlan"></div></div></div>
+              <div class="card"><div class="card-head"><div class="card-title"><span data-icon="building"></span>客户影响面与回访计划</div></div>
+                <div class="card-body" id="custPlan"></div></div>
+            </div>
+          </div>
         </div>
 
         <!-- 右侧属性栏 -->
         <div class="grid" style="gap:14px;align-content:start">
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="sliders"></span>需求属性</div></div>
             <div class="card-body" style="padding:8px 14px"><div class="props" id="props"></div></div></div>
-          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>RICE 价值评估</div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>价值与紧迫性评估</div></div>
             <div class="card-body" id="riceBox"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="building"></span>客户与来源</div></div>
+            <div class="card-body" style="padding:10px 14px" id="custBox"></div></div>
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>参与人</div></div>
             <div class="card-body" id="people"></div></div>
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="link"></span>关联项</div></div>
@@ -306,7 +326,10 @@ document.getElementById('actLog').innerHTML = [
 document.getElementById('props').innerHTML = [
   ['状态', '<span class="tag warning">评审中</span>'], ['优先级', UI.priority('P0')],
   ['需求类型', '功能需求'], ['所属产品', '统一支付网关'], ['产品模块', '路由与渠道'],
-  ['需求来源', '内部规划'], ['提出人', UI.avatar('周雅', 'sm') + ' 周雅'],
+  ['来源渠道', '<span class="tag purple">产品规划</span> <span class="id-link">PLAN-Q3-02</span>'],
+  ['业务价值', '<b style="color:var(--success)">92</b> / 100'],
+  ['研发紧迫性', '<b style="color:var(--danger)">88</b> / 100（立即做）'],
+  ['客户呼声', '<b style="color:var(--brand-600)">3</b> 家（含 2 家战略客户）'], ['提出人', UI.avatar('周雅', 'sm') + ' 周雅'],
   ['产品负责人', UI.avatar('周雅', 'sm') + ' 周雅'], ['研发负责人', UI.avatar('李思远', 'sm') + ' 李思远'],
   ['测试负责人', UI.avatar('吴敏', 'sm') + ' 吴敏'], ['目标版本', '<span class="tag line">V3.0</span>'],
   ['关联项目', '<a style="color:var(--brand-600)" href="project-detail.html">PRJ-018</a>'],
@@ -314,16 +337,74 @@ document.getElementById('props').innerHTML = [
 ].map(function (p) { return '<div class="prop"><span class="k">' + p[0] + '</span><span class="v editable">' + p[1] + '</span></div>'; }).join('');
 
 document.getElementById('riceBox').innerHTML =
-  '<div class="flex items-center gap12 mb12"><div style="flex:none">' +
-  '<div style="font-size:30px;font-weight:650;color:var(--success);line-height:1">92</div>' +
-  '<div class="muted fz11">RICE 总分</div></div>' +
-  '<div style="flex:1"><div class="fz11 muted">全池排名</div><div class="fw6">3 / 128</div>' +
-  '<div class="fz11 muted mt4">价值分位 <b style="color:var(--success)">TOP 3%</b></div></div></div>' +
-  [['Reach 触达商户数', 82, '12.8 万商户'], ['Impact 业务影响', 95, '成功率 +1.5pt'], ['Confidence 信心度', 85, '方案已验证'], ['Effort 投入成本', 62, '21 人日']]
+  '<div class="grid g2 mb12" style="gap:10px">' +
+  '<div style="background:var(--success-bg);border-radius:9px;padding:10px 12px"><div class="muted fz11">业务价值</div>' +
+  '<div style="font-size:26px;font-weight:650;color:var(--success);line-height:1.2">92</div>' +
+  '<div class="muted fz11">全池排名 3 / 128</div></div>' +
+  '<div style="background:var(--danger-bg);border-radius:9px;padding:10px 12px"><div class="muted fz11">研发紧迫性</div>' +
+  '<div style="font-size:26px;font-weight:650;color:var(--danger);line-height:1.2">88</div>' +
+  '<div class="muted fz11">结论：立即做</div></div></div>' +
+  '<div class="fz12 fw6 mb8">价值构成</div>' +
+  [['客户影响面（3 家 / GMV 42 亿）', 88], ['业务收益（成功率 +1.5pt）', 95], ['战略契合度（降本一号工程）', 92], ['方案信心度', 85]]
     .map(function (r) {
       return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '</b></div>' +
-        UI.bar(r[1], r[1] >= 80 ? 'green' : '', 'thin') + '<div class="muted fz11 mt4">' + r[2] + '</div></div>';
-    }).join('');
+        UI.bar(r[1], r[1] >= 80 ? 'green' : '', 'thin') + '</div>';
+    }).join('') +
+  '<div class="fz12 fw6 mt12 mb8">紧迫性构成</div>' +
+  [['时间窗口（大促前必须上线）', 92], ['客户/合规压力', 85], ['风险与损失（成本持续外流）', 90], ['依赖阻塞（阻塞 3 项需求）', 78]]
+    .map(function (r) {
+      return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '</b></div>' +
+        UI.bar(r[1], r[1] >= 80 ? 'orange' : '', 'thin') + '</div>';
+    }).join('') +
+  '<div class="tl-box mt8">评估由产品、研发、客户经理三方打分，取加权均值；分值进入需求池「价值 × 紧迫度矩阵」自动排序。</div>';
+
+document.getElementById('custBox').innerHTML = [
+  ['星辰出行科技', '战略', '大促期间通道拥塞导致成功率下降'],
+  ['华南连锁商超集团', '战略', '希望降低通道费率'],
+  ['云上餐饮连锁', 'KA', '多渠道结算成功率不稳定']
+].map(function (c) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag ' + (c[1] === '战略' ? 'danger' : 'purple') + '">' + c[1] + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + c[0] + '</div><div class="muted fz11">' + c[2] + '</div></div></div>';
+}).join('') + '<a class="btn btn-sm btn-block mt8" href="customer.html">查看客户跟踪</a>';
+
+/* 价值与复盘 */
+document.getElementById('kpiTable').innerHTML =
+  '<thead><tr><th>收益指标</th><th>当前基线</th><th>目标值</th><th>度量方式</th><th>数据来源</th><th>责任人</th></tr></thead><tbody>' +
+  [['支付成功率', '97.4%', '≥ 98.9%', '上线后 30 天日均', '交易监控大盘', '林小满'],
+   ['通道综合费率', '0.380%', '≤ 0.357%', '月度加权平均', '清结算对账数据', '何俊'],
+   ['单通道故障影响面', '100%', '≤ 30%', '故障演练实测', '混沌工程平台', '林小满'],
+   ['大促期间客诉量', '月 86 起', '≤ 40 起', '工单系统统计', '工单管理', '王倩'],
+   ['策略配置生效时长', '需发版（约 3 天）', '≤ 30 秒', '功能验收实测', '测试报告', '吴敏']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim">' + r[1] + '</td><td><b>' + r[2] + '</b></td>' +
+      '<td class="fz12 muted">' + r[3] + '</td><td class="fz12 muted">' + r[4] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[5], 'sm') + '<span class="fz12">' + r[5] + '</span></div></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('retroPlan').innerHTML = [
+  { c: 'green', i: 'check', t: '<b>需求评审</b>：锁定 5 项可量化收益指标与度量方式', time: '07-21 已完成' },
+  { c: 'brand', i: 'refresh', t: '<b>上线前</b>：埋点与监控看板就位，基线数据快照留存', time: '计划 09-25' },
+  { c: '', i: 'rocket', t: '<b>上线后 7 天</b>：自动触发客户回访任务（3 家关联客户）', time: '计划 10-07' },
+  { c: '', i: 'history', t: '<b>上线后 30 天</b>：系统自动生成价值复盘报告，对照目标与实际', time: '计划 10-30' },
+  { c: '', i: 'award', t: '<b>复盘结论</b>：达成情况 + ROI + 经验沉淀，归档知识库', time: '计划 11-05' }
+].map(function (f) {
+  return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+    '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div></div>';
+}).join('');
+document.getElementById('custPlan').innerHTML =
+  '<div class="grid g2 mb12" style="gap:10px">' +
+  '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">直接影响客户</div>' +
+  '<div class="fw6 fz17">3 家</div><div class="muted fz11">含 2 家战略客户</div></div>' +
+  '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">涉及交易规模</div>' +
+  '<div class="fw6 fz17">¥ 96 亿</div><div class="muted fz11">占平台 24.8%</div></div></div>' +
+  [['星辰出行科技', '合同承诺 09-30 前上线', 'danger'], ['华南连锁商超集团', '意向沟通，Q4 前可接受', 'warning'],
+   ['云上餐饮连锁', '无明确承诺，上线后回访', '']].map(function (c) {
+    return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+      '<span class="tico req">' + icon('building', 11) + '</span>' +
+      '<div style="flex:1;min-width:0"><div class="fz12">' + c[0] + '</div><div class="muted fz11">' + c[1] + '</div></div>' +
+      (c[2] ? '<span class="tag ' + c[2] + '">承诺</span>' : '') + '</div>';
+  }).join('') +
+  '<div class="tl-box mt12">上线后系统将自动向以上客户发送交付通知，并在 7 天后触发满意度回访，回访结果计入需求价值复盘。</div>';
 
 document.getElementById('people').innerHTML = [
   ['周雅', '产品负责人'], ['李思远', '研发负责人'], ['陈立', '架构评审'], ['吴敏', '测试负责人'], ['林小满', 'SRE 支持'], ['沈知远', '决策人']

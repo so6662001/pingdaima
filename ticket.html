@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工单管理 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="ticket" data-crumb="需求与客户/工单管理">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">工单管理 · 服务台</div>
+          <div class="page-desc">多渠道受理 · SLA 时效管控 · 工单转需求 · 客户满意度闭环</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn"><span data-icon="sliders"></span>服务规则</button>
+          <button class="btn" data-toast="工单日报已推送至服务群"><span data-icon="send"></span>服务日报</button>
+          <button class="btn btn-primary" data-modal="mNewTicket"><span data-icon="plus"></span>新建工单</button>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="tkStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="k1"><span data-icon="list" data-size="14"></span>工单池 <span class="cnt">23</span></div>
+        <div class="tab" data-tab="k2"><span data-icon="kanban" data-size="14"></span>处理看板</div>
+        <div class="tab" data-tab="k3"><span data-icon="timer" data-size="14"></span>SLA 与时效</div>
+        <div class="tab" data-tab="k4"><span data-icon="pie" data-size="14"></span>反馈分析与转化</div>
+        <div class="tab" data-tab="k5"><span data-icon="workflow" data-size="14"></span>服务目录与规则</div>
+      </div>
+
+      <!-- 工单池 -->
+      <div class="tab-pane active" data-pane="k1">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索工单号 / 标题 / 客户"></div>
+          <div class="filter on"><span data-icon="circleDot"></span>状态：<b>未关闭</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="share"></span>受理渠道<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="building"></span>客户<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="tag"></span>工单类型<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="user"></span>处理人<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="warn"></span>仅看 SLA 风险</div>
+          <div class="ml-auto flex items-center gap8">
+            <span class="fz12 muted">未关闭 <b style="color:var(--danger)">23</b> · SLA 超时 <b style="color:var(--danger)">3</b> · 待转需求 <b style="color:var(--warning)">5</b></span>
+          </div>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="table-wrap" style="max-height:calc(100vh - 330px);overflow:auto">
+          <table class="tbl" id="tkTable"></table></div></div>
+          <div class="card-foot">显示 1-14 条，共 23 条未关闭工单 · 本月累计受理 386 条</div>
+        </div>
+      </div>
+
+      <!-- 看板 -->
+      <div class="tab-pane" data-pane="k2">
+        <div class="toolbar">
+          <div class="btn-group"><button class="active">按状态</button><button>按渠道</button><button>按客户等级</button></div>
+          <div class="filter"><span data-icon="flag"></span>优先级<span data-icon="down"></span></div>
+          <span class="ml-auto fz12 muted">红色左边条表示 SLA 即将超时或已超时</span>
+        </div>
+        <div class="board" id="tkBoard"></div>
+      </div>
+
+      <!-- SLA -->
+      <div class="tab-pane" data-pane="k3">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>首响与解决时长趋势</div>
+            <div class="card-sub">近 8 周（小时）</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#2b5cff"></i>平均首响</span><span><i style="background:#15a86b"></i>平均解决</span><span><i style="background:#e5484d"></i>SLA 超时数</span></div>
+              <div id="slaTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>SLA 达成率</div></div>
+            <div class="card-body"><div id="slaGauge"></div><div class="divider"></div><div id="slaByPri"></div></div></div>
+        </div>
+        <div class="grid g2">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="warn"></span>SLA 风险工单</div>
+            <div class="card-head-actions"><span class="tag danger">3 已超时</span><span class="tag warning">4 即将超时</span></div></div>
+            <div class="card-body flush"><table class="tbl" id="riskTk"></table></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>服务人员工作量</div></div>
+            <div class="card-body"><div id="agentBar"></div>
+              <div class="divider"></div><div id="agentTable"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 分析与转化 -->
+      <div class="tab-pane" data-pane="k4">
+        <div class="grid g3 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="share"></span>受理渠道分布</div></div>
+            <div class="card-body"><div id="chDonut"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="tag"></span>工单类型分布</div></div>
+            <div class="card-body"><div id="typeDonut"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="thumb"></span>客户满意度 CSAT</div></div>
+            <div class="card-body"><div id="csat"></div><div class="divider"></div><div id="csatList"></div></div></div>
+        </div>
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="workflow"></span>工单 → 需求转化漏斗</div>
+            <div class="card-sub">客户声音如何进入研发流程</div></div>
+            <div class="card-body"><div id="funnel"></div>
+              <div class="tl-box mt12">本月 386 条工单中，<b>68 条</b>被识别为产品改进诉求，<b>32 条</b>合并去重后提交为需求，
+                <b>21 条</b>通过价值评审进入排期，<b>9 条</b>已上线交付并回访客户。转化链路全程可追溯。</div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="trendUp"></span>热点问题 TOP</div>
+            <div class="card-sub">近 30 天聚类</div></div>
+            <div class="card-body"><div id="hotIssue"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 服务目录与规则 -->
+      <div class="tab-pane" data-pane="k5">
+        <div class="grid g-2-1">
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="folder"></span>服务目录</div>
+              <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="plus" data-size="13"></span>新增分类</button></div></div>
+              <div class="card-body flush"><table class="tbl" id="catTable"></table></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="bolt"></span>自动分派与升级规则</div></div>
+              <div class="card-body" id="rules"></div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>SLA 策略</div></div>
+              <div class="card-body flush"><table class="tbl" id="slaPolicy"></table></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="share"></span>受理渠道接入</div></div>
+              <div class="card-body" id="channels"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 工单详情抽屉 -->
+<div class="drawer" id="dTk" style="width:820px">
+  <div class="drawer-head">
+    <span class="tico req" id="tkIco"></span>
+    <div style="flex:1;min-width:0">
+      <div class="flex items-center gap8"><span class="id-link" id="tkId">TK-3821</span>
+        <span class="tag danger" id="tkPri">P1</span><span class="tag brand" id="tkSt">处理中</span>
+        <span class="tag warning" id="tkSla">SLA 剩余 1.5h</span></div>
+      <div class="fw6" style="font-size:14.5px;color:var(--ink-900)" id="tkTitle">大额账单导出超时，影响门店对账</div>
+    </div>
+    <button class="btn btn-sm btn-soft" data-modal="mToReq"><span data-icon="bulb" data-size="13"></span>转为需求</button>
+    <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
+  </div>
+  <div class="drawer-body">
+    <div style="display:grid;grid-template-columns:1fr 268px;min-height:100%">
+      <div style="padding:16px 18px;border-right:1px solid var(--ink-100)">
+        <div class="fw6 mb8">问题描述</div>
+        <div class="fz13" style="color:var(--ink-600);line-height:1.85" id="tkDesc"></div>
+        <div class="fw6 mt20 mb8">SLA 计时</div>
+        <div id="tkSlaBox"></div>
+        <div class="fw6 mt20 mb8">处理记录</div>
+        <div class="timeline" id="tkLog"></div>
+        <div class="fw6 mt20 mb8">回复客户</div>
+        <div class="flex gap8 items-start">
+          <span class="avatar" style="background:linear-gradient(135deg,#2b5cff,#7c5cff)">SZ</span>
+          <div style="flex:1"><textarea class="textarea" style="min-height:60px" placeholder="回复内容将同步至客户企业微信与邮件…"></textarea>
+            <div class="flex gap8 mt8"><button class="btn btn-sm">插入知识库方案</button>
+              <button class="btn btn-sm btn-primary ml-auto" data-toast="回复已发送给客户">发送回复</button></div></div>
+        </div>
+      </div>
+      <div style="padding:16px 14px">
+        <div class="fz12 fw6 mb8">客户信息</div>
+        <div id="tkCust"></div>
+        <div class="divider"></div>
+        <div class="props" id="tkProps"></div>
+        <div class="divider"></div>
+        <div class="fz12 fw6 mb8">关联项</div>
+        <div id="tkLinks"></div>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" data-toast="已转派给二线支持">转派</button>
+    <button class="btn" data-toast="已挂起，等待客户补充信息">等待客户</button>
+    <button class="btn btn-primary" data-toast="工单已解决，满意度邀请已发送">标记已解决</button>
+  </div>
+</div>
+
+<!-- 工单转需求 -->
+<div class="modal" id="mToReq" style="width:660px">
+  <div class="modal-head"><span data-icon="bulb"></span><span class="modal-title">工单转需求</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16">来源工单 <b>TK-3821</b>（华南连锁商超集团 · P1）· 系统已识别到 <b style="color:var(--brand-600)">另有 7 家客户</b>提交过同类诉求，建议合并为同一需求以放大价值权重。</div>
+    <div class="field"><label>需求标题<span class="req">*</span></label><input class="input" value="商户后台大额账单异步导出与进度提醒"></div>
+    <div class="form-row">
+      <div class="field"><label>所属产品</label><select class="select"><option>商户运营中心</option><option>统一支付网关</option></select></div>
+      <div class="field"><label>需求来源渠道</label><select class="select"><option>工单（客户诉求）</option><option>客户反馈</option><option>产品规划</option></select></div>
+    </div>
+    <div class="field"><label>关联客户（影响面）</label>
+      <div class="flex flex-wrap gap6" id="mergeCust"></div>
+      <div class="hint">关联客户越多，需求价值评分中的「客户影响面」权重越高</div></div>
+    <div class="form-row">
+      <div class="field"><label>业务价值评分</label>
+        <div class="flex items-center gap8"><input class="input" value="76" style="width:70px"><div style="flex:1" id="valBar"></div></div>
+        <div class="hint">影响客户数 8 家 · 涉及 GMV 12.4 亿 · 客诉 23 起</div></div>
+      <div class="field"><label>研发紧迫性</label>
+        <div class="flex items-center gap8"><input class="input" value="82" style="width:70px"><div style="flex:1" id="urgBar"></div></div>
+        <div class="hint">战略客户已升级 · 月结日临近 · 存在合规风险</div></div>
+    </div>
+    <div class="field"><label>期望交付时间</label><input class="input" value="2026-08-20（客户承诺）"></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">需求状态变更时自动回写工单并通知客户</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button>
+    <button class="btn" data-close data-toast="已合并到已有需求 REQ-2036">合并到已有需求</button>
+    <button class="btn btn-primary" data-close data-toast="需求已创建（REQ-2046），并与工单建立双向关联">创建需求</button></div>
+</div>
+
+<div class="modal" id="mNewTicket">
+  <div class="modal-head"><span data-icon="inbox"></span><span class="modal-title">新建工单</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>工单标题<span class="req">*</span></label><input class="input" placeholder="简述客户遇到的问题或诉求"></div>
+    <div class="form-row">
+      <div class="field"><label>客户<span class="req">*</span></label><select class="select"><option>华南连锁商超集团（战略）</option><option>星辰出行科技（KA）</option><option>云上餐饮连锁（KA）</option></select></div>
+      <div class="field"><label>受理渠道</label><select class="select"><option>客服热线</option><option>企业微信</option><option>客户经理转达</option><option>邮件</option><option>开放平台工单</option><option>官网在线客服</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>工单类型</label><select class="select"><option>故障报障</option><option>需求建议</option><option>使用咨询</option><option>投诉</option><option>数据订正</option></select></div>
+      <div class="field"><label>优先级</label><select class="select"><option>P1 严重（4h 解决）</option><option>P0 紧急（1h 解决）</option><option>P2 一般（1 天）</option><option>P3 低（3 天）</option></select></div>
+    </div>
+    <div class="field"><label>问题描述</label><textarea class="textarea" placeholder="现象、影响范围、发生时间、客户诉求"></textarea></div>
+    <div class="field"><label>处理人</label><select class="select"><option>自动分派（按服务目录规则）</option><option>王倩</option><option>何俊</option></select></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="工单已创建并按规则分派，SLA 计时开始">创建工单</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('tkStats').innerHTML = [
+  { l: '未关闭工单', v: 23, u: '条', i: 'inbox', c: '#2b5cff', bg: 'var(--brand-50)', f: '今日新增 12 条' },
+  { l: 'SLA 达成率', v: '94.2', u: '%', i: 'target', c: '#15a86b', bg: 'var(--success-bg)', f: '目标 ≥ 95%' },
+  { l: '平均首响', v: '18', u: '分钟', i: 'zap', c: '#7c5cff', bg: 'var(--purple-bg)', f: '承诺 ≤ 30 分钟' },
+  { l: '平均解决', v: '6.4', u: '小时', i: 'timer', c: '#f59e0b', bg: 'var(--warning-bg)', f: '环比 −1.2h' },
+  { l: '客户满意度', v: '4.6', u: '/5', i: 'thumb', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '回访率 78%' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+var CH_ICON = { '客服热线': 'comment', '企业微信': 'comment', '客户经理': 'user', '邮件': 'mail', '开放平台': 'cloud', '官网客服': 'share' };
+var TICKETS = [
+  { id: 'TK-3821', t: '大额账单导出超时，影响 32 家门店月度对账', c: '华南连锁商超集团', lv: '战略', ch: '客户经理', ty: '故障报障', pri: 'P1', st: '处理中', own: '王倩', sla: '剩余 1.5h', risk: 1, req: 'REQ-2036', time: '今天 09:12' },
+  { id: 'TK-3820', t: '希望支持按门店维度自动分账', c: '云上餐饮连锁', lv: 'KA', ch: '企业微信', ty: '需求建议', pri: 'P2', st: '待转需求', own: '孙悦', sla: '剩余 1.2 天', risk: 0, req: '—', time: '今天 08:40' },
+  { id: 'TK-3819', t: '数字人民币支付回调失败率升高', c: '星辰出行科技', lv: 'KA', ch: '开放平台', ty: '故障报障', pri: 'P0', st: '处理中', own: '何俊', sla: '已超时 0.6h', risk: 2, req: 'BUG-762', time: '今天 07:55' },
+  { id: 'TK-3818', t: '对账文件字段说明不清，需要文档', c: '优鲜生活超市', lv: '普通', ch: '邮件', ty: '使用咨询', pri: 'P3', st: '待客户确认', own: '赵鹏', sla: '剩余 2.1 天', risk: 0, req: '—', time: '昨天 17:20' },
+  { id: 'TK-3817', t: '商户后台登录频繁掉线', c: '悦享连锁酒店', lv: 'KA', ch: '客服热线', ty: '故障报障', pri: 'P1', st: '处理中', own: '王倩', sla: '剩余 3.4h', risk: 0, req: 'BUG-768', time: '昨天 16:02' },
+  { id: 'TK-3816', t: '申请提高开放平台 API 调用限额', c: '星辰出行科技', lv: 'KA', ch: '开放平台', ty: '需求建议', pri: 'P2', st: '待转需求', own: '陈立', sla: '剩余 8h', risk: 1, req: '—', time: '昨天 14:36' },
+  { id: 'TK-3815', t: '结算到账时间比承诺晚 2 小时', c: '华南连锁商超集团', lv: '战略', ch: '客户经理', ty: '投诉', pri: 'P1', st: '已解决', own: '何俊', sla: '按时完成', risk: 0, req: '—', time: '昨天 11:10' },
+  { id: 'TK-3814', t: '希望账单支持导出 PDF 版本', c: '优鲜生活超市', lv: '普通', ch: '官网客服', ty: '需求建议', pri: 'P3', st: '待转需求', own: '孙悦', sla: '剩余 1.8 天', risk: 0, req: '—', time: '昨天 10:22' },
+  { id: 'TK-3813', t: '风控规则误拦截正常交易 14 笔', c: '云上餐饮连锁', lv: 'KA', ch: '企业微信', ty: '故障报障', pri: 'P1', st: '待验证', own: '郑宇', sla: '剩余 5.2h', risk: 0, req: 'BUG-751', time: '前天 19:48' },
+  { id: 'TK-3812', t: '收银台在门店老旧安卓机上白屏', c: '悦享连锁酒店', lv: 'KA', ch: '客服热线', ty: '故障报障', pri: 'P2', st: '已解决', own: '王倩', sla: '按时完成', risk: 0, req: 'BUG-755', time: '前天 15:30' },
+  { id: 'TK-3811', t: '需要提供交易数据的开放查询接口', c: '数智物流科技', lv: '普通', ch: '开放平台', ty: '需求建议', pri: 'P2', st: '待转需求', own: '陈立', sla: '剩余 6h', risk: 1, req: '—', time: '前天 14:02' },
+  { id: 'TK-3810', t: '批量退款操作没有进度提示', c: '云上餐饮连锁', lv: 'KA', ch: '官网客服', ty: '需求建议', pri: 'P3', st: '待转需求', own: '孙悦', sla: '剩余 2.4 天', risk: 0, req: '—', time: '3 天前' },
+  { id: 'TK-3809', t: '月结账单金额与自有系统差 0.02 元', c: '优鲜生活超市', lv: '普通', ch: '邮件', ty: '数据订正', pri: 'P2', st: '处理中', own: '何俊', sla: '已超时 3.2h', risk: 2, req: '—', time: '3 天前' },
+  { id: 'TK-3808', t: '希望增加对账差错的自动补单能力', c: '华南连锁商超集团', lv: '战略', ch: '客户经理', ty: '需求建议', pri: 'P1', st: '已转需求', own: '周雅', sla: '按时完成', risk: 0, req: 'REQ-2035', time: '4 天前' }
+];
+var TSTAG = { '新建': '', '处理中': 'brand', '待客户确认': 'warning', '待验证': 'purple', '待转需求': 'warning', '已转需求': 'success', '已解决': 'success', '已关闭': '' };
+var LVTAG = { '战略': 'danger', 'KA': 'purple', '普通': '' };
+
+document.getElementById('tkTable').innerHTML =
+  '<thead><tr><th style="width:30px"><span class="checkbox"></span></th><th style="width:26%">工单</th><th>客户</th><th>渠道</th><th>类型</th>' +
+  '<th>优先级</th><th>状态</th><th>处理人</th><th>SLA</th><th>关联</th><th>创建时间</th><th style="width:34px"></th></tr></thead><tbody>' +
+  TICKETS.map(function (k) {
+    return '<tr onclick="openTk(\'' + k.id + '\')"><td><span class="checkbox"></span></td>' +
+      '<td><div class="row-flex"><span class="tico req">' + icon('inbox', 11) + '</span><div style="min-width:0">' +
+      '<div class="t-main ellipsis" style="max-width:300px">' + k.t + '</div><div class="id-link">' + k.id + '</div></div></div></td>' +
+      '<td><div class="row-flex"><span class="tag ' + LVTAG[k.lv] + '" style="height:17px">' + k.lv + '</span><span class="fz12">' + k.c + '</span></div></td>' +
+      '<td><span class="tag line">' + icon(CH_ICON[k.ch] || 'share', 11) + k.ch + '</span></td>' +
+      '<td class="dim fz12">' + k.ty + '</td>' +
+      '<td>' + UI.priority(k.pri) + '</td>' +
+      '<td><span class="tag ' + TSTAG[k.st] + '">' + k.st + '</span></td>' +
+      '<td><div class="row-flex">' + UI.avatar(k.own, 'sm') + '<span class="fz12">' + k.own + '</span></div></td>' +
+      '<td><span class="tag ' + (k.risk === 2 ? 'danger' : k.risk === 1 ? 'warning' : 'success') + '">' + k.sla + '</span></td>' +
+      '<td>' + (k.req === '—' ? '<span class="muted">—</span>' : '<a class="id-link" style="color:var(--brand-600)">' + k.req + '</a>') + '</td>' +
+      '<td class="muted fz11 nowrap">' + k.time + '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'转为需求\',icon:\'bulb\'},{label:\'转派\',icon:\'user\'},{label:\'升级优先级\',icon:\'arrowUp\'},{label:\'关联缺陷\',icon:\'bug\'},{label:\'关闭工单\',icon:\'x\'}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 看板 */
+var TCOLS = [{ n: '新建待受理', c: '#b3bfd0' }, { n: '处理中', c: '#2b5cff' }, { n: '待客户确认', c: '#f59e0b' },
+  { n: '待转需求', c: '#7c5cff' }, { n: '待验证', c: '#0fb5ba' }, { n: '已解决', c: '#15a86b' }];
+document.getElementById('tkBoard').innerHTML = TCOLS.map(function (col) {
+  var items = TICKETS.filter(function (k) { return k.st === col.n || (col.n === '新建待受理' && k.st === '新建'); });
+  if (col.n === '已解决') items = TICKETS.filter(function (k) { return k.st === '已解决' || k.st === '已转需求'; });
+  return '<div class="board-col"><div class="board-col-head"><span class="dot-status" style="background:' + col.c + '"></span>' +
+    '<span class="name">' + col.n + '</span><span class="cnt">' + items.length + '</span><span class="add">' + icon('plus', 14) + '</span></div>' +
+    '<div class="board-col-body">' + (items.length ? items.map(function (k) {
+      return '<div class="kcard" onclick="openTk(\'' + k.id + '\')" style="border-left:3px solid ' + (k.risk === 2 ? 'var(--danger)' : k.risk === 1 ? 'var(--warning)' : 'transparent') + '">' +
+        '<div class="kcard-top"><span class="id-link">' + k.id + '</span>' + UI.priority(k.pri) +
+        '<span class="ml-auto tag ' + LVTAG[k.lv] + '" style="height:17px">' + k.lv + '</span></div>' +
+        '<div class="kcard-title">' + k.t + '</div>' +
+        '<div class="kcard-meta"><span class="tag line">' + k.c.slice(0, 6) + '</span>' +
+        '<span class="tag ' + (k.risk ? 'danger' : '') + '" style="height:17px">' + k.sla + '</span>' +
+        '<span class="spacer"></span>' + UI.avatar(k.own, 'sm') + '</div></div>';
+    }).join('') : '<div class="empty" style="padding:22px">' + icon('inbox', 28) + '<div class="t fz12">暂无工单</div></div>') + '</div></div>';
+}).join('');
+UI.initKanban();
+
+/* SLA */
+Charts.bar('#slaTrend', {
+  height: 250, labels: ['W23', 'W24', 'W25', 'W26', 'W27', 'W28', 'W29', 'W30'],
+  series: [{ name: 'SLA 超时', data: [8, 7, 6, 5, 4, 4, 3, 3], color: '#e5484d' }],
+  lineSeries: { name: '平均解决(h)', data: [9.2, 8.6, 8.1, 7.6, 7.2, 6.8, 6.6, 6.4], color: '#15a86b' }, lineMax: 12
+});
+Charts.gauge('#slaGauge', { value: 94.2, max: 100, text: '94.2%', label: 'SLA 整体达成率', color: '#15a86b', size: 180 });
+document.getElementById('slaByPri').innerHTML = [['P0（1h 解决）', 88, 'orange'], ['P1（4h 解决）', 92, 'orange'], ['P2（1 天）', 96, 'green'], ['P3（3 天）', 99, 'green']]
+  .map(function (r) {
+    return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2], 'thin') + '</div>';
+  }).join('');
+document.getElementById('riskTk').innerHTML =
+  '<thead><tr><th>工单</th><th>客户</th><th>处理人</th><th>SLA</th><th>升级</th></tr></thead><tbody>' +
+  TICKETS.filter(function (k) { return k.risk; }).map(function (k) {
+    return '<tr onclick="openTk(\'' + k.id + '\')"><td><div><div class="t-main ellipsis" style="max-width:240px">' + k.t + '</div>' +
+      '<div class="id-link">' + k.id + ' · ' + k.pri + '</div></div></td>' +
+      '<td class="fz12">' + k.c + '</td><td><div class="row-flex">' + UI.avatar(k.own, 'sm') + '</div></td>' +
+      '<td><span class="tag ' + (k.risk === 2 ? 'danger' : 'warning') + '">' + k.sla + '</span></td>' +
+      '<td onclick="event.stopPropagation()"><button class="btn btn-sm" data-toast="已升级至研发二线并通知负责人">升级</button></td></tr>';
+  }).join('') + '</tbody>';
+Charts.hbar('#agentBar', { unit: ' 条', data: [
+  { name: '王倩', value: 86 }, { name: '何俊', value: 74 }, { name: '孙悦', value: 62 },
+  { name: '赵鹏', value: 48 }, { name: '郑宇', value: 36 }, { name: '陈立', value: 28 }] });
+document.getElementById('agentTable').innerHTML = [['王倩', 86, '16 分钟', '5.2h', 4.7], ['何俊', 74, '21 分钟', '6.8h', 4.5],
+  ['孙悦', 62, '14 分钟', '4.6h', 4.8], ['赵鹏', 48, '25 分钟', '8.1h', 4.4]]
+  .map(function (r) {
+    return '<div class="flex items-center gap8" style="padding:6px 0;border-bottom:1px solid var(--ink-100)">' +
+      UI.avatar(r[0], 'sm') + '<span class="fz12" style="width:40px">' + r[0] + '</span>' +
+      '<span class="fz11 muted">首响 ' + r[2] + '</span><span class="fz11 muted">解决 ' + r[3] + '</span>' +
+      '<span class="tag success ml-auto">CSAT ' + r[4] + '</span></div>';
+  }).join('');
+
+/* 分析 */
+Charts.donut('#chDonut', { size: 148, thickness: 18, center: { value: '386', label: '本月工单' }, data: [
+  { name: '客服热线', value: 108, color: '#2b5cff' }, { name: '企业微信', value: 96, color: '#15a86b' },
+  { name: '客户经理转达', value: 74, color: '#7c5cff' }, { name: '开放平台工单', value: 52, color: '#f59e0b' },
+  { name: '邮件', value: 34, color: '#0fb5ba' }, { name: '官网在线客服', value: 22, color: '#b3bfd0' }] });
+Charts.donut('#typeDonut', { size: 148, thickness: 18, center: { value: '386', label: '本月工单' }, data: [
+  { name: '故障报障', value: 142, color: '#e5484d' }, { name: '需求建议', value: 98, color: '#2b5cff' },
+  { name: '使用咨询', value: 86, color: '#15a86b' }, { name: '数据订正', value: 38, color: '#f59e0b' },
+  { name: '投诉', value: 22, color: '#7c5cff' }] });
+Charts.gauge('#csat', { value: 4.6, max: 5, text: '4.6', label: '客户满意度（满分 5）', color: '#0fb5ba', size: 168 });
+document.getElementById('csatList').innerHTML = [['非常满意', 68, 'green'], ['满意', 22, ''], ['一般', 7, 'orange'], ['不满意', 3, 'red']]
+  .map(function (r) {
+    return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2], 'thin') + '</div>';
+  }).join('');
+(function () {
+  var steps = [['本月受理工单', 386, '#2b5cff'], ['识别为产品诉求', 68, '#7c5cff'], ['合并去重后提需求', 32, '#0fb5ba'],
+    ['通过评审并排期', 21, '#15a86b'], ['已上线并回访', 9, '#f59e0b']];
+  document.getElementById('funnel').innerHTML = steps.map(function (s, i) {
+    var w = s[1] / steps[0][1] * 100;
+    return '<div style="margin-bottom:10px"><div class="flex items-center fz12 mb4"><span class="dim">' + s[0] + '</span>' +
+      '<b class="ml-auto">' + s[1] + ' 条</b>' +
+      (i ? '<span class="muted fz11" style="margin-left:8px">转化 ' + (s[1] / steps[i - 1][1] * 100).toFixed(0) + '%</span>' : '') + '</div>' +
+      '<div style="height:22px;border-radius:6px;background:var(--ink-100);overflow:hidden">' +
+      '<div style="height:100%;width:' + Math.max(w, 4) + '%;background:' + s[2] + ';border-radius:6px"></div></div></div>';
+  }).join('');
+})();
+Charts.hbar('#hotIssue', { unit: ' 条', data: [
+  { name: '账单/对账导出超时', value: 42, color: '#e5484d' }, { name: '结算到账延迟', value: 34, color: '#e5484d' },
+  { name: '风控误拦截', value: 28, color: '#f59e0b' }, { name: '开放 API 限额不足', value: 21, color: '#f59e0b' },
+  { name: '收银台兼容性', value: 18, color: '#2b5cff' }, { name: '分账规则不灵活', value: 16, color: '#2b5cff' }] });
+
+/* 服务目录 */
+document.getElementById('catTable').innerHTML =
+  '<thead><tr><th>服务分类</th><th>二级分类</th><th>默认优先级</th><th>默认处理组</th><th>本月工单</th></tr></thead><tbody>' +
+  [['交易与支付', '支付失败 / 回调异常', 'P1', '交易平台组', 96], ['清算与账单', '对账 / 结算 / 导出', 'P1', '交易平台组', 108],
+   ['风控', '误拦截 / 规则咨询', 'P1', '风控算法组', 52], ['商户后台', '登录 / 权限 / 功能咨询', 'P2', '前端体验组', 74],
+   ['开放平台', 'API / 限额 / 文档', 'P2', '技术架构组', 38], ['其他', '建议 / 投诉', 'P3', '产品部', 18]
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td>' +
+      '<td>' + UI.priority(r[2]) + '</td><td class="dim fz12">' + r[3] + '</td><td class="num">' + r[4] + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('rules').innerHTML = [
+  ['战略客户工单自动升一级优先级并抄送客户经理', 1],
+  ['P0 工单 15 分钟未响应自动升级至研发二线并通知总裁', 1],
+  ['「需求建议」类工单自动进入「待转需求」列并通知产品经理', 1],
+  ['同一问题 7 天内出现 ≥ 5 次自动聚类为热点问题并生成需求建议', 1],
+  ['工单解决后 2 小时自动发送满意度回访', 1],
+  ['需求上线后自动回访所有关联工单的客户', 1],
+  ['连续 3 天无客户响应的工单自动关闭', 0]
+].map(function (r) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="switch ' + (r[1] ? 'on' : '') + '"></span><span class="fz12" style="flex:1">' + r[0] + '</span></div>';
+}).join('');
+document.getElementById('slaPolicy').innerHTML =
+  '<thead><tr><th>优先级</th><th>首响</th><th>解决</th><th>战略客户</th><th>升级对象</th></tr></thead><tbody>' +
+  [['P0 紧急', '15 分钟', '1 小时', '折半', '研发总裁'], ['P1 严重', '30 分钟', '4 小时', '×0.75', '技术负责人'],
+   ['P2 一般', '2 小时', '1 天', '×0.75', '服务主管'], ['P3 低', '1 天', '3 天', '—', '—']
+  ].map(function (r) {
+    return '<tr><td>' + UI.priority(r[0].split(' ')[0]) + '</td><td class="fz12">' + r[1] + '</td><td class="fz12">' + r[2] + '</td>' +
+      '<td class="dim fz12">' + r[3] + '</td><td class="dim fz12">' + r[4] + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('channels').innerHTML = [
+  ['客服热线（400 系统）', 'comment', 1, '工单自动创建 + 通话录音归档'],
+  ['企业微信客户群', 'comment', 1, '群消息一键转工单'],
+  ['客户经理 / 销售转达', 'user', 1, 'CRM 打通，自动带出客户档案'],
+  ['开放平台工单入口', 'cloud', 1, '开发者自助提单'],
+  ['邮件（support@）', 'mail', 1, '邮件解析自动建单'],
+  ['官网在线客服', 'share', 1, '机器人预分类 + 转人工'],
+  ['小程序意见反馈', 'thumb', 0, '待接入']
+].map(function (c) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tico ' + (c[2] ? 'req' : 'task') + '" style="background:' + (c[2] ? '#2b5cff' : '#b3bfd0') + '">' + icon(c[1], 11) + '</span>' +
+    '<div style="flex:1"><div class="fz12">' + c[0] + '</div><div class="muted fz11 mt4">' + c[3] + '</div></div>' +
+    (c[2] ? '<span class="tag success">已接入</span>' : '<button class="btn btn-sm">接入</button>') + '</div>';
+}).join('');
+
+document.getElementById('valBar').innerHTML = UI.bar(76, '', 'thin');
+document.getElementById('urgBar').innerHTML = UI.bar(82, 'orange', 'thin');
+document.getElementById('mergeCust').innerHTML = ['华南连锁商超集团', '云上餐饮连锁', '优鲜生活超市', '悦享连锁酒店', '星辰出行科技', '数智物流科技', '万联便利', '鲜丰果业']
+  .map(function (c, i) { return '<span class="tag ' + (i < 2 ? 'brand' : '') + '">' + c + '</span>'; }).join('');
+
+/* 工单详情 */
+function openTk(id) {
+  var k = TICKETS.filter(function (x) { return x.id === id; })[0] || TICKETS[0];
+  document.getElementById('tkIco').innerHTML = icon('inbox', 11);
+  document.getElementById('tkId').textContent = k.id;
+  document.getElementById('tkTitle').textContent = k.t;
+  document.getElementById('tkPri').textContent = k.pri;
+  var stEl = document.getElementById('tkSt'); stEl.textContent = k.st; stEl.className = 'tag ' + (TSTAG[k.st] || '');
+  var slaEl = document.getElementById('tkSla'); slaEl.textContent = 'SLA ' + k.sla;
+  slaEl.className = 'tag ' + (k.risk === 2 ? 'danger' : k.risk === 1 ? 'warning' : 'success');
+  document.getElementById('tkDesc').innerHTML =
+    '<p><b>客户描述：</b>商户后台导出 7 月账单（约 12 万行）时页面长时间无响应，最终提示「导出失败」。目前 32 家门店的月度对账被阻塞，' +
+    '财务需在 <b>每月 5 日前</b>完成对账，否则影响门店结算与考核。</p>' +
+    '<p class="mt8"><b>初步定位：</b>导出为同步生成，超过 10 万行时网关 60 秒超时。已提供临时方案（按周分批导出），' +
+    '根因需产品侧支持异步导出与进度提醒。</p>' +
+    '<p class="mt8"><b>客户诉求：</b>① 本月先人工出具完整账单；② 8 月底前提供产品化的异步导出能力。</p>';
+  document.getElementById('tkSlaBox').innerHTML =
+    '<div class="grid g2" style="gap:10px">' +
+    ['<div style="background:var(--success-bg);border-radius:9px;padding:10px 12px"><div class="muted fz11">首次响应</div>' +
+      '<div class="fw6 mt4" style="color:var(--success)">12 分钟 · 达标</div><div class="muted fz11 mt4">承诺 ≤ 30 分钟</div></div>',
+     '<div style="background:var(--warning-bg);border-radius:9px;padding:10px 12px"><div class="muted fz11">解决时限</div>' +
+      '<div class="fw6 mt4" style="color:#b8760a">' + k.sla + '</div><div class="muted fz11 mt4">承诺 4 小时（战略客户折半 2h）</div></div>'].join('') +
+    '</div><div class="mt12">' + UI.bar(72, 'orange') + '<div class="muted fz11 mt4">SLA 已消耗 72%，超时将自动升级至技术负责人</div></div>';
+  document.getElementById('tkLog').innerHTML = [
+    { c: 'brand', i: 'inbox', t: '<b>李经理（客户经理）</b> 代客户提交工单', time: '今天 09:12', box: '客户财务反馈月结受阻，要求今天内给到可用方案。' },
+    { c: 'green', i: 'check', t: '<b>王倩</b> 首次响应（12 分钟）', time: '今天 09:24', box: '已确认问题现象，正在排查导出链路超时原因。' },
+    { c: '', i: 'comment', t: '<b>何俊</b> 补充定位结论', time: '今天 10:05', box: '同步导出在 12 万行时耗时 78 秒，超过网关 60 秒超时阈值。建议改为异步导出 + 完成通知。' },
+    { c: 'orange', i: 'send', t: '<b>王倩</b> 向客户提供临时方案', time: '今天 10:30', box: '指导客户按周分 4 批导出，已验证可用；同时后台为其手工生成完整账单。' },
+    { c: 'brand', i: 'bulb', t: '系统识别为<b>产品改进诉求</b>，建议转需求', time: '今天 10:32', box: '近 30 天同类工单 42 条，涉及 8 家客户，建议合并为一条需求。' }
+  ].map(function (f) {
+    return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+      '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div>' +
+      (f.box ? '<div class="tl-box">' + f.box + '</div>' : '') + '</div>';
+  }).join('');
+  document.getElementById('tkCust').innerHTML =
+    '<div class="flex items-center gap8 mb8"><div style="width:34px;height:34px;border-radius:9px;background:var(--brand-50);color:var(--brand-600);display:grid;place-items:center;font-weight:700;font-size:11px">HN</div>' +
+    '<div style="flex:1"><div class="fw6 fz13">' + k.c + '</div><div class="muted fz11 mt4">' +
+    '<span class="tag ' + LVTAG[k.lv] + '">' + k.lv + '客户</span> 零售连锁</div></div></div>' +
+    [['客户经理', '李经理'], ['合作年限', '4 年'], ['年交易额', '¥ 42.6 亿'], ['门店数', '328 家'],
+     ['历史工单', '86 条（满意度 4.5）'], ['在跟需求', '6 条']].map(function (p) {
+      return '<div class="flex fz12" style="padding:4px 0"><span class="muted" style="width:66px">' + p[0] + '</span><span>' + p[1] + '</span></div>';
+    }).join('') +
+    '<a class="btn btn-sm btn-block mt8" href="customer.html">查看客户 360 视图</a>';
+  document.getElementById('tkProps').innerHTML = [
+    ['受理渠道', '<span class="tag line">' + k.ch + '</span>'], ['工单类型', k.ty], ['优先级', UI.priority(k.pri)],
+    ['处理人', UI.avatar(k.own, 'sm') + ' ' + k.own], ['二线支持', UI.avatar('何俊', 'sm') + ' 何俊'],
+    ['创建时间', k.time], ['影响门店', '32 家'], ['影响金额', '¥ 1,240 万'], ['是否可产品化', '<span class="tag brand">是</span>']
+  ].map(function (p) { return '<div class="prop"><span class="k" style="width:64px">' + p[0] + '</span><span class="v editable">' + p[1] + '</span></div>'; }).join('');
+  document.getElementById('tkLinks').innerHTML = [
+    ['bulb', 'req', 'REQ-2036 商户后台大额账单异步导出', '关联需求 · 评审中'],
+    ['inbox', 'task', '同类工单 42 条（8 家客户）', '热点问题聚类'],
+    ['book', 'doc', '《账单导出常见问题处理》', '知识库方案']
+  ].map(function (l) {
+    return '<div class="flex items-center gap8" style="padding:6px 0;cursor:pointer"><span class="tico ' + l[1] + '">' + icon(l[0], 11) + '</span>' +
+      '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + l[2] + '</div><div class="muted fz11">' + l[3] + '</div></div>' + icon('right', 12) + '</div>';
+  }).join('');
+  UI.hydrateIcons(document.getElementById('dTk'));
+  UI.openDrawer('dTk');
+}
+var deepTk = location.hash.match(/TK-\d+/);
+if (deepTk) setTimeout(function () { openTk(deepTk[0]); }, 150);
+</script>
+</body>
+</html>

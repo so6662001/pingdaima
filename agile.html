@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>敏捷迭代 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="agile" data-crumb="交付管理/敏捷迭代">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">敏捷迭代中心</div>
+          <div class="page-desc">Scrum 仪式 · 迭代规划与估算 · 多团队协同 · 迭代健康与成熟度</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn"><span data-icon="building"></span>范围：研发中心 6 个团队</button>
+          <button class="btn"><span data-icon="calendar"></span>迭代 26-14（07-14 ~ 07-27）</button>
+          <button class="btn btn-primary" data-modal="mStandup"><span data-icon="users"></span>发起每日站会</button>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="agStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="a1"><span data-icon="grid" data-size="14"></span>团队迭代总览</div>
+        <div class="tab" data-tab="a2"><span data-icon="users" data-size="14"></span>敏捷仪式</div>
+        <div class="tab" data-tab="a3"><span data-icon="award" data-size="14"></span>规划与估算</div>
+        <div class="tab" data-tab="a4"><span data-icon="activity" data-size="14"></span>迭代健康</div>
+        <div class="tab" data-tab="a5"><span data-icon="workflow" data-size="14"></span>跨团队依赖 <span class="cnt">7</span></div>
+      </div>
+
+      <!-- 团队迭代总览 -->
+      <div class="tab-pane active" data-pane="a1">
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="calendar"></span>迭代节奏总览</div>
+            <div class="card-sub">全中心统一 2 周迭代，双周三对齐发布窗口</div></div>
+          <div class="card-body flush"><div class="gantt" id="cadence"></div></div>
+        </div>
+        <div class="grid g3" id="teamCards"></div>
+      </div>
+
+      <!-- 敏捷仪式 -->
+      <div class="tab-pane" data-pane="a2">
+        <div class="grid g-2-1 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="users"></span>每日站会看板</div>
+              <div class="card-sub">交易平台组 · 2026-07-25 09:30 · 已同步 6/7 人</div>
+              <div class="card-head-actions"><span class="tag danger">2 项阻塞待处理</span>
+                <button class="btn btn-sm" data-toast="站会纪要已生成并推送至知识库">生成纪要</button></div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="standup"></table></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="calendar"></span>本周仪式日历</div></div>
+            <div class="card-body" style="padding:10px 14px" id="ceremony"></div>
+          </div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="alert"></span>阻塞项跟踪</div></div>
+            <div class="card-body" id="blockers"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>仪式执行质量</div>
+            <div class="card-sub">近 6 个迭代</div></div>
+            <div class="card-body"><div id="ceremonyQuality"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="book"></span>敏捷实践清单</div></div>
+            <div class="card-body" id="practices"></div></div>
+        </div>
+      </div>
+
+      <!-- 规划与估算 -->
+      <div class="tab-pane" data-pane="a3">
+        <div class="grid g-2-1 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="award"></span>规划扑克估算</div>
+              <div class="card-sub">STORY-3318 通道限额中心对接 · 第 2 轮</div>
+              <div class="card-head-actions"><button class="btn btn-sm" data-toast="已重新发牌，进入第 3 轮">重新估算</button>
+                <button class="btn btn-sm btn-primary" data-toast="已采纳 8 点作为最终估算">采纳共识</button></div></div>
+            <div class="card-body">
+              <div id="pokerCards"></div>
+              <div class="divider"></div>
+              <div class="flex items-center gap16">
+                <div><div class="muted fz11">出牌情况</div><div class="fw6 fz15">6 / 7 人已出牌</div></div>
+                <div><div class="muted fz11">建议共识</div><div class="fw6 fz15" style="color:var(--brand-600)">8 点</div></div>
+                <div><div class="muted fz11">分歧度</div><div class="fw6 fz15" style="color:var(--warning)">中（3 ~ 13）</div></div>
+                <div style="flex:1"><div class="tl-box">分歧提示：何俊估 13 点、王倩估 3 点，主要分歧在「是否需要改造限额中心的存量接口」，建议先澄清后再估。</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="target"></span>估算准确度</div>
+              <div class="card-sub">估算点数 vs 实际投入</div></div>
+            <div class="card-body"><div id="estAcc"></div>
+              <div class="divider"></div><div id="estList"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="list"></span>迭代规划（Sprint 26-15）</div>
+            <div class="card-sub">容量 44 点 · 已规划 38 点 · 预留 15% 应对插入需求</div>
+            <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="sparkles" data-size="13"></span>AI 建议排布</button>
+              <button class="btn btn-sm btn-primary" data-toast="Sprint 26-15 已启动，看板已生成">启动迭代</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="planTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 迭代健康 -->
+      <div class="tab-pane" data-pane="a4">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>速率与承诺达成</div>
+            <div class="card-sub">交易平台组近 8 个迭代</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#dde4ee"></i>承诺点数</span><span><i style="background:#2b5cff"></i>完成点数</span><span><i style="background:#f59e0b"></i>范围变更</span></div>
+              <div id="velocity"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>迭代健康雷达</div></div>
+            <div class="card-body"><div id="healthRadar"></div></div></div>
+        </div>
+        <div class="grid g4">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>范围蔓延</div></div>
+            <div class="card-body"><div id="scopeCreep"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="bug"></span>缺陷注入率</div></div>
+            <div class="card-body"><div id="bugRate"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="refresh"></span>迭代准时率</div></div>
+            <div class="card-body"><div id="onTime"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>敏捷成熟度</div></div>
+            <div class="card-body"><div id="maturity"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 跨团队依赖 -->
+      <div class="tab-pane" data-pane="a5">
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="workflow"></span>跨团队依赖地图</div>
+            <div class="card-sub">红色表示存在阻塞风险的依赖</div></div>
+          <div class="card-body"><div id="depMap"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="link"></span>依赖清单</div>
+            <div class="card-head-actions"><button class="btn btn-sm btn-primary"><span data-icon="plus" data-size="13"></span>登记依赖</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="depTable"></table></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mStandup" style="width:620px">
+  <div class="modal-head"><span data-icon="users"></span><span class="modal-title">发起每日站会</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>团队</label><select class="select"><option>交易平台组</option><option>风控算法组</option><option>前端体验组</option></select></div>
+      <div class="field"><label>时间</label><input class="input" value="2026-07-25 09:30"></div>
+    </div>
+    <div class="field"><label>站会模式</label>
+      <div class="pills"><span class="pill active">异步同步（成员自助填写）</span><span class="pill">线上会议</span><span class="pill">线下站立</span></div>
+      <div class="hint">异步模式下，成员在 09:30 前提交三问，系统自动汇总阻塞项并 @ 负责人</div></div>
+    <div class="field"><label>站会三问模板</label>
+      <textarea class="textarea" style="min-height:80px">1. 昨天完成了什么（关联工作项）
+2. 今天计划做什么
+3. 遇到什么阻塞，需要谁支持</textarea></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">自动从代码提交与工作项流转中预填「昨天完成」</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="站会已发起，已通知 7 名成员">发起站会</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('agStats').innerHTML = [
+  { l: '敏捷团队', v: 6, u: '个', i: 'users', c: '#2b5cff', bg: 'var(--brand-50)', f: '统一 2 周迭代' },
+  { l: '平均速率', v: 41, u: '点/迭代', i: 'zap', c: '#7c5cff', bg: 'var(--purple-bg)', f: '较上季 +9%' },
+  { l: '承诺达成率', v: 86, u: '%', i: 'target', c: '#15a86b', bg: 'var(--success-bg)', f: '目标 ≥ 85%' },
+  { l: '范围蔓延', v: 12, u: '%', i: 'layers', c: '#f59e0b', bg: 'var(--warning-bg)', f: '警戒线 15%' },
+  { l: '敏捷成熟度', v: '3.6', u: '/5', i: 'award', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '已进入「规范级」' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+/* 迭代节奏甘特 */
+(function () {
+  var teams = [
+    { n: '交易平台组', s: 'Sprint 26-14', off: 0 }, { n: '风控算法组', s: 'Sprint 26-07', off: 0 },
+    { n: '前端体验组', s: 'Sprint 26-22', off: 0 }, { n: '基础架构组', s: 'Sprint 26-11', off: 0 },
+    { n: '数据平台组', s: 'Sprint 26-18', off: 0 }, { n: '质量保障部', s: '随版本节奏', off: 0 }
+  ];
+  var weeks = ['07-14', '07-21', '07-28', '08-04', '08-11', '08-18'];
+  var html = '<div class="gantt-grid"><div class="gantt-head"><div class="gantt-name">团队 / 迭代</div><div class="gantt-ticks">' +
+    weeks.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div></div>';
+  teams.forEach(function (t, i) {
+    var n = parseInt(t.s.replace(/\D/g, '').slice(-2)) || 14;
+    html += '<div class="gantt-row"><div class="gantt-name"><span class="dot-status blue"></span><span class="fz12">' + t.n + '</span></div>' +
+      '<div class="gantt-track">' +
+      '<div class="gantt-bar" style="left:0%;width:33%;background:#2b5cff"><span>' + t.s + '（进行中）</span></div>' +
+      '<div class="gantt-bar" style="left:33.5%;width:33%;background:#7c5cff"><span>Sprint ' + (n + 1) + '（规划中）</span></div>' +
+      '<div class="gantt-bar" style="left:67%;width:33%;background:#dde4ee;color:var(--ink-500)"><span>Sprint ' + (n + 2) + '</span></div>' +
+      '</div></div>';
+  });
+  html += '<div class="gantt-row" style="background:var(--warning-bg)"><div class="gantt-name"><span class="milestone" style="position:static;transform:rotate(45deg);display:inline-block"></span>' +
+    '<span class="fz12" style="margin-left:8px">发布窗口</span></div><div class="gantt-track">' +
+    '<div class="milestone" style="left:33%" title="V2.6 发布"></div><div class="milestone" style="left:67%" title="V2.9 发布"></div>' +
+    '<div class="milestone" style="left:99%" title="V3.0 灰度"></div></div></div>';
+  html += '<div class="gantt-today" style="left:calc(230px + (100% - 230px) * 0.29)"></div></div>';
+  document.getElementById('cadence').innerHTML = html;
+})();
+
+var TEAMS = [
+  { n: '交易平台组', sp: 'Sprint 26-14', goal: '完成路由引擎核心链路与灰度框架', cap: 42, done: 28, doing: 9, todo: 5, vel: [34, 38, 36, 41, 42], block: 2, standup: '6/7', mem: ['李思远', '何俊', '王倩', '林小满', '吴敏', '陈立'] },
+  { n: '风控算法组', sp: 'Sprint 26-07', goal: '规则热更新灰度与特征平台联调', cap: 34, done: 14, doing: 12, todo: 8, vel: [28, 30, 32, 31, 34], block: 2, standup: '5/5', mem: ['郑宇', '何俊', '吴敏'] },
+  { n: '前端体验组', sp: 'Sprint 26-22', goal: '商户中心信息架构重构收尾与验收', cap: 26, done: 22, doing: 3, todo: 1, vel: [24, 22, 26, 25, 26], block: 0, standup: '4/4', mem: ['王倩', '孙悦', '吴敏'] },
+  { n: '基础架构组', sp: 'Sprint 26-11', goal: 'K8s 升级收尾 + 压测环境准备', cap: 22, done: 15, doing: 5, todo: 2, vel: [18, 20, 21, 20, 22], block: 1, standup: '3/4', mem: ['林小满', '陈立'] },
+  { n: '数据平台组', sp: 'Sprint 26-18', goal: '指标口径统一与自助取数联调', cap: 21, done: 19, doing: 2, todo: 0, vel: [16, 18, 19, 20, 21], block: 0, standup: '3/3', mem: ['何俊', '陈立'] },
+  { n: '质量保障部', sp: '回归节奏', goal: 'V3.0 第 3 轮回归 + 自动化补齐', cap: 18, done: 12, doing: 4, todo: 2, vel: [14, 15, 16, 17, 18], block: 1, standup: '4/4', mem: ['赵鹏', '吴敏'] }
+];
+document.getElementById('teamCards').innerHTML = TEAMS.map(function (t, i) {
+  var pct = Math.round(t.done / t.cap * 100);
+  return '<div class="card hover-card"><div class="card-body">' +
+    '<div class="flex items-center gap8"><span class="tico task">' + icon('users', 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fw6 fz13">' + t.n + '</div><div class="muted fz11 mt4">' + t.sp + ' · 站会同步 ' + t.standup + '</div></div>' +
+    (t.block ? '<span class="tag danger">' + t.block + ' 阻塞</span>' : '<span class="tag success">畅通</span>') + '</div>' +
+    '<div class="tl-box" style="margin-top:10px;padding:7px 10px;font-size:11.5px">迭代目标：' + t.goal + '</div>' +
+    '<div class="mt12"><div class="bar-multi">' +
+    '<i style="width:' + (t.done / t.cap * 100) + '%;background:var(--success)"></i>' +
+    '<i style="width:' + (t.doing / t.cap * 100) + '%;background:var(--brand-500)"></i>' +
+    '<i style="width:' + (t.todo / t.cap * 100) + '%;background:var(--ink-200)"></i></div>' +
+    '<div class="flex mt8 fz11"><span class="dim">完成 <b style="color:var(--success)">' + t.done + '</b></span>' +
+    '<span class="dim" style="margin-left:10px">进行 <b style="color:var(--brand-600)">' + t.doing + '</b></span>' +
+    '<span class="dim" style="margin-left:10px">待办 <b>' + t.todo + '</b></span><b class="ml-auto">' + pct + '%</b></div></div>' +
+    '<div class="flex items-center gap8 mt12" style="padding-top:10px;border-top:1px solid var(--ink-100)">' +
+    UI.avatarGroup(t.mem, 4) +
+    '<span class="ml-auto fz11 muted">速率</span>' + Charts.spark(t.vel, { width: 62, height: 24 }) +
+    '<a class="btn btn-sm" href="project-detail.html">看板</a></div>' +
+    '</div></div>';
+}).join('');
+
+/* 站会 */
+document.getElementById('standup').innerHTML =
+  '<thead><tr><th>成员</th><th style="width:26%">昨天完成</th><th style="width:26%">今天计划</th><th>阻塞</th><th>提交</th><th>状态</th></tr></thead><tbody>' +
+  [['何俊', 'STORY-3313 权重计算引擎主流程（自动识别 4 次提交）', '完成熔断器半开探活 + 补充单测', '压测环境资源不足，等待基础架构组扩容', '4 次 · 486 行', '已同步'],
+   ['王倩', 'STORY-3312 策略配置表单联调（2 次提交）', '权限与操作审计、对接配置中心接口', '—', '2 次 · 312 行', '已同步'],
+   ['林小满', 'TASK-5531 压测脚本编写', '搭建影子库、准备 12k TPS 压测', 'K8s 节点扩容采购未到位', '1 次 · 96 行', '已同步'],
+   ['吴敏', 'TC-8821/8822 回归执行，提交 BUG-770', '熔断场景混沌测试用例设计', '需 SRE 配合混沌注入', '—', '已同步'],
+   ['李思远', 'PR #482 评审、方案答疑', '风险决策会、对齐压测方案', '—', '1 次 · 42 行', '已同步'],
+   ['陈立', '渠道适配层接口抽取（1 次提交）', 'OpenAPI 网关方案评审', '—', '1 次 · 164 行', '已同步'],
+   ['周雅', '—', '需求评审会准备（7 条批量）', '—', '—', '待同步']
+  ].map(function (r) {
+    return '<tr><td><div class="row-flex">' + UI.avatar(r[0], 'sm') + '<span class="t-main">' + r[0] + '</span></div></td>' +
+      '<td class="fz12" style="color:var(--ink-600)">' + r[1] + '</td>' +
+      '<td class="fz12" style="color:var(--ink-600)">' + r[2] + '</td>' +
+      '<td>' + (r[3] === '—' ? '<span class="muted">—</span>' : '<span class="tag danger">' + r[3] + '</span>') + '</td>' +
+      '<td class="dim fz11 mono">' + r[4] + '</td>' +
+      '<td><span class="tag ' + (r[5] === '已同步' ? 'success' : 'warning') + '">' + r[5] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('ceremony').innerHTML = [
+  ['周一 07-21', '迭代规划会', '交易平台组 · 2h', 'done', '已完成 · 承诺 42 点'],
+  ['每日 09:30', '每日站会', '全部团队 · 15min', 'run', '今日 6/7 已同步'],
+  ['周四 07-24', '需求梳理会', '产品部 + 各组 · 1h', 'done', '梳理 12 条需求'],
+  ['周五 07-25', '规划扑克估算', '交易平台组 · 1h', 'run', '进行中 · 第 2 轮'],
+  ['周一 07-28', '迭代评审会（Demo）', '全体 + 业务方 · 1.5h', 'wait', '待举行'],
+  ['周一 07-28', '迭代回顾会', '各团队 · 1h', 'wait', '待举行 · 已收集 18 条反馈'],
+  ['周二 07-29', '版本发布评审', 'SRE + 测试 · 1h', 'wait', 'V3.0 灰度准入']
+].map(function (c) {
+  var m = { done: ['success', 'check'], run: ['brand', 'refresh'], wait: ['', 'clock'] }[c[3]];
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span style="width:66px;flex:none" class="muted fz11">' + c[0] + '</span>' +
+    '<span class="tico ' + (c[3] === 'done' ? 'story' : c[3] === 'run' ? 'task' : 'doc') + '">' + icon(m[1], 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 fw5">' + c[1] + '</div><div class="muted fz11 mt4">' + c[2] + '</div></div>' +
+    '<span class="tag ' + m[0] + '">' + c[4] + '</span></div>';
+}).join('');
+
+document.getElementById('blockers').innerHTML = [
+  ['压测环境 K8s 节点不足', '林小满 → 基础架构组', '2 天', 'danger', '已提交采购，预计 07-28 到位'],
+  ['第三方征信接口不稳定', '郑宇 → 外部供应商', '4 天', 'danger', '已启动备用供应商接入'],
+  ['混沌注入需 SRE 配合排期', '吴敏 → 林小满', '1 天', 'warning', '已约 07-28 上午'],
+  ['数据中台指标口径待财务确认', '何俊 → 财务部', '3 天', 'warning', '专班每周二对齐']
+].map(function (b) {
+  return '<div style="padding:9px 11px;border-radius:9px;background:var(--' + b[3] + '-bg);margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><span class="tag ' + b[3] + '">阻塞 ' + b[2] + '</span>' +
+    '<span class="muted fz11 ml-auto">' + b[1] + '</span></div>' +
+    '<div class="fz12 fw5 mt4" style="color:var(--ink-800)">' + b[0] + '</div>' +
+    '<div class="muted fz11 mt4">' + b[4] + '</div></div>';
+}).join('');
+Charts.hbar('#ceremonyQuality', { unit: '%', data: [
+  { name: '站会按时同步率', value: 92 }, { name: '规划会承诺达成率', value: 86 },
+  { name: 'Demo 业务方参与率', value: 74, color: '#f59e0b' }, { name: '回顾会改进项闭环率', value: 68, color: '#f59e0b' },
+  { name: '需求梳理提前量（迭代）', value: 88 }] });
+document.getElementById('practices').innerHTML = [
+  ['需求就绪度 DoR 门禁', 1], ['完成定义 DoD 统一', 1], ['故事点相对估算', 1], ['WIP 在制品限制', 1],
+  ['自动化验收测试', 0], ['结对编程 / 代码共有', 0], ['特性开关与主干开发', 0], ['迭代回顾改进项闭环', 1]
+].map(function (p) {
+  return '<div class="flex items-center gap8" style="padding:6px 0">' +
+    '<span class="checkbox' + (p[1] ? ' checked' : '') + '"></span><span class="fz12" style="flex:1">' + p[0] + '</span>' +
+    '<span class="tag ' + (p[1] ? 'success' : '') + '">' + (p[1] ? '已落地' : '推进中') + '</span></div>';
+}).join('');
+
+/* 规划扑克 */
+document.getElementById('pokerCards').innerHTML =
+  '<div class="flex flex-wrap gap12">' + [
+    ['何俊', 13, 1], ['王倩', 3, 1], ['林小满', 8, 1], ['陈立', 8, 1], ['吴敏', 5, 1], ['李思远', 8, 1], ['周雅', '?', 0]
+  ].map(function (p) {
+    return '<div style="text-align:center">' +
+      '<div style="width:62px;height:84px;border-radius:10px;border:2px solid ' + (p[2] ? 'var(--brand-400)' : 'var(--ink-200)') + ';' +
+      'background:' + (p[2] ? '#fff' : 'var(--ink-50)') + ';display:grid;place-items:center;font-size:24px;font-weight:650;' +
+      'color:' + (p[2] ? 'var(--brand-600)' : 'var(--ink-300)') + ';box-shadow:var(--shadow-xs)">' + p[1] + '</div>' +
+      '<div class="flex items-center justify-center gap4 mt8">' + UI.avatar(p[0], 'sm') + '<span class="fz11 dim">' + p[0] + '</span></div></div>';
+  }).join('') + '</div>' +
+  '<div class="flex items-center gap8 mt16"><span class="fz12 dim">可选点数</span>' +
+  [1, 2, 3, 5, 8, 13, 21, '?'].map(function (n) {
+    return '<span class="pill' + (n === 8 ? ' active' : '') + '">' + n + '</span>';
+  }).join('') + '</div>';
+Charts.gauge('#estAcc', { value: 78, max: 100, text: '78%', label: '估算准确度（±20% 内）', color: '#15a86b', size: 175 });
+document.getElementById('estList').innerHTML = [
+  ['1-3 点', 92, 'green'], ['5 点', 84, 'green'], ['8 点', 71, ''], ['13 点', 52, 'orange'], ['21 点及以上', 34, 'red']
+].map(function (r) {
+  return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2], 'thin') + '</div>';
+}).join('') + '<div class="tl-box mt8">13 点以上故事的估算准确度显著下降，建议拆分为 ≤ 8 点的故事后再进入迭代。</div>';
+document.getElementById('planTable').innerHTML =
+  '<thead><tr><th>工作项</th><th>类型</th><th>来源</th><th>价值/紧迫</th><th class="num">估点</th><th>负责人</th><th>就绪度</th><th>依赖</th></tr></thead><tbody>' +
+  [['STORY-3318', '通道限额中心对接', 'story', 'REQ-2041', 82, 78, 8, '何俊', 1, '—'],
+   ['STORY-3313', '成本与成功率实时计算引擎', 'story', 'REQ-2041', 92, 88, 8, '何俊', 1, '—'],
+   ['STORY-3314', '灰度切流与回滚机制', 'story', 'REQ-2041', 92, 88, 5, '林小满', 1, '基础架构组'],
+   ['STORY-3321', '风控前置调用并行化改造', 'story', 'REQ-2041', 74, 66, 5, '何俊', 1, '风控算法组'],
+   ['STORY-3330', '商户后台账单异步导出', 'story', 'REQ-2036', 76, 82, 5, '王倩', 1, '客户承诺 08-20'],
+   ['TASK-5541', '老网关流量镜像回放工具', 'task', '技术债', 58, 62, 5, '林小满', 1, '—'],
+   ['TASK-5531', '路由引擎性能压测（12k TPS）', 'task', '风险专项', 88, 92, 5, '林小满', 0, '压测环境扩容']
+  ].map(function (r) {
+    return '<tr><td><div class="row-flex"><span class="tico ' + r[2] + '">' + icon(r[2] === 'story' ? 'file' : 'kanban', 11) + '</span>' +
+      '<div><div class="t-main">' + r[1] + '</div><div class="id-link">' + r[0] + '</div></div></div></td>' +
+      '<td class="dim fz12">' + (r[2] === 'story' ? '用户故事' : '任务') + '</td>' +
+      '<td><a class="id-link" style="color:var(--brand-600)">' + r[3] + '</a></td>' +
+      '<td><span class="tag success">价值 ' + r[4] + '</span> <span class="tag ' + (r[5] >= 80 ? 'danger' : 'warning') + '">紧迫 ' + r[5] + '</span></td>' +
+      '<td class="num"><b>' + r[6] + '</b></td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[7], 'sm') + '<span class="fz12">' + r[7] + '</span></div></td>' +
+      '<td>' + (r[8] ? '<span class="tag success">就绪</span>' : '<span class="tag warning">未就绪</span>') + '</td>' +
+      '<td class="dim fz12">' + r[9] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* 迭代健康 */
+Charts.bar('#velocity', {
+  height: 250, labels: ['26-07', '26-08', '26-09', '26-10', '26-11', '26-12', '26-13', '26-14'],
+  series: [{ name: '承诺', data: [36, 38, 40, 38, 40, 42, 40, 42], color: '#dde4ee' },
+    { name: '完成', data: [32, 35, 34, 38, 36, 41, 38, 28], color: '#2b5cff' },
+    { name: '范围变更', data: [3, 2, 5, 2, 4, 3, 2, 6], color: '#f59e0b' }], unit: ' 点'
+});
+Charts.radar('#healthRadar', {
+  size: 260, axes: ['承诺达成', '速率稳定', '范围可控', '质量内建', '协作顺畅', '持续改进'],
+  series: [{ name: '交易平台组', data: [86, 82, 74, 78, 88, 68], color: '#2b5cff' },
+    { name: '中心平均', data: [80, 76, 78, 74, 80, 72], color: '#b3bfd0' }]
+});
+Charts.line('#scopeCreep', {
+  height: 190, labels: ['26-10', '26-11', '26-12', '26-13', '26-14'], padLeft: 30,
+  series: [{ name: '范围蔓延(%)', data: [6, 11, 8, 5, 14], color: '#f59e0b', area: true },
+    { name: '警戒线', data: [15, 15, 15, 15, 15], color: '#e5484d', dashed: true, dots: false }]
+});
+Charts.line('#bugRate', {
+  height: 190, labels: ['26-10', '26-11', '26-12', '26-13', '26-14'], padLeft: 30,
+  series: [{ name: '每 10 点缺陷数', data: [2.6, 2.2, 2.4, 1.8, 1.6], color: '#e5484d', area: true }]
+});
+Charts.gauge('#onTime', { value: 83, max: 100, text: '83%', label: '迭代按时收敛率', color: '#2b5cff', size: 160 });
+document.getElementById('maturity').innerHTML = [
+  ['L1 初始', 100], ['L2 可重复', 100], ['L3 规范级（当前）', 72], ['L4 量化管理', 34], ['L5 持续优化', 12]
+].map(function (r, i) {
+  return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' +
+    UI.bar(r[1], r[1] === 100 ? 'green' : i === 2 ? '' : 'orange', 'thin') + '</div>';
+}).join('') + '<div class="muted fz11 mt8">下一步：把度量口径与迭代目标绑定，推进 L4 量化管理。</div>';
+
+/* 跨团队依赖 */
+(function () {
+  var W = 900, H = 260;
+  var nodes = [
+    { n: '交易平台组', x: 380, y: 40, c: '#2b5cff' }, { n: '风控算法组', x: 90, y: 130, c: '#e5484d' },
+    { n: '基础架构组', x: 380, y: 200, c: '#7c5cff' }, { n: '前端体验组', x: 670, y: 40, c: '#15a86b' },
+    { n: '数据平台组', x: 670, y: 200, c: '#0fb5ba' }, { n: '质量保障部', x: 90, y: 40, c: '#f59e0b' }
+  ];
+  var links = [[0, 1, '风控并行化改造', 1], [0, 2, '压测环境扩容', 2], [3, 0, '路由配置接口', 0],
+    [0, 4, '交易指标口径', 0], [5, 0, '回归环境与数据', 1], [3, 4, '经营看板数据', 0], [2, 4, '集群资源', 0]];
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;min-width:760px" height="' + H + '">' +
+    '<defs><marker id="dep" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8c9ab1"/></marker>' +
+    '<marker id="depR" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#e5484d"/></marker></defs>';
+  links.forEach(function (l) {
+    var a = nodes[l[0]], b = nodes[l[1]];
+    var color = l[3] === 2 ? '#e5484d' : l[3] === 1 ? '#f59e0b' : '#c7d0dd';
+    var mx = (a.x + b.x) / 2 + 50, my = (a.y + b.y) / 2;
+    s += '<path d="M' + (a.x + 50) + ',' + (a.y + 14) + ' Q' + mx + ',' + my + ' ' + (b.x + 50) + ',' + (b.y + 14) + '" fill="none" stroke="' + color +
+      '" stroke-width="' + (l[3] ? 2 : 1.4) + '" ' + (l[3] ? '' : 'stroke-dasharray="4 3" ') + 'marker-end="url(#' + (l[3] === 2 ? 'depR' : 'dep') + ')"/>';
+    s += '<text x="' + mx + '" y="' + (my - 4) + '" text-anchor="middle" font-size="10" fill="' + (l[3] ? color : '#8c9ab1') + '">' + l[2] + '</text>';
+  });
+  nodes.forEach(function (n) {
+    s += '<rect x="' + n.x + '" y="' + n.y + '" width="100" height="30" rx="8" fill="#fff" stroke="' + n.c + '" stroke-width="1.8"/>' +
+      '<circle cx="' + (n.x + 14) + '" cy="' + (n.y + 15) + '" r="4" fill="' + n.c + '"/>' +
+      '<text x="' + (n.x + 26) + '" y="' + (n.y + 19) + '" font-size="11.5" fill="#2c3a55">' + n.n + '</text>';
+  });
+  s += '</svg>';
+  document.getElementById('depMap').innerHTML = '<div style="overflow-x:auto">' + s + '</div>' +
+    '<div class="legend mt8"><span><i style="background:#e5484d"></i>阻塞中</span><span><i style="background:#f59e0b"></i>有风险</span><span><i style="background:#c7d0dd"></i>正常</span></div>';
+})();
+document.getElementById('depTable').innerHTML =
+  '<thead><tr><th>依赖事项</th><th>需求方</th><th>提供方</th><th>期望时间</th><th>提供方计划</th><th>状态</th><th>影响</th><th>协调人</th></tr></thead><tbody>' +
+  [['压测环境 K8s 节点扩容（12 节点）', '交易平台组', '基础架构组', '07-26', '07-28', '阻塞', 'V3.0 压测顺延 2 天', '林小满', 'danger'],
+   ['风控前置调用并行化接口', '交易平台组', '风控算法组', '07-30', '07-30', '有风险', '路由延迟目标可能不达标', '郑宇', 'warning'],
+   ['回归测试环境与脱敏数据', '质量保障部', '交易平台组', '07-25', '07-25', '已完成', '—', '吴敏', 'success'],
+   ['路由策略配置接口契约', '前端体验组', '交易平台组', '07-24', '07-24', '已完成', '—', '王倩', 'success'],
+   ['交易域指标口径确认', '数据平台组', '交易平台组', '08-05', '08-05', '进行中', '—', '何俊', 'brand'],
+   ['经营看板数据接口', '前端体验组', '数据平台组', '08-08', '08-10', '有风险', '看板演示可能延后', '何俊', 'warning'],
+   ['开放平台网关集群资源', '基础架构组', '数据平台组', '08-12', '08-12', '未开始', '—', '陈立', '']
+  ].map(function (d) {
+    return '<tr><td class="t-main">' + d[0] + '</td><td class="dim fz12">' + d[1] + '</td><td class="dim fz12">' + d[2] + '</td>' +
+      '<td class="fz12">' + d[3] + '</td><td class="fz12">' + d[4] + '</td>' +
+      '<td><span class="tag ' + d[8] + '">' + d[5] + '</span></td>' +
+      '<td class="fz12 muted">' + d[6] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(d[7], 'sm') + '<span class="fz12">' + d[7] + '</span></div></td></tr>';
+  }).join('') + '</tbody>';
+</script>
+</body>
+</html>
