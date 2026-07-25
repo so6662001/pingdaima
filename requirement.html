@@ -536,6 +536,9 @@ function openReq(id) {
 document.querySelector('[data-icon-holder]').innerHTML = icon('bulb', 11);
 document.getElementById('btnImport').onclick = function () { UI.toast('支持从 Excel / Jira / TAPD 导入需求'); };
 if (location.search.indexOf('new=1') > -1) setTimeout(function () { UI.openModal('mNewReq'); }, 200);
+/* 支持 requirement.html#REQ-2041 直接打开需求详情抽屉 */
+var deep = location.hash.match(/REQ-\d+/);
+if (deep) setTimeout(function () { openReq(deep[0]); }, 150);
 </script>
 </body>
 </html>

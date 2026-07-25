@@ -505,6 +505,9 @@ document.getElementById('runTable').innerHTML =
 document.getElementById('planMembers').innerHTML = UI.avatarGroup(['吴敏', '赵鹏', '林小满'], 3) + ' <span class="fz12 muted">吴敏、赵鹏、林小满</span>';
 
 if (location.search.indexOf('tab=bug') > -1) setTimeout(function () { document.querySelector('[data-tab="t4"]').click(); }, 100);
+/* 支持 testing.html#BUG-771 直接打开缺陷详情抽屉 */
+var deepBug = location.hash.match(/BUG-\d+/);
+if (deepBug) setTimeout(function () { document.querySelector('[data-tab="t4"]').click(); openBug(deepBug[0]); }, 150);
 </script>
 </body>
 </html>

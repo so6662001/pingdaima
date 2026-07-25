@@ -212,9 +212,16 @@
   UI.fmt = function (n) { return n.toLocaleString('en-US'); };
   /** 将 <span data-icon="name" data-size="16"></span> 占位符替换为内联 SVG */
   UI.hydrateIcons = function (root) {
-    (root || document).querySelectorAll('[data-icon]').forEach(function (s) {
-      s.outerHTML = icon(s.dataset.icon, +(s.dataset.size || 15));
-    });
+    var scope = root || document;
+    // 替换 outerHTML 会改变文档结构，循环直到没有剩余占位符
+    for (var pass = 0; pass < 3; pass++) {
+      var list = scope.querySelectorAll('[data-icon]');
+      if (!list.length) break;
+      list.forEach(function (s) {
+        if (!s.parentNode) return;
+        s.outerHTML = icon(s.dataset.icon, +(s.dataset.size || 15));
+      });
+    }
   };
 
   window.UI = UI;

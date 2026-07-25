@@ -30,7 +30,7 @@ python3 -m http.server 8088
 - `Ctrl / Cmd + K` 打开全局命令面板（跨模块搜索需求、项目、PR、文档）
 - 看板卡片可**拖拽换列**，列头数量实时更新
 - 表格行、卡片可点击打开**详情抽屉**；顶栏「新建」可快捷创建各类对象
-- 页面 URL 支持 `#tab=xxx` 深链，例如 `product.html#tab=p2` 直接打开产品路线图
+- 页面 URL 支持深链：`product.html#tab=p2` 直接打开产品路线图，`requirement.html#REQ-2041` 直接打开需求详情抽屉，`testing.html#BUG-771` 直接打开缺陷详情
 
 ---
 
