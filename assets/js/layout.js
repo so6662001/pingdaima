@@ -29,6 +29,7 @@
       group: '工程效能', items: [
         { key: 'devops', name: '代码与 CI', icon: 'branch', href: 'devops.html' },
         { key: 'worklog', name: '智能工时', icon: 'timer', href: 'worklog.html' },
+        { key: 'people', name: '人员效能与贡献', icon: 'award', href: 'people.html' },
         { key: 'metrics', name: '效能度量', icon: 'chart', href: 'metrics.html' }
       ]
     },
