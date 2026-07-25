@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>测试管理 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="testing" data-crumb="交付管理/测试管理">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">测试管理</div>
+          <div class="page-desc">用例资产 · 测试计划与执行 · 缺陷闭环 · 自动化与质量门禁</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn"><span data-icon="upload"></span>导入用例</button>
+          <button class="btn" data-toast="质量日报已发送至研发中心群"><span data-icon="send"></span>质量日报</button>
+          <button class="btn btn-primary" data-modal="mNewPlan"><span data-icon="plus"></span>新建测试计划</button>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="qaStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="t1"><span data-icon="dashboard" data-size="14"></span>质量概览</div>
+        <div class="tab" data-tab="t2"><span data-icon="database" data-size="14"></span>用例库 <span class="cnt">2,486</span></div>
+        <div class="tab" data-tab="t3"><span data-icon="flask" data-size="14"></span>测试计划与执行 <span class="cnt">6</span></div>
+        <div class="tab" data-tab="t4"><span data-icon="bug" data-size="14"></span>缺陷管理 <span class="cnt">38</span></div>
+        <div class="tab" data-tab="t5"><span data-icon="cpu" data-size="14"></span>自动化与门禁</div>
+      </div>
+
+      <!-- 质量概览 -->
+      <div class="tab-pane active" data-pane="t1">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>测试执行与缺陷趋势</div>
+            <div class="card-sub">近 10 个迭代</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#2b5cff"></i>执行用例数</span><span><i style="background:#15a86b"></i>通过率</span><span><i style="background:#e5484d"></i>新增缺陷</span></div>
+              <div id="execTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shieldCheck"></span>质量门禁</div>
+            <div class="card-sub">V3.0 发布准入</div></div>
+            <div class="card-body" id="gate"></div></div>
+        </div>
+        <div class="grid g4">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>缺陷严重程度</div></div>
+            <div class="card-body"><div id="sevDonut"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>缺陷模块分布</div></div>
+            <div class="card-body"><div id="modBar"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>缺陷平均修复时长</div></div>
+            <div class="card-body"><div id="fixGauge"></div><div class="divider"></div><div id="fixList"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>用例覆盖情况</div></div>
+            <div class="card-body"><div id="covList"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 用例库 -->
+      <div class="tab-pane" data-pane="t2">
+        <div style="display:grid;grid-template-columns:250px 1fr;gap:14px;align-items:start">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="folder"></span>用例目录</div>
+              <div class="card-head-actions"><button class="icon-btn" style="width:24px;height:24px"><span data-icon="plus" data-size="14"></span></button></div></div>
+            <div class="card-body" style="padding:8px"><div class="doc-tree" id="caseTree"></div></div>
+          </div>
+          <div>
+            <div class="toolbar">
+              <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索用例编号 / 标题"></div>
+              <div class="filter on"><span data-icon="folder"></span>模块：<b>路由与渠道</b><span data-icon="down"></span></div>
+              <div class="filter"><span data-icon="flag"></span>优先级<span data-icon="down"></span></div>
+              <div class="filter"><span data-icon="cpu"></span>类型<span data-icon="down"></span></div>
+              <div class="filter"><span data-icon="user"></span>维护人<span data-icon="down"></span></div>
+              <div class="ml-auto flex gap8">
+                <button class="btn btn-sm"><span data-icon="sparkles" data-size="13"></span>AI 生成用例</button>
+                <button class="btn btn-sm btn-primary"><span data-icon="plus" data-size="13"></span>新建用例</button>
+              </div>
+            </div>
+            <div class="card"><div class="card-body flush"><div class="table-wrap" style="max-height:calc(100vh - 340px);overflow:auto">
+              <table class="tbl" id="caseTable"></table></div></div>
+              <div class="card-foot">共 486 条用例（当前模块） · 自动化 312 条（64.2%）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 测试计划 -->
+      <div class="tab-pane" data-pane="t3">
+        <div class="grid g-2-1">
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="flask"></span>测试计划</div>
+              <div class="card-head-actions"><div class="btn-group"><button class="active">进行中</button><button>已完成</button><button>全部</button></div></div></div>
+              <div class="card-body flush"><table class="tbl" id="planTable"></table></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="list"></span>TP-2026-07 执行明细</div>
+              <div class="card-sub">支付网关 3.0 回归测试 · 第 3 轮</div>
+              <div class="card-head-actions"><button class="btn btn-sm btn-primary"><span data-icon="play" data-size="13"></span>继续执行</button></div></div>
+              <div class="card-body flush"><table class="tbl" id="execTable"></table></div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>本轮执行进度</div></div>
+              <div class="card-body"><div id="roundDonut"></div>
+                <div class="divider"></div><div id="roundBars"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>测试人员进度</div></div>
+              <div class="card-body"><div id="testerBar"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>历史轮次</div></div>
+              <div class="card-body" id="rounds"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 缺陷 -->
+      <div class="tab-pane" data-pane="t4">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索缺陷 ID / 标题"></div>
+          <div class="filter on"><span data-icon="circleDot"></span>状态：<b>未关闭</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="flag"></span>严重程度<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="box"></span>所属产品<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="user"></span>处理人<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="server"></span>发现环境<span data-icon="down"></span></div>
+          <div class="ml-auto flex items-center gap8"><span class="fz12 muted">未关闭 <b style="color:var(--danger)">38</b> · 超时 <b style="color:var(--danger)">4</b></span>
+            <button class="btn btn-sm btn-primary" data-modal="mNewBug"><span data-icon="plus" data-size="13"></span>提交缺陷</button></div>
+        </div>
+        <div class="grid g-3-2 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>缺陷燃尽（本迭代）</div></div>
+            <div class="card-body"><div id="bugBurn"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="workflow"></span>缺陷生命周期分布</div></div>
+            <div class="card-body"><div id="lifeBar"></div></div></div>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="table-wrap"><table class="tbl" id="bugTable"></table></div></div></div>
+      </div>
+
+      <!-- 自动化 -->
+      <div class="tab-pane" data-pane="t5">
+        <div class="grid g4 mb16" id="autoStats"></div>
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="cpu"></span>自动化执行趋势</div>
+            <div class="card-sub">每日回归（CI 触发）</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#15a86b"></i>通过</span><span><i style="background:#e5484d"></i>失败</span><span><i style="background:#f59e0b"></i>不稳定用例</span></div>
+              <div id="autoTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="warn"></span>Top 不稳定用例</div>
+            <div class="card-sub">近 30 天失败率</div></div>
+            <div class="card-body"><div id="flaky"></div></div></div>
+        </div>
+        <div class="grid g2">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shield"></span>质量门禁规则</div>
+            <div class="card-head-actions"><a class="btn btn-sm" href="settings.html">配置</a></div></div>
+            <div class="card-body" id="gateRules"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="zap"></span>最近自动化执行</div></div>
+            <div class="card-body flush"><table class="tbl" id="runTable"></table></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 缺陷详情抽屉 -->
+<div class="drawer" id="dBug">
+  <div class="drawer-head">
+    <span class="tico bug" id="bIco"></span>
+    <div style="flex:1"><div class="flex items-center gap8"><span class="id-link" id="bId">BUG-771</span>
+      <span class="tag danger" id="bSev">P0 致命</span><span class="tag warning">处理中</span></div>
+      <div class="fw6" style="font-size:14px" id="bTitle">生产环境对账任务超时</div></div>
+    <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
+  </div>
+  <div class="drawer-body" style="padding:16px 18px">
+    <div class="grid g2 mb16" id="bProps"></div>
+    <div class="fw6 mb8">缺陷描述</div>
+    <div class="fz13" style="color:var(--ink-600);line-height:1.85" id="bDesc"></div>
+    <div class="fw6 mt20 mb8">复现步骤</div>
+    <div id="bSteps"></div>
+    <div class="fw6 mt20 mb8">日志与堆栈</div>
+    <div class="terminal" id="bLog"></div>
+    <div class="fw6 mt20 mb8">处理流程</div>
+    <div class="timeline" id="bFlow"></div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" data-toast="已转派给 何俊">转派</button>
+    <button class="btn" data-toast="已标记为不予修复">不予修复</button>
+    <button class="btn btn-primary" data-toast="缺陷已标记为已修复，等待验证">标记已修复</button>
+  </div>
+</div>
+
+<div class="modal" id="mNewPlan">
+  <div class="modal-head"><span data-icon="flask"></span><span class="modal-title">新建测试计划</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>计划名称<span class="req">*</span></label><input class="input" value="支付网关 3.0 回归测试计划（第 4 轮）"></div>
+    <div class="form-row">
+      <div class="field"><label>关联版本</label><select class="select"><option>V3.0</option><option>V2.9</option></select></div>
+      <div class="field"><label>测试类型</label><select class="select"><option>回归测试</option><option>功能测试</option><option>性能测试</option><option>安全测试</option><option>验收测试</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>开始时间</label><input class="input" value="2026-07-28"></div>
+      <div class="field"><label>结束时间</label><input class="input" value="2026-08-02"></div>
+    </div>
+    <div class="field"><label>用例选择</label>
+      <div class="flex items-center gap8"><span class="tag brand">路由与渠道 486</span><span class="tag brand">清结算 312</span><span class="tag">+ 添加模块</span></div>
+      <div class="hint">共选择 798 条用例，其中自动化 512 条将由流水线执行</div></div>
+    <div class="field"><label>测试人员</label><div id="planMembers"></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="测试计划已创建并分配任务">创建计划</button></div>
+</div>
+
+<div class="modal" id="mNewBug">
+  <div class="modal-head"><span data-icon="bug"></span><span class="modal-title">提交缺陷</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>缺陷标题<span class="req">*</span></label><input class="input" placeholder="简要描述问题现象"></div>
+    <div class="form-row">
+      <div class="field"><label>严重程度</label><select class="select"><option>P1 严重</option><option>P0 致命</option><option>P2 一般</option><option>P3 轻微</option></select></div>
+      <div class="field"><label>发现环境</label><select class="select"><option>测试环境</option><option>预发环境</option><option>生产环境</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>所属模块</label><select class="select"><option>路由与渠道</option><option>清结算</option><option>风控决策</option></select></div>
+      <div class="field"><label>处理人</label><select class="select"><option>何俊</option><option>王倩</option></select></div>
+    </div>
+    <div class="field"><label>复现步骤</label><textarea class="textarea" placeholder="1. …&#10;2. …&#10;预期结果：&#10;实际结果："></textarea></div>
+    <div class="field"><label>附件</label><div style="border:1.5px dashed var(--ink-200);border-radius:8px;padding:18px;text-align:center;color:var(--ink-400)">
+      <div data-icon="upload" data-size="22"></div><div class="fz12 mt4">拖拽截图 / 日志到此处，或点击上传</div></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="缺陷已提交并通知处理人">提交缺陷</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('qaStats').innerHTML = [
+  { l: '用例总量', v: '2,486', u: '条', i: 'database', c: '#2b5cff', bg: 'var(--brand-50)', f: '本月新增 168 条' },
+  { l: '自动化率', v: '64.2', u: '%', i: 'cpu', c: '#7c5cff', bg: 'var(--purple-bg)', f: '目标 75%' },
+  { l: '本轮通过率', v: '96.8', u: '%', i: 'circleCheck', c: '#15a86b', bg: 'var(--success-bg)', f: '门禁要求 ≥ 98%' },
+  { l: '未关闭缺陷', v: 38, u: '个', i: 'bug', c: '#e5484d', bg: 'var(--danger-bg)', f: 'P0 1 · P1 9' },
+  { l: '缺陷逃逸率', v: '2.4', u: '%', i: 'shield', c: '#f59e0b', bg: 'var(--warning-bg)', f: '环比 −1.8pt' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+Charts.bar('#execTrend', {
+  height: 250, labels: ['26-05', '26-06', '26-07', '26-08', '26-09', '26-10', '26-11', '26-12', '26-13', '26-14'],
+  series: [{ name: '执行用例', data: [420, 468, 512, 486, 540, 578, 602, 626, 648, 682], color: '#2b5cff' },
+    { name: '新增缺陷', data: [32, 28, 41, 35, 30, 26, 24, 21, 18, 16], color: '#e5484d' }],
+  lineSeries: { name: '通过率(%)', data: [91.2, 92.4, 90.8, 93.1, 94.2, 95.0, 95.6, 96.1, 96.4, 96.8], color: '#15a86b' }, lineMax: 100
+});
+
+document.getElementById('gate').innerHTML = [
+  ['用例执行率', '100%', '100%', 1], ['用例通过率', '≥ 98%', '96.8%', 0], ['P0/P1 缺陷', '0', '2', 0],
+  ['自动化回归', '通过', '通过', 1], ['代码覆盖率', '≥ 70%', '73.4%', 1], ['静态扫描高危', '0', '0', 1],
+  ['性能压测', '12k TPS', '8.2k TPS', 0], ['安全渗透测试', '通过', '通过', 1]
+].map(function (g) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span style="color:' + (g[3] ? 'var(--success)' : 'var(--danger)') + '">' + icon(g[3] ? 'circleCheck' : 'alert', 15) + '</span>' +
+    '<span class="fz12" style="flex:1">' + g[0] + '</span>' +
+    '<span class="muted fz11">要求 ' + g[1] + '</span>' +
+    '<b class="fz12" style="color:' + (g[3] ? 'var(--success)' : 'var(--danger)') + ';width:64px;text-align:right">' + g[2] + '</b></div>';
+}).join('') + '<div class="flex items-center gap8 mt12"><span class="tag danger">3 项未达标</span>' +
+  '<span class="fz12 muted">发布准入未通过</span><button class="btn btn-sm ml-auto" data-toast="已申请门禁豁免，需总裁审批">申请豁免</button></div>';
+
+Charts.donut('#sevDonut', { size: 140, thickness: 18, legend: true, center: { value: '38', label: '未关闭' }, data: [
+  { name: 'P0 致命', value: 1, color: '#b3182c' }, { name: 'P1 严重', value: 9, color: '#e5484d' },
+  { name: 'P2 一般', value: 18, color: '#f59e0b' }, { name: 'P3 轻微', value: 10, color: '#b3bfd0' }] });
+Charts.hbar('#modBar', { unit: ' 个', data: [
+  { name: '路由与渠道', value: 12 }, { name: '清结算', value: 9 }, { name: '收银台前端', value: 7 },
+  { name: '风控决策', value: 5 }, { name: '商户后台', value: 5 }] });
+Charts.gauge('#fixGauge', { value: 18.6, max: 48, text: '18.6h', label: '平均修复时长', color: '#f59e0b', size: 150 });
+document.getElementById('fixList').innerHTML = [['P0', '2.1h', 'red'], ['P1', '8.4h', 'orange'], ['P2', '26.2h', ''], ['P3', '72h+', 'green']]
+  .map(function (r) {
+    return '<div class="flex items-center gap8" style="padding:4px 0"><span class="tag ' + (r[2] === 'red' ? 'danger' : r[2] === 'orange' ? 'warning' : '') + '">' + r[0] + '</span>' +
+      '<span class="fz12 muted">平均修复</span><b class="fz12 ml-auto">' + r[1] + '</b></div>';
+  }).join('');
+document.getElementById('covList').innerHTML = [['需求覆盖率', 94, 'green'], ['接口覆盖率', 88, ''], ['代码行覆盖率', 73, 'orange'], ['分支覆盖率', 64, 'orange'], ['核心链路覆盖', 100, 'green']]
+  .map(function (r) {
+    return '<div class="mb12"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2]) + '</div>';
+  }).join('');
+
+/* 用例目录 */
+var TREE = [
+  { n: '统一支付网关', c: 486 + 312 + 208, ch: [{ n: '路由与渠道', c: 486, active: 1 }, { n: '清结算', c: 312 }, { n: '收银台前端', c: 208 }] },
+  { n: '智能风控平台', c: 642, ch: [{ n: '规则引擎', c: 286 }, { n: '模型服务', c: 194 }, { n: '名单管理', c: 162 }] },
+  { n: '商户运营中心', c: 428, ch: [{ n: '商户入驻', c: 168 }, { n: '经营看板', c: 142 }, { n: '账单结算', c: 118 }] },
+  { n: '数据资产中台', c: 210, ch: [] }
+];
+document.getElementById('caseTree').innerHTML = TREE.map(function (t) {
+  return '<div><div class="doc-node"><span class="caret open">' + icon('right', 12) + '</span>' + icon('folder', 14) +
+    '<span style="flex:1">' + t.n + '</span><span class="muted fz11">' + t.c + '</span></div>' +
+    '<div class="doc-children">' + t.ch.map(function (c) {
+      return '<div class="doc-node' + (c.active ? ' active' : '') + '">' + icon('file', 13) + '<span style="flex:1">' + c.n + '</span><span class="muted fz11">' + c.c + '</span></div>';
+    }).join('') + '</div></div>';
+}).join('');
+
+document.getElementById('caseTable').innerHTML =
+  '<thead><tr><th style="width:30px"><span class="checkbox"></span></th><th>用例编号</th><th style="width:32%">用例标题</th><th>类型</th><th>优先级</th>' +
+  '<th>自动化</th><th>最近结果</th><th>维护人</th><th>更新时间</th></tr></thead><tbody>' +
+  [['TC-8821', '策略组合配置生效时效验证（≤30s）', '功能', 'P0', 1, '通过', '吴敏', '今天'],
+   ['TC-8822', '路由决策 P99 延迟压测（15ms）', '性能', 'P0', 1, '通过', '吴敏', '今天'],
+   ['TC-8823', '成功率权重计算准确性', '功能', 'P0', 1, '通过', '吴敏', '昨天'],
+   ['TC-8825', '单通道熔断自动切换零丢单', '可靠性', 'P0', 0, '失败', '赵鹏', '昨天'],
+   ['TC-8826', '熔断半开探活恢复', '可靠性', 'P1', 1, '通过', '赵鹏', '昨天'],
+   ['TC-8830', '灰度比例实时调整生效', '功能', 'P1', 1, '通过', '吴敏', '2 天前'],
+   ['TC-8832', '费率优先策略与限额冲突处理', '功能', 'P1', 0, '未执行', '吴敏', '2 天前'],
+   ['TC-8836', '路由明细按订单号追溯', '功能', 'P1', 0, '未执行', '赵鹏', '3 天前'],
+   ['TC-8841', '商户白名单优先级校验', '功能', 'P1', 1, '阻塞', '吴敏', '3 天前'],
+   ['TC-8844', '异常渠道返回码兜底处理', '异常', 'P2', 1, '通过', '吴敏', '4 天前'],
+   ['TC-8846', '路由配置操作审计日志', '安全', 'P2', 0, '通过', '赵鹏', '5 天前'],
+   ['TC-8850', '大促峰值 12k TPS 稳定性', '性能', 'P0', 1, '失败', '林小满', '5 天前']
+  ].map(function (c) {
+    var m = { '通过': 'success', '失败': 'danger', '阻塞': 'warning', '未执行': '' };
+    return '<tr onclick="UI.toast(\'打开用例 ' + c[0] + '\')"><td><span class="checkbox"></span></td>' +
+      '<td class="id-link">' + c[0] + '</td><td><div class="row-flex"><span class="tico test">' + icon('flask', 11) + '</span><span class="t-main">' + c[1] + '</span></div></td>' +
+      '<td class="dim fz12">' + c[2] + '</td><td>' + UI.priority(c[3]) + '</td>' +
+      '<td>' + (c[4] ? '<span class="tag purple">' + icon('cpu', 11) + '已自动化</span>' : '<span class="tag">手工</span>') + '</td>' +
+      '<td><span class="tag ' + m[c[5]] + '">' + c[5] + '</span></td>' +
+      '<td><div class="row-flex">' + UI.avatar(c[6], 'sm') + '<span class="fz12">' + c[6] + '</span></div></td>' +
+      '<td class="muted fz11">' + c[7] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* 测试计划 */
+document.getElementById('planTable').innerHTML =
+  '<thead><tr><th>测试计划</th><th>版本</th><th>类型</th><th class="num">用例</th><th style="width:130px">执行进度</th><th>通过率</th><th>负责人</th><th>状态</th></tr></thead><tbody>' +
+  [['TP-2026-07', '支付网关 3.0 回归测试', 'V3.0', '回归', 486, 78, 96.8, '赵鹏', '执行中', 'brand'],
+   ['TP-2026-06', '数字人民币受理功能测试', 'V3.0', '功能', 168, 92, 98.2, '吴敏', '执行中', 'brand'],
+   ['TP-2026-08', '风控规则热更新验证', 'V2.9', '功能', 124, 45, 97.1, '吴敏', '执行中', 'brand'],
+   ['TP-2026-09', '商户中心 UI 兼容性测试', 'V2.6', '兼容', 96, 100, 99.0, '赵鹏', '待验收', 'purple'],
+   ['TP-2026-05', '全链路性能压测', 'V3.0', '性能', 42, 62, 71.4, '林小满', '执行中', 'warning'],
+   ['TP-2026-04', '安全渗透测试', 'V3.0', '安全', 68, 100, 100, '外部团队', '已完成', 'success']
+  ].map(function (p) {
+    return '<tr onclick="UI.toast(\'打开测试计划 ' + p[0] + '\')"><td><div class="row-flex"><span class="tico test">' + icon('flask', 11) + '</span>' +
+      '<div><div class="t-main">' + p[1] + '</div><div class="id-link">' + p[0] + '</div></div></div></td>' +
+      '<td><span class="tag line">' + p[2] + '</span></td><td class="dim fz12">' + p[3] + '</td><td class="num">' + p[4] + '</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(p[5], p[5] === 100 ? 'green' : '') + '</div><span class="fz11 muted">' + p[5] + '%</span></div></td>' +
+      '<td><b style="color:' + (p[6] >= 98 ? 'var(--success)' : p[6] >= 90 ? 'var(--warning)' : 'var(--danger)') + '">' + p[6] + '%</b></td>' +
+      '<td><div class="row-flex">' + UI.avatar(p[7], 'sm') + '<span class="fz12">' + p[7] + '</span></div></td>' +
+      '<td><span class="tag ' + p[9] + '">' + p[8] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('execTable').innerHTML =
+  '<thead><tr><th>用例</th><th>模块</th><th>执行人</th><th>结果</th><th>耗时</th><th>缺陷</th><th>执行时间</th></tr></thead><tbody>' +
+  [['TC-8821', '策略组合配置生效时效验证', '路由与渠道', '吴敏', '通过', '4m 12s', '—', '今天 10:12'],
+   ['TC-8822', '路由决策 P99 延迟压测', '路由与渠道', '吴敏', '通过', '18m 05s', '—', '今天 09:40'],
+   ['TC-8825', '单通道熔断自动切换零丢单', '路由与渠道', '吴敏', '失败', '12m 30s', 'BUG-770', '昨天 20:15'],
+   ['TC-8841', '商户白名单优先级校验', '路由与渠道', '吴敏', '阻塞', '—', 'BUG-768', '昨天 16:30'],
+   ['TC-8850', '大促峰值 12k TPS 稳定性', '性能', '林小满', '失败', '46m 18s', 'BUG-773', '5 天前'],
+   ['TC-8830', '灰度比例实时调整生效', '路由与渠道', '赵鹏', '通过', '6m 44s', '—', '2 天前']
+  ].map(function (c) {
+    var m = { '通过': 'success', '失败': 'danger', '阻塞': 'warning' };
+    return '<tr><td><div class="row-flex"><span class="id-link">' + c[0] + '</span><span class="t-main">' + c[1] + '</span></div></td>' +
+      '<td class="dim fz12">' + c[2] + '</td><td><div class="row-flex">' + UI.avatar(c[3], 'sm') + '<span class="fz12">' + c[3] + '</span></div></td>' +
+      '<td><span class="tag ' + m[c[4]] + '">' + c[4] + '</span></td><td class="dim mono fz11">' + c[5] + '</td>' +
+      '<td>' + (c[6] === '—' ? '<span class="muted">—</span>' : '<a class="id-link" style="color:var(--danger)" onclick="openBug(\'' + c[6] + '\')">' + c[6] + '</a>') + '</td>' +
+      '<td class="muted fz11">' + c[7] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+Charts.donut('#roundDonut', { size: 150, thickness: 19, center: { value: '78%', label: '执行进度' }, data: [
+  { name: '通过', value: 367, color: '#15a86b' }, { name: '失败', value: 8, color: '#e5484d' },
+  { name: '阻塞', value: 4, color: '#f59e0b' }, { name: '未执行', value: 107, color: '#dde4ee' }] });
+document.getElementById('roundBars').innerHTML = [['P0 用例', 100, 'green'], ['P1 用例', 84, ''], ['P2 用例', 62, 'orange'], ['P3 用例', 38, 'orange']]
+  .map(function (r) { return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2], 'thin') + '</div>'; }).join('');
+Charts.hbar('#testerBar', { unit: ' 条', data: [
+  { name: '吴敏', value: 186 }, { name: '赵鹏', value: 124 }, { name: '林小满', value: 42 }, { name: '自动化流水线', value: 312, color: '#7c5cff' }] });
+document.getElementById('rounds').innerHTML = [
+  ['第 3 轮', '进行中', '78%', '96.8%', '07-24 ~', 'brand'], ['第 2 轮', '已完成', '100%', '94.2%', '07-18 ~ 07-22', 'success'],
+  ['第 1 轮', '已完成', '100%', '89.6%', '07-10 ~ 07-16', 'success'], ['冒烟测试', '已完成', '100%', '100%', '07-08', 'success']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<b class="fz12" style="width:60px">' + r[0] + '</b><span class="tag ' + r[5] + '">' + r[1] + '</span>' +
+    '<span class="fz12 muted">执行 ' + r[2] + '</span><span class="fz12 ml-auto">通过率 <b>' + r[3] + '</b></span></div>';
+}).join('');
+
+/* 缺陷 */
+Charts.line('#bugBurn', {
+  height: 220, labels: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'],
+  series: [{ name: '未关闭缺陷', data: [46, 48, 51, 47, 44, 42, 41, 40, 39, 38], color: '#e5484d', area: true },
+    { name: '新增', data: [5, 6, 7, 3, 4, 3, 4, 2, 3, 1], color: '#f59e0b' },
+    { name: '关闭', data: [3, 4, 4, 7, 7, 5, 5, 3, 4, 2], color: '#15a86b' }]
+});
+Charts.hbar('#lifeBar', { unit: ' 个', data: [
+  { name: '新建（待确认）', value: 6, color: '#b3bfd0' }, { name: '已确认（待修复）', value: 11, color: '#f59e0b' },
+  { name: '修复中', value: 9, color: '#2b5cff' }, { name: '待验证', value: 8, color: '#7c5cff' },
+  { name: '重开', value: 4, color: '#e5484d' }] });
+
+var BUGS = [
+  ['BUG-771', '生产环境对账任务超时，影响 128 家商户', 'P0', '生产', '清结算', '何俊', '林小满', '处理中', '超时 2h', 1],
+  ['BUG-773', '大促峰值压测 TPS 仅 8.2k 未达标', 'P1', '预发', '路由与渠道', '李思远', '林小满', '处理中', '2 天', 0],
+  ['BUG-770', '熔断后备用通道限额校验缺失', 'P1', '测试', '路由与渠道', '何俊', '吴敏', '待验证', '1 天', 0],
+  ['BUG-768', '路由权重配置保存后未生效', 'P1', '测试', '路由与渠道', '王倩', '吴敏', '修复中', '1 天', 0],
+  ['BUG-762', '钱包签约回调重复通知导致重复入账', 'P1', '测试', '清结算', '何俊', '吴敏', '修复中', '3 天', 0],
+  ['BUG-759', '商户后台账单导出超 10 万行超时', 'P2', '生产', '商户后台', '王倩', '客服', '已确认', '5 天', 0],
+  ['BUG-755', '收银台在低端安卓机白屏', 'P1', '测试', '收银台前端', '王倩', '吴敏', '已修复', '—', 0],
+  ['BUG-751', '风控规则灰度期间命中率统计偏差', 'P2', '预发', '风控决策', '郑宇', '郑宇', '待验证', '4 天', 0],
+  ['BUG-748', '开放平台 API 文档示例返回码错误', 'P3', '生产', '开放平台', '陈立', '开发者', '已确认', '8 天', 1],
+  ['BUG-744', '对账差错工单重复派发', 'P2', '测试', '清结算', '何俊', '吴敏', '重开', '6 天', 1]
+];
+document.getElementById('bugTable').innerHTML =
+  '<thead><tr><th style="width:30px"><span class="checkbox"></span></th><th style="width:30%">缺陷</th><th>严重程度</th><th>环境</th><th>模块</th>' +
+  '<th>处理人</th><th>报告人</th><th>状态</th><th>停留</th><th>SLA</th><th style="width:34px"></th></tr></thead><tbody>' +
+  BUGS.map(function (b) {
+    var st = { '处理中': 'brand', '修复中': 'brand', '待验证': 'purple', '已确认': 'warning', '已修复': 'success', '重开': 'danger' }[b[7]];
+    return '<tr onclick="openBug(\'' + b[0] + '\')"><td><span class="checkbox"></span></td>' +
+      '<td><div class="row-flex"><span class="tico bug">' + icon('bug', 11) + '</span>' +
+      '<div><div class="t-main">' + b[1] + '</div><div class="id-link">' + b[0] + '</div></div></div></td>' +
+      '<td>' + UI.priority(b[2]) + '</td>' +
+      '<td><span class="tag ' + (b[3] === '生产' ? 'danger' : b[3] === '预发' ? 'warning' : '') + '">' + b[3] + '</span></td>' +
+      '<td class="dim fz12">' + b[4] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(b[5], 'sm') + '<span class="fz12">' + b[5] + '</span></div></td>' +
+      '<td class="dim fz12">' + b[6] + '</td>' +
+      '<td><span class="tag ' + st + '">' + b[7] + '</span></td><td class="dim fz12">' + b[8] + '</td>' +
+      '<td>' + (b[9] ? '<span class="tag danger">超时</span>' : '<span class="tag success">正常</span>') + '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'转派\',icon:\'user\'},{label:\'关联需求\',icon:\'link\'},{label:\'升级为 P0\',icon:\'arrowUp\'},{label:\'关闭\',icon:\'x\'}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+function openBug(id) {
+  var b = BUGS.filter(function (x) { return x[0] === id; })[0] || BUGS[0];
+  document.getElementById('bIco').innerHTML = icon('bug', 11);
+  document.getElementById('bId').textContent = b[0];
+  document.getElementById('bTitle').textContent = b[1];
+  document.getElementById('bSev').textContent = b[2] + (b[2] === 'P0' ? ' 致命' : b[2] === 'P1' ? ' 严重' : ' 一般');
+  document.getElementById('bProps').innerHTML = [
+    ['严重程度', UI.priority(b[2])], ['状态', '<span class="tag brand">' + b[7] + '</span>'],
+    ['发现环境', '<span class="tag danger">' + b[3] + '</span>'], ['所属模块', b[4]],
+    ['处理人', UI.avatar(b[5], 'sm') + ' ' + b[5]], ['报告人', UI.avatar(b[6], 'sm') + ' ' + b[6]],
+    ['关联需求', '<a style="color:var(--brand-600)" href="requirement-detail.html">REQ-2035</a>'], ['关联用例', 'TC-8825'],
+    ['发现版本', 'V3.0-rc2'], ['修复版本', 'V3.0-rc3'],
+    ['创建时间', '今天 07:42'], ['SLA 剩余', '<span style="color:var(--danger)">已超时 2h</span>']
+  ].map(function (p) { return '<div class="prop"><span class="k">' + p[0] + '</span><span class="v editable">' + p[1] + '</span></div>'; }).join('');
+  document.getElementById('bDesc').innerHTML =
+    '<p>生产环境每日 02:00 的对账任务在处理招行渠道 380 万条流水时超时中断，导致 <b>128 家</b>商户当日账单延迟出账，客服已收到 <b>23</b> 起投诉。</p>' +
+    '<p class="mt8"><b>影响面：</b>商户账单延迟 6 小时以上；资金结算未受影响。<b>紧急程度：</b>已升级为 P0，需 4 小时内给出修复方案。</p>';
+  document.getElementById('bSteps').innerHTML = [
+    '生产环境等待对账任务定时触发（每日 02:00）',
+    '观察 settle-job 服务日志，单批次处理量超过 300 万条',
+    '任务在 45 分钟后触发数据库连接池耗尽并抛出超时异常',
+    '预期结果：任务在 30 分钟内完成并生成对账文件',
+    '实际结果：任务中断，账单未生成，未触发自动重试'
+  ].map(function (s, i) {
+    return '<div class="flex gap8" style="padding:5px 0"><span class="tag" style="height:18px">' + (i + 1) + '</span><span class="fz12" style="flex:1">' + s + '</span></div>';
+  }).join('');
+  document.getElementById('bLog').innerHTML =
+    '<div class="dim">2026-07-25 02:47:12.338</div>' +
+    '<div class="err">ERROR [settle-job-worker-3] c.x.settle.BatchReconcileTask - reconcile batch timeout after 2700s</div>' +
+    '<div>  at com.xinglian.settle.BatchReconcileTask.execute(BatchReconcileTask.java:214)</div>' +
+    '<div>  at com.xinglian.settle.support.JobRunner.run(JobRunner.java:88)</div>' +
+    '<div class="err">Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 30000ms</div>' +
+    '<div class="warn">WARN  [monitor] pool.active=50 pool.idle=0 pool.waiting=137</div>' +
+    '<div class="dim">2026-07-25 02:47:13.002</div>' +
+    '<div class="err">ERROR [settle-job-worker-3] job status changed: RUNNING -&gt; FAILED (retry=0/3, retryPolicy=NONE)</div>' +
+    '<div class="ok">HINT  建议：拆分批次（≤50 万/批）+ 开启失败重试 + 连接池扩容至 120</div>';
+  document.getElementById('bFlow').innerHTML = [
+    { c: 'red', i: 'bug', t: '<b>林小满</b> 上报缺陷并标记 P1', time: '今天 07:42' },
+    { c: 'orange', i: 'arrowUp', t: '<b>徐磊</b> 升级为 <b>P0</b>（影响商户 > 100 家）', time: '今天 08:05' },
+    { c: 'brand', i: 'user', t: '指派给 <b>何俊</b>，抄送 沈知远、李思远', time: '今天 08:06' },
+    { c: '', i: 'comment', t: '<b>何俊</b>：定位为批次过大导致连接池耗尽，先手工重跑补账单', time: '今天 08:40' },
+    { c: 'green', i: 'check', t: '<b>何俊</b> 已手工补跑，商户账单已恢复', time: '今天 09:55' },
+    { c: 'brand', i: 'branch', t: '关联修复分支 hotfix/settle-batch-split', time: '今天 10:10' }
+  ].map(function (f) {
+    return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+      '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div></div>';
+  }).join('');
+  UI.hydrateIcons(document.getElementById('dBug'));
+  UI.openDrawer('dBug');
+}
+
+/* 自动化 */
+document.getElementById('autoStats').innerHTML = [
+  { l: '自动化用例', v: '1,596', u: '条', i: 'cpu', c: '#7c5cff' }, { l: '每日执行', v: '4.2', u: '次', i: 'refresh', c: '#2b5cff' },
+  { l: '平均执行时长', v: '23', u: '分钟', i: 'timer', c: '#0fb5ba' }, { l: '不稳定用例', v: 14, u: '条', i: 'warn', c: '#f59e0b' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div></div>';
+}).join('');
+Charts.bar('#autoTrend', {
+  height: 250, stacked: true, labels: ['07-18', '07-19', '07-20', '07-21', '07-22', '07-23', '07-24', '07-25'],
+  series: [{ name: '通过', data: [1482, 1496, 1508, 1512, 1526, 1540, 1548, 1562], color: '#15a86b' },
+    { name: '失败', data: [42, 36, 31, 28, 24, 21, 18, 16], color: '#e5484d' },
+    { name: '不稳定', data: [22, 20, 19, 18, 16, 15, 14, 14], color: '#f59e0b' }], unit: ' 条'
+});
+Charts.hbar('#flaky', { unit: '%', data: [
+  { name: 'TC-8825 熔断切换零丢单', value: 42, color: '#e5484d' }, { name: 'TC-9012 并发下单幂等', value: 34, color: '#e5484d' },
+  { name: 'TC-8850 峰值 TPS 稳定性', value: 28, color: '#f59e0b' }, { name: 'TC-7731 异步通知重试', value: 21, color: '#f59e0b' },
+  { name: 'TC-8102 分布式锁超时', value: 16, color: '#f59e0b' }] });
+document.getElementById('gateRules').innerHTML = [
+  ['提交阶段', '单元测试通过率 100% + 覆盖率 ≥ 70%', 'on'], ['合并阶段', '至少 2 人评审 + 静态扫描无高危', 'on'],
+  ['测试环境', '冒烟用例 100% 通过', 'on'], ['预发环境', '回归通过率 ≥ 98% + P0/P1 清零', 'on'],
+  ['生产发布', '性能压测达标 + 安全评审通过 + 回滚预案', 'on'], ['热修复', '允许跳过回归，需总裁审批', 'off']
+].map(function (g) {
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag brand" style="width:66px;justify-content:center">' + g[0] + '</span>' +
+    '<span class="fz12" style="flex:1">' + g[1] + '</span>' +
+    '<span class="switch ' + (g[2] === 'on' ? 'on' : '') + '"></span></div>';
+}).join('');
+document.getElementById('runTable').innerHTML =
+  '<thead><tr><th>执行</th><th>触发</th><th>用例</th><th>结果</th><th>耗时</th><th>时间</th></tr></thead><tbody>' +
+  [['#4821', 'CI · develop', '1,596', '通过 1,562 / 失败 16', 'ok', '22m 14s', '1 小时前'],
+   ['#4820', 'CI · feature/smart-router', '486', '通过 478 / 失败 8', 'fail', '9m 02s', '3 小时前'],
+   ['#4819', '定时 · 每日全量', '1,596', '通过 1,548 / 失败 18', 'ok', '24m 51s', '今天 02:00'],
+   ['#4818', 'CI · release-3.0', '798', '通过 790 / 失败 8', 'ok', '14m 33s', '昨天 22:10']
+  ].map(function (r) {
+    return '<tr><td class="mono fz11">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td><td class="num">' + r[2] + '</td>' +
+      '<td class="fz12">' + r[3] + '</td><td class="dim mono fz11">' + r[5] + '</td><td class="muted fz11">' + r[6] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('planMembers').innerHTML = UI.avatarGroup(['吴敏', '赵鹏', '林小满'], 3) + ' <span class="fz12 muted">吴敏、赵鹏、林小满</span>';
+
+if (location.search.indexOf('tab=bug') > -1) setTimeout(function () { document.querySelector('[data-tab="t4"]').click(); }, 100);
+</script>
+</body>
+</html>

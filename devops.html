@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>代码与 CI · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="devops" data-crumb="工程效能/代码与 CI">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">代码与 CI/CD</div>
+          <div class="page-desc">GitHub 组织集成 · 分支与评审 · 流水线与制品 · 环境部署</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn" data-toast="已触发全量仓库同步"><span data-icon="refresh"></span>同步 GitHub</button>
+          <a class="btn" href="settings.html"><span data-icon="settings"></span>集成设置</a>
+          <button class="btn btn-primary" data-modal="mRun"><span data-icon="play"></span>触发流水线</button>
+        </div>
+      </div>
+
+      <!-- 集成状态 -->
+      <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 40%)">
+        <div class="card-body" style="padding:12px 16px">
+          <div class="flex items-center gap10">
+            <span style="color:var(--ink-900)" data-icon="github" data-size="22"></span>
+            <div>
+              <div class="flex items-center gap8"><b class="fz13">GitHub Enterprise · xinglian-tech</b>
+                <span class="tag success"><span class="dot-status green"></span>已连接</span>
+                <span class="tag">GitHub App · devflow-bot</span></div>
+              <div class="muted fz11 mt4">12 个仓库已同步 · Webhook 正常 · 最近同步 2 分钟前 · 双向关联需求 / 缺陷 / 工作项</div>
+            </div>
+            <div class="ml-auto flex items-center gap16">
+              <div class="tc"><div class="fw6 fz15">12</div><div class="muted fz11">仓库</div></div>
+              <div class="tc"><div class="fw6 fz15">186</div><div class="muted fz11">今日提交</div></div>
+              <div class="tc"><div class="fw6 fz15" style="color:var(--warning)">9</div><div class="muted fz11">待评审 PR</div></div>
+              <div class="tc"><div class="fw6 fz15" style="color:var(--success)">96.4%</div><div class="muted fz11">流水线成功率</div></div>
+              <a class="btn btn-sm" href="#" data-toast="已在 GitHub 中打开组织主页"><span data-icon="extLink" data-size="13"></span>在 GitHub 打开</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="c1"><span data-icon="folder" data-size="14"></span>代码仓库 <span class="cnt">12</span></div>
+        <div class="tab" data-tab="c2"><span data-icon="pr" data-size="14"></span>Pull Request <span class="cnt">9</span></div>
+        <div class="tab" data-tab="c3"><span data-icon="zap" data-size="14"></span>流水线 CI/CD</div>
+        <div class="tab" data-tab="c4"><span data-icon="server" data-size="14"></span>环境与部署</div>
+        <div class="tab" data-tab="c5"><span data-icon="shieldCheck" data-size="14"></span>代码质量与安全</div>
+      </div>
+
+      <!-- 仓库 -->
+      <div class="tab-pane active" data-pane="c1">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索仓库名称"></div>
+          <div class="filter on"><span data-icon="box"></span>产品线：<b>全部</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="cpu"></span>语言<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="user"></span>负责人<span data-icon="down"></span></div>
+          <div class="ml-auto btn-group"><button class="active">卡片</button><button>列表</button></div>
+        </div>
+        <div class="grid g3" id="repoCards"></div>
+      </div>
+
+      <!-- PR -->
+      <div class="tab-pane" data-pane="c2">
+        <div class="toolbar">
+          <div class="btn-group"><button class="active">待我评审 3</button><button>我发起的 2</button><button>全部 9</button><button>已合并</button></div>
+          <div class="filter"><span data-icon="folder"></span>仓库<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="check"></span>CI 状态<span data-icon="down"></span></div>
+          <span class="ml-auto fz12 muted">PR 平均评审时长 <b style="color:var(--ink-800)">4.2 小时</b> · 平均合并时长 <b style="color:var(--ink-800)">1.1 天</b></span>
+        </div>
+        <div class="card"><div class="card-body flush"><table class="tbl" id="prTable"></table></div></div>
+      </div>
+
+      <!-- 流水线 -->
+      <div class="tab-pane" data-pane="c3">
+        <div class="grid g4 mb16" id="ciStats"></div>
+        <div class="card mb16">
+          <div class="card-head">
+            <div class="card-title"><span data-icon="workflow"></span>payment-gateway · release-3.0 · #1286</div>
+            <div class="card-sub">由 何俊 push 触发 · 提交 a3f91c2 · 开始于 12 分钟前</div>
+            <div class="card-head-actions">
+              <span class="tag danger"><span class="dot-status red"></span>失败</span>
+              <button class="btn btn-sm" data-toast="已重新运行失败阶段"><span data-icon="refresh" data-size="13"></span>重跑失败阶段</button>
+              <button class="btn btn-sm"><span data-icon="download" data-size="13"></span>下载制品</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="pipeline mb16" id="pipeline"></div>
+            <div style="display:grid;grid-template-columns:200px 1fr;gap:14px">
+              <div>
+                <div class="fz12 fw6 mb8">阶段列表</div>
+                <div id="stageList"></div>
+              </div>
+              <div>
+                <div class="flex items-center mb8"><div class="fz12 fw6">单元测试 · 执行日志</div>
+                  <div class="ml-auto flex gap6"><span class="tag danger">3 个用例失败</span>
+                    <button class="btn btn-sm"><span data-icon="download" data-size="13"></span>完整日志</button></div></div>
+                <div class="terminal" id="ciLog"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>最近流水线运行</div></div>
+            <div class="card-body flush"><table class="tbl" id="runTable"></table></div></div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>构建成功率与时长</div></div>
+              <div class="card-body"><div id="ciTrend"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>阶段耗时构成</div></div>
+              <div class="card-body"><div id="stageBar"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 环境与部署 -->
+      <div class="tab-pane" data-pane="c4">
+        <div class="grid g4 mb16" id="envCards"></div>
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="rocket"></span>部署记录</div>
+            <div class="card-head-actions"><button class="btn btn-sm btn-danger" data-toast="已发起回滚，预计 3 分钟完成"><span data-icon="history" data-size="13"></span>一键回滚</button></div></div>
+            <div class="card-body flush"><table class="tbl" id="deployTable"></table></div></div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>部署频率趋势</div></div>
+              <div class="card-body"><div id="deployTrend"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shield"></span>发布策略</div></div>
+              <div class="card-body" id="strategy"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 代码质量 -->
+      <div class="tab-pane" data-pane="c5">
+        <div class="grid g4 mb16" id="qStats"></div>
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>代码提交活跃度</div>
+            <div class="card-sub">研发中心近 26 周</div></div>
+            <div class="card-body"><div id="heat" style="overflow-x:auto"></div>
+              <div class="flex items-center gap6 mt8 fz11 muted"><span>少</span>
+                <i style="width:11px;height:11px;border-radius:3px;background:#eef2f7;display:inline-block"></i>
+                <i style="width:11px;height:11px;border-radius:3px;background:#c9dbff;display:inline-block"></i>
+                <i style="width:11px;height:11px;border-radius:3px;background:#8eb0ff;display:inline-block"></i>
+                <i style="width:11px;height:11px;border-radius:3px;background:#4d82ff;display:inline-block"></i>
+                <i style="width:11px;height:11px;border-radius:3px;background:#1d47e6;display:inline-block"></i><span>多</span></div>
+            </div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>贡献者排行</div>
+            <div class="card-sub">近 30 天代码当量</div></div>
+            <div class="card-body"><div id="contribRank"></div></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>测试覆盖率趋势</div></div>
+            <div class="card-body"><div id="covTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="warn"></span>静态扫描问题</div></div>
+            <div class="card-body"><div id="lintDonut"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="database"></span>技术债务</div>
+            <div class="card-sub">预计偿还 42 人日</div></div>
+            <div class="card-body"><div id="debtBar"></div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PR 详情抽屉 -->
+<div class="drawer" id="dPr" style="width:880px">
+  <div class="drawer-head">
+    <span class="tico epic" id="prIco"></span>
+    <div style="flex:1"><div class="flex items-center gap8"><span class="id-link">payment-gateway #482</span>
+      <span class="tag warning">待评审</span><span class="tag success">CI 通过</span></div>
+      <div class="fw6" style="font-size:14px">feat: 智能路由策略引擎</div></div>
+    <button class="btn btn-sm"><span data-icon="github" data-size="13"></span>在 GitHub 打开</button>
+    <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
+  </div>
+  <div class="drawer-body" style="padding:16px 18px">
+    <div class="flex items-center gap8 mb16">
+      <span class="branch-chip"><span data-icon="branch" data-size="11"></span>feature/smart-router</span>
+      <span data-icon="arrowRight" data-size="13" class="muted"></span>
+      <span class="branch-chip"><span data-icon="branch" data-size="11"></span>develop</span>
+      <span class="ml-auto fz12 muted">12 文件变更 · <span style="color:var(--success)">+1,284</span> <span style="color:var(--danger)">−316</span> · 8 次提交</span>
+    </div>
+    <div class="tabs" style="margin-bottom:12px">
+      <div class="tab active" data-tab="pr1">概览</div>
+      <div class="tab" data-tab="pr2">文件变更 <span class="cnt">12</span></div>
+      <div class="tab" data-tab="pr3">评审意见 <span class="cnt">5</span></div>
+      <div class="tab" data-tab="pr4">CI 检查 <span class="cnt">7</span></div>
+    </div>
+    <div class="tab-pane active" data-pane="pr1">
+      <div class="prose" style="font-size:13px">
+        <h3>变更说明</h3>
+        <p>实现智能路由策略引擎核心能力，支持基于成功率与费率的动态选路，包含策略匹配、权重计算、熔断器三个模块。</p>
+        <h3>关联工作项</h3>
+      </div>
+      <div class="mt8" id="prLinks"></div>
+      <div class="fw6 mt20 mb8">检查清单</div>
+      <div id="prCheck"></div>
+      <div class="fw6 mt20 mb8">提交记录</div>
+      <div id="prCommits"></div>
+    </div>
+    <div class="tab-pane" data-pane="pr2">
+      <div class="card" style="overflow:hidden">
+        <div class="card-head" style="padding:9px 12px;background:var(--ink-50)">
+          <span class="mono fz11">src/main/java/com/xinglian/gateway/router/StrategyEngine.java</span>
+          <span class="ml-auto mono fz11"><span style="color:var(--success)">+86</span> <span style="color:var(--danger)">−12</span></span>
+        </div>
+        <div id="diff"></div>
+      </div>
+    </div>
+    <div class="tab-pane" data-pane="pr3"><div id="prReview"></div></div>
+    <div class="tab-pane" data-pane="pr4"><div id="prChecks"></div></div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" data-toast="已请求修改">请求修改</button>
+    <button class="btn" data-toast="已批准该 PR">批准</button>
+    <button class="btn btn-primary" data-toast="PR 已合并到 develop，关联需求状态自动流转">合并 PR</button>
+  </div>
+</div>
+
+<div class="modal" id="mRun">
+  <div class="modal-head"><span data-icon="play"></span><span class="modal-title">手动触发流水线</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>仓库</label><select class="select"><option>payment-gateway</option><option>risk-engine</option><option>merchant-portal</option></select></div>
+      <div class="field"><label>分支</label><select class="select"><option>release-3.0</option><option>develop</option><option>main</option></select></div>
+    </div>
+    <div class="field"><label>流水线</label><select class="select"><option>build-test-deploy（默认）</option><option>nightly-regression</option><option>security-scan</option></select></div>
+    <div class="field"><label>目标环境</label>
+      <div class="pills"><span class="pill active">测试环境</span><span class="pill">预发环境</span><span class="pill">生产环境</span></div></div>
+    <div class="field"><label>构建参数</label><textarea class="textarea" style="min-height:60px">SKIP_E2E=false
+IMAGE_TAG=3.0.0-rc3</textarea></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="流水线 #1287 已触发">运行</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* 仓库 */
+var REPOS = [
+  { n: 'payment-gateway', d: '统一支付网关核心服务', lang: 'Java', c: '#e5484d', br: 24, pr: 5, cov: 78, ci: 'fail', own: '李思远', commit: '12 分钟前', star: 42, prod: '统一支付网关' },
+  { n: 'payment-cashier-web', d: '收银台前端（H5 / 小程序）', lang: 'TypeScript', c: '#2b5cff', br: 12, pr: 2, cov: 64, ci: 'ok', own: '王倩', commit: '1 小时前', star: 28, prod: '统一支付网关' },
+  { n: 'settle-service', d: '清结算与对账服务', lang: 'Java', c: '#e5484d', br: 9, pr: 1, cov: 82, ci: 'ok', own: '何俊', commit: '3 小时前', star: 19, prod: '统一支付网关' },
+  { n: 'risk-engine', d: '风控决策引擎', lang: 'Go', c: '#0fb5ba', br: 15, pr: 1, cov: 86, ci: 'ok', own: '郑宇', commit: '2 小时前', star: 36, prod: '智能风控平台' },
+  { n: 'risk-model-serving', d: '风控模型在线推理服务', lang: 'Python', c: '#f59e0b', br: 7, pr: 0, cov: 71, ci: 'ok', own: '郑宇', commit: '昨天', star: 22, prod: '智能风控平台' },
+  { n: 'merchant-portal', d: '商户运营中心前端', lang: 'TypeScript', c: '#2b5cff', br: 11, pr: 0, cov: 68, ci: 'ok', own: '王倩', commit: '5 小时前', star: 24, prod: '商户运营中心' },
+  { n: 'merchant-api', d: '商户中心服务端', lang: 'Java', c: '#e5484d', br: 8, pr: 0, cov: 75, ci: 'ok', own: '何俊', commit: '昨天', star: 17, prod: '商户运营中心' },
+  { n: 'data-platform', d: '数据资产中台（采集/治理）', lang: 'Scala', c: '#7c5cff', br: 6, pr: 0, cov: 62, ci: 'run', own: '何俊', commit: '4 小时前', star: 15, prod: '数据资产中台' },
+  { n: 'open-api-gateway', d: '开放平台 API 网关', lang: 'Go', c: '#0fb5ba', br: 5, pr: 0, cov: 58, ci: 'ok', own: '陈立', commit: '2 天前', star: 12, prod: '开放能力平台' }
+];
+document.getElementById('repoCards').innerHTML = REPOS.map(function (r) {
+  var ciTag = { ok: '<span class="tag success">CI 通过</span>', fail: '<span class="tag danger">CI 失败</span>', run: '<span class="tag warning">构建中</span>' }[r.ci];
+  return '<div class="card hover-card pointer" onclick="UI.toast(\'打开仓库 ' + r.n + '\')"><div class="card-body">' +
+    '<div class="flex items-center gap8"><span style="color:var(--ink-800)">' + icon('github', 18) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fw6 fz13 mono ellipsis">' + r.n + '</div>' +
+    '<div class="muted fz11 mt4">' + r.d + '</div></div>' + ciTag + '</div>' +
+    '<div class="flex items-center gap12 mt12 fz11 muted">' +
+    '<span class="flex items-center gap4"><i style="width:8px;height:8px;border-radius:50%;background:' + r.c + '"></i>' + r.lang + '</span>' +
+    '<span class="flex items-center gap4">' + icon('branch', 12) + r.br + '</span>' +
+    '<span class="flex items-center gap4">' + icon('pr', 12) + r.pr + '</span>' +
+    '<span class="flex items-center gap4">' + icon('star', 12) + r.star + '</span></div>' +
+    '<div class="flex items-center gap8 mt12"><span class="fz11 muted">覆盖率</span>' +
+    '<div style="flex:1">' + UI.bar(r.cov, r.cov >= 80 ? 'green' : r.cov >= 65 ? '' : 'orange', 'thin') + '</div><b class="fz11">' + r.cov + '%</b></div>' +
+    '<div class="flex items-center gap6 mt12" style="padding-top:10px;border-top:1px solid var(--ink-100)">' +
+    UI.avatar(r.own, 'sm') + '<span class="fz11 muted">' + r.own + '</span>' +
+    '<span class="ml-auto fz11 muted">最近提交 ' + r.commit + '</span></div>' +
+    '</div></div>';
+}).join('');
+
+/* PR */
+var PRS = [
+  ['#482', 'feat: 智能路由策略引擎', 'payment-gateway', '陈立', 'feature/smart-router', 'develop', '+1,284 −316', 'ok', '待评审', 'REQ-2041', '3 分钟前', 2],
+  ['#479', 'feat: 路由决策日志埋点', 'payment-gateway', '林小满', 'feature/router-log', 'develop', '+286 −24', 'ok', '待评审', 'STORY-3311', '2 小时前', 1],
+  ['#188', 'fix: 对账批次拆分与重试策略', 'settle-service', '何俊', 'hotfix/settle-batch-split', 'main', '+164 −38', 'run', '待评审', 'BUG-771', '1 小时前', 0],
+  ['#276', 'feat: 风控规则热更新推送', 'risk-engine', '郑宇', 'feature/rule-hot-reload', 'develop', '+642 −128', 'ok', '已批准', 'REQ-2038', '昨天', 2],
+  ['#312', 'refactor: 收银台组件库升级至 v4', 'payment-cashier-web', '王倩', 'refactor/ui-v4', 'develop', '+2,148 −1,806', 'fail', '需修改', 'STORY-3301', '昨天', 1],
+  ['#94', 'feat: 指标口径统一元数据模型', 'data-platform', '何俊', 'feature/metric-model', 'develop', '+486 −52', 'ok', '待评审', 'REQ-2032', '2 天前', 0],
+  ['#141', 'chore: 升级 Go 1.23 与依赖', 'open-api-gateway', '陈立', 'chore/go-upgrade', 'main', '+92 −86', 'ok', '已批准', '—', '2 天前', 2],
+  ['#208', 'feat: 商户白名单批量导入', 'merchant-api', '何俊', 'feature/whitelist-import', 'develop', '+318 −16', 'ok', '待评审', 'REQ-2039', '3 天前', 1],
+  ['#278', 'test: 补充风控引擎集成测试', 'risk-engine', '吴敏', 'test/integration', 'develop', '+524 −8', 'ok', '待评审', '—', '3 天前', 0]
+];
+document.getElementById('prTable').innerHTML =
+  '<thead><tr><th style="width:30%">Pull Request</th><th>仓库</th><th>作者</th><th>分支</th><th>变更</th><th>CI</th><th>关联</th><th>评审</th><th>状态</th><th>更新</th></tr></thead><tbody>' +
+  PRS.map(function (p) {
+    var ci = { ok: '<span class="tag success">' + icon('check', 11) + '通过</span>', fail: '<span class="tag danger">' + icon('x', 11) + '失败</span>', run: '<span class="tag warning">' + icon('refresh', 11) + '运行中</span>' }[p[7]];
+    var st = { '待评审': 'warning', '已批准': 'success', '需修改': 'danger' }[p[8]];
+    var add = p[6].split(' ')[0], del = p[6].split(' ')[1];
+    return '<tr onclick="UI.openDrawer(\'dPr\')"><td><div class="row-flex"><span class="tico epic">' + icon('pr', 11) + '</span>' +
+      '<div><div class="t-main">' + p[1] + '</div><div class="id-link">' + p[0] + '</div></div></div></td>' +
+      '<td class="mono fz11 dim">' + p[2] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(p[3], 'sm') + '<span class="fz12">' + p[3] + '</span></div></td>' +
+      '<td><span class="branch-chip">' + icon('branch', 11) + p[4].slice(0, 18) + '</span></td>' +
+      '<td class="mono fz11"><span style="color:var(--success)">' + add + '</span> <span style="color:var(--danger)">' + del + '</span></td>' +
+      '<td>' + ci + '</td>' +
+      '<td>' + (p[9] === '—' ? '<span class="muted">—</span>' : '<a class="id-link" style="color:var(--brand-600)">' + p[9] + '</a>') + '</td>' +
+      '<td><span class="fz12">' + p[11] + ' / 2</span></td>' +
+      '<td><span class="tag ' + st + '">' + p[8] + '</span></td>' +
+      '<td class="muted fz11 nowrap">' + p[10] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* PR 详情 */
+document.getElementById('prIco').innerHTML = icon('pr', 11);
+document.getElementById('prLinks').innerHTML = [
+  ['bulb', 'req', 'REQ-2041 支付网关多渠道智能路由能力', '需求 · 合并后自动流转为「联调中」'],
+  ['file', 'story', 'STORY-3313 成本与成功率实时计算引擎', '用户故事 · Sprint 26-14'],
+  ['flask', 'test', 'TC-8821 ~ TC-8826 路由策略用例', '6 条用例已自动执行']
+].map(function (l) {
+  return '<div class="link-item"><span class="tico ' + l[1] + '">' + icon(l[0], 11) + '</span>' +
+    '<div style="flex:1"><div class="fz12">' + l[2] + '</div><div class="muted fz11">' + l[3] + '</div></div>' + icon('right', 13) + '</div>';
+}).join('');
+document.getElementById('prCheck').innerHTML = [
+  ['已通过本地单元测试与集成测试', 1], ['已补充/更新对应测试用例（+18 条）', 1], ['已更新接口文档与技术方案', 1],
+  ['无敏感信息与硬编码配置', 1], ['已评估对存量交易的兼容性与回滚方案', 0]
+].map(function (c) {
+  return '<div class="flex items-center gap8" style="padding:5px 0"><span class="checkbox' + (c[1] ? ' checked' : '') + '"></span>' +
+    '<span class="fz12">' + c[0] + '</span></div>';
+}).join('');
+document.getElementById('prCommits').innerHTML = [
+  ['a3f91c2', 'feat(router): 引入策略权重计算引擎', '何俊', '2 小时前'],
+  ['7b20e14', 'feat(router): 通道熔断器与半开探活', '何俊', '5 小时前'],
+  ['c81d0aa', 'test: 补充路由策略单元测试', '吴敏', '昨天'],
+  ['e45b993', 'refactor: 抽取渠道适配层接口', '陈立', '昨天'],
+  ['5d1a7bf', 'feat(router): 策略匹配 DSL 解析', '何俊', '2 天前']
+].map(function (c) {
+  return '<div class="flex items-center gap8" style="padding:6px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="mono fz11" style="color:var(--brand-600);width:66px">' + c[0] + '</span>' +
+    '<span class="fz12" style="flex:1">' + c[1] + '</span>' + UI.avatar(c[2], 'sm') + '<span class="muted fz11">' + c[3] + '</span></div>';
+}).join('');
+document.getElementById('diff').innerHTML = [
+  ['ctx', '@@ -142,10 +142,84 @@ public class StrategyEngine {'],
+  ['ctx', '     private final ChannelMetricsRepository metricsRepo;'],
+  ['ctx', '     private final RateConfigClient rateConfigClient;'],
+  ['del', '-    public Channel select(PayOrder order) {'],
+  ['del', '-        return channels.get(0);'],
+  ['del', '-    }'],
+  ['add', '+    /** 基于成功率与费率的加权选路，返回最优通道 */'],
+  ['add', '+    public Channel select(PayOrder order) {'],
+  ['add', '+        List<Channel> candidates = filterByCompliance(order, channels);'],
+  ['add', '+        if (candidates.isEmpty()) {'],
+  ['add', '+            throw new NoAvailableChannelException(order.getOrderNo());'],
+  ['add', '+        }'],
+  ['add', '+        Map<Channel, Double> scores = new HashMap<>(candidates.size());'],
+  ['add', '+        for (Channel c : candidates) {'],
+  ['add', '+            if (circuitBreaker.isOpen(c.getCode())) continue;'],
+  ['add', '+            double sr = metricsRepo.successRate(c.getCode(), WINDOW_5M);'],
+  ['add', '+            double rate = rateConfigClient.feeRate(c.getCode(), order.getAmount());'],
+  ['add', '+            scores.put(c, SR_WEIGHT * sr + RATE_WEIGHT * (1 - normalize(rate)));'],
+  ['add', '+        }'],
+  ['add', '+        return scores.entrySet().stream()'],
+  ['add', '+                .max(Map.Entry.comparingByValue())'],
+  ['add', '+                .map(Map.Entry::getKey)'],
+  ['add', '+                .orElseGet(() -> fallbackChannel(order));'],
+  ['add', '+    }'],
+  ['ctx', ' '],
+  ['ctx', '     private double normalize(double rate) {']
+].map(function (d) { return '<div class="diff-line ' + d[0] + '">' + d[1].replace(/</g, '&lt;') + '</div>'; }).join('') +
+  '<div style="padding:10px 12px;background:var(--brand-50);border-top:1px solid var(--ink-100)">' +
+  '<div class="flex gap8">' + UI.avatar('陈立', 'sm') + '<div style="flex:1"><div class="fz12"><b>陈立</b> 在第 156 行评论</div>' +
+  '<div class="fz12 mt4" style="color:var(--ink-600)">建议对 <code class="code-inline">metricsRepo.successRate</code> 增加本地缓存（1s TTL），避免高并发下对指标服务造成压力。</div></div></div></div>';
+document.getElementById('prReview').innerHTML = [
+  { u: '陈立', s: '请求修改', c: 'danger', t: '整体设计清晰。两点建议：1）成功率查询建议加本地缓存；2）熔断阈值应可配置而非硬编码。', time: '1 小时前' },
+  { u: '李思远', s: '批准', c: 'success', t: '策略权重与降级逻辑符合方案设计，测试覆盖到位。缓存优化可以在下个 PR 处理。', time: '40 分钟前' },
+  { u: '吴敏', s: '评论', c: '', t: '已补充 6 条自动化用例，其中熔断切换场景需要混沌注入，暂时标记为手工执行。', time: '30 分钟前' },
+  { u: '林小满', s: '评论', c: '', t: '压测环境已准备，建议合并后立即触发 12k TPS 压测流水线。', time: '20 分钟前' },
+  { u: '何俊', s: '回复', c: '', t: '已按建议将熔断阈值改为配置中心下发，缓存优化在 #485 跟进。', time: '10 分钟前' }
+].map(function (r) {
+  return '<div class="card mb8"><div class="card-body" style="padding:12px 14px"><div class="flex items-center gap8">' +
+    UI.avatar(r.u, 'sm') + '<b class="fz12">' + r.u + '</b><span class="tag ' + r.c + '">' + r.s + '</span>' +
+    '<span class="ml-auto muted fz11">' + r.time + '</span></div>' +
+    '<div class="fz12 mt8" style="color:var(--ink-600);line-height:1.75">' + r.t + '</div></div></div>';
+}).join('');
+document.getElementById('prChecks').innerHTML = [
+  ['构建 build', 'ok', '1m 12s'], ['单元测试 unit-test', 'ok', '2m 04s'], ['代码规范 lint', 'ok', '32s'],
+  ['SonarQube 质量门禁', 'ok', '1m 08s'], ['依赖安全扫描 SCA', 'ok', '46s'], ['镜像构建与签名', 'ok', '1m 33s'],
+  ['自动化回归（子集）', 'ok', '8m 21s']
+].map(function (c) {
+  return '<div class="flex items-center gap8" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span style="color:var(--success)">' + icon('circleCheck', 15) + '</span>' +
+    '<span class="fz12" style="flex:1">' + c[0] + '</span><span class="muted mono fz11">' + c[2] + '</span>' +
+    '<a class="fz11" style="color:var(--brand-600)">查看日志</a></div>';
+}).join('');
+
+/* 流水线 */
+document.getElementById('ciStats').innerHTML = [
+  { l: '今日构建', v: 42, u: '次', i: 'zap', c: '#2b5cff' }, { l: '成功率', v: '96.4', u: '%', i: 'circleCheck', c: '#15a86b' },
+  { l: '平均构建时长', v: '6.8', u: '分钟', i: 'timer', c: '#7c5cff' }, { l: '今日部署', v: 9, u: '次', i: 'rocket', c: '#f59e0b' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div></div>';
+}).join('');
+var STAGES = [
+  ['代码检出', 'ok', '8s'], ['依赖安装', 'ok', '34s'], ['编译构建', 'ok', '1m 12s'], ['单元测试', 'fail', '2m 18s'],
+  ['代码扫描', 'skip', '—'], ['镜像构建', 'skip', '—'], ['部署测试环境', 'skip', '—'], ['自动化回归', 'skip', '—']
+];
+document.getElementById('pipeline').innerHTML = STAGES.map(function (p, i) {
+  var ic = { ok: 'check', fail: 'x', run: 'refresh', skip: 'minus', wait: 'clock' }[p[1]];
+  return (i ? '<div class="pconn"></div>' : '') + '<div class="pstage ' + p[1] + '"><span class="ico">' + icon(ic, 11) + '</span>' +
+    '<span>' + p[0] + '</span><span class="dur">' + p[2] + '</span></div>';
+}).join('');
+document.getElementById('stageList').innerHTML = STAGES.map(function (p, i) {
+  var c = { ok: 'var(--success)', fail: 'var(--danger)', skip: 'var(--ink-300)' }[p[1]];
+  return '<div class="flex items-center gap8" style="padding:7px 9px;border-radius:7px;cursor:pointer;' + (p[1] === 'fail' ? 'background:var(--danger-bg)' : '') + '">' +
+    '<span style="color:' + c + '">' + icon(p[1] === 'ok' ? 'circleCheck' : p[1] === 'fail' ? 'alert' : 'circle', 14) + '</span>' +
+    '<span class="fz12" style="flex:1">' + p[0] + '</span><span class="muted mono fz11">' + p[2] + '</span></div>';
+}).join('');
+document.getElementById('ciLog').innerHTML = [
+  ['dim', '$ mvn -B test -Dmaven.test.failure.ignore=false'],
+  ['', '[INFO] Scanning for projects...'],
+  ['', '[INFO] Running com.xinglian.gateway.router.StrategyEngineTest'],
+  ['ok', '[INFO] Tests run: 42, Failures: 0, Errors: 0, Skipped: 0 - in StrategyEngineTest (4.281 s)'],
+  ['', '[INFO] Running com.xinglian.gateway.router.CircuitBreakerTest'],
+  ['err', '[ERROR] Tests run: 18, Failures: 3, Errors: 0, Skipped: 0 - in CircuitBreakerTest (2.914 s)'],
+  ['err', '[ERROR] shouldHalfOpenAfterCooldown  Time elapsed: 0.412 s  <<< FAILURE!'],
+  ['err', 'java.lang.AssertionError: expected:<HALF_OPEN> but was:<OPEN>'],
+  ['err', '\tat com.xinglian.gateway.router.CircuitBreakerTest.shouldHalfOpenAfterCooldown(CircuitBreakerTest.java:118)'],
+  ['err', '[ERROR] shouldFallbackWhenAllChannelsOpen  Time elapsed: 0.208 s  <<< FAILURE!'],
+  ['err', '[ERROR] shouldRecoverAfterProbeSuccess  Time elapsed: 0.164 s  <<< FAILURE!'],
+  ['warn', '[WARNING] Coverage check: 73.4% (threshold 70%) - PASSED'],
+  ['err', '[ERROR] BUILD FAILURE'],
+  ['dim', '[INFO] Total time: 02:18 min'],
+  ['cmd', '提示：熔断器冷却时间在 CI 环境下受时钟精度影响，建议使用可注入的 Clock 以稳定测试']
+].map(function (l) { return '<div class="' + l[0] + '">' + l[1].replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>'; }).join('');
+
+document.getElementById('runTable').innerHTML =
+  '<thead><tr><th>运行</th><th>仓库 / 分支</th><th>触发</th><th>阶段</th><th>结果</th><th>耗时</th><th>时间</th></tr></thead><tbody>' +
+  [['#1286', 'payment-gateway / release-3.0', '何俊 push', '4/8', 'fail', '4m 12s', '12 分钟前'],
+   ['#1285', 'payment-gateway / feature/smart-router', 'PR #482', '8/8', 'ok', '14m 26s', '1 小时前'],
+   ['#1284', 'settle-service / hotfix/settle-batch-split', '何俊 push', '6/8', 'run', '—', '进行中'],
+   ['#1283', 'risk-engine / develop', '定时触发', '8/8', 'ok', '9m 44s', '3 小时前'],
+   ['#1282', 'merchant-portal / develop', '王倩 push', '8/8', 'ok', '6m 18s', '5 小时前'],
+   ['#1281', 'payment-gateway / develop', 'PR #479 合并', '8/8', 'ok', '13m 02s', '昨天'],
+   ['#1280', 'data-platform / feature/metric-model', '何俊 push', '3/8', 'fail', '2m 51s', '昨天']
+  ].map(function (r) {
+    var m = { ok: '<span class="tag success">成功</span>', fail: '<span class="tag danger">失败</span>', run: '<span class="tag warning">运行中</span>' };
+    return '<tr onclick="UI.toast(\'查看流水线 ' + r[0] + '\')"><td class="mono fz11" style="color:var(--brand-600)">' + r[0] + '</td>' +
+      '<td class="mono fz11">' + r[1] + '</td><td class="dim fz12">' + r[2] + '</td><td class="dim fz12">' + r[3] + '</td>' +
+      '<td>' + m[r[4]] + '</td><td class="mono fz11 dim">' + r[5] + '</td><td class="muted fz11">' + r[6] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+Charts.bar('#ciTrend', {
+  height: 200, labels: ['07-19', '07-20', '07-21', '07-22', '07-23', '07-24', '07-25'],
+  series: [{ name: '成功', data: [36, 41, 38, 44, 46, 42, 40], color: '#15a86b' }, { name: '失败', data: [3, 2, 4, 2, 1, 2, 2], color: '#e5484d' }],
+  stacked: true, lineSeries: { name: '平均时长(分)', data: [7.8, 7.4, 7.6, 7.1, 6.9, 6.8, 6.8], color: '#f59e0b' }, lineMax: 15
+});
+Charts.hbar('#stageBar', { unit: ' 秒', data: [
+  { name: '编译构建', value: 72 }, { name: '单元测试', value: 124 }, { name: '代码扫描', value: 48 },
+  { name: '镜像构建', value: 93 }, { name: '部署', value: 42 }, { name: '自动化回归', value: 501, color: '#f59e0b' }] });
+
+/* 环境 */
+document.getElementById('envCards').innerHTML = [
+  { n: '开发环境 DEV', v: 'develop-20260725', s: '健康', c: 'success', dep: '18 次/日', ver: 'snapshot', pods: '24/24', cpu: 42 },
+  { n: '测试环境 TEST', v: 'v3.0.0-rc3', s: '健康', c: 'success', dep: '9 次/日', ver: 'V3.0-rc3', pods: '36/36', cpu: 58 },
+  { n: '预发环境 STAGING', v: 'v3.0.0-rc2', s: '压测中', c: 'warning', dep: '2 次/日', ver: 'V3.0-rc2', pods: '48/48', cpu: 86 },
+  { n: '生产环境 PROD', v: 'v2.9.3', s: '健康', c: 'success', dep: '0.6 次/日', ver: 'V2.9.3', pods: '186/186', cpu: 61 }
+].map(function (e) {
+  return '<div class="card"><div class="card-body">' +
+    '<div class="flex items-center gap8"><span class="stat-ico" style="background:var(--' + (e.c === 'success' ? 'success' : 'warning') + '-bg);color:var(--' + (e.c === 'success' ? 'success' : 'warning') + ')">' + icon('server', 15) + '</span>' +
+    '<div style="flex:1"><div class="fw6 fz13">' + e.n + '</div><div class="muted fz11 mt4 mono">' + e.v + '</div></div>' +
+    '<span class="tag ' + e.c + '">' + e.s + '</span></div>' +
+    '<div class="grid g2 mt12" style="gap:8px">' +
+    '<div style="background:var(--ink-50);border-radius:8px;padding:7px 9px"><div class="muted fz11">实例</div><div class="fw6 fz12 mt4">' + e.pods + '</div></div>' +
+    '<div style="background:var(--ink-50);border-radius:8px;padding:7px 9px"><div class="muted fz11">部署频率</div><div class="fw6 fz12 mt4">' + e.dep + '</div></div></div>' +
+    '<div class="flex items-center gap8 mt12"><span class="fz11 muted">CPU</span><div style="flex:1">' + UI.bar(e.cpu, e.cpu > 80 ? 'red' : e.cpu > 60 ? 'orange' : 'green', 'thin') + '</div><b class="fz11">' + e.cpu + '%</b></div>' +
+    '<div class="flex gap6 mt12"><button class="btn btn-sm" style="flex:1" data-toast="已打开日志">日志</button>' +
+    '<button class="btn btn-sm" style="flex:1" data-toast="已打开监控">监控</button>' +
+    '<button class="btn btn-sm btn-soft" style="flex:1" data-toast="部署已发起">部署</button></div>' +
+    '</div></div>';
+}).join('');
+document.getElementById('deployTable').innerHTML =
+  '<thead><tr><th>发布单</th><th>服务</th><th>环境</th><th>版本</th><th>方式</th><th>操作人</th><th>结果</th><th>耗时</th><th>时间</th></tr></thead><tbody>' +
+  [['REL-0724-03', 'payment-gateway', '生产', 'v2.9.3', '滚动', '林小满', '成功', '12m 40s', '今天 02:10'],
+   ['REL-0724-02', 'settle-service', '生产', 'v2.9.3', '滚动', '林小满', '成功', '6m 22s', '今天 02:02'],
+   ['REL-0723-08', 'payment-gateway', '预发', 'v3.0.0-rc2', '蓝绿', '何俊', '成功', '8m 05s', '昨天 21:30'],
+   ['REL-0723-05', 'merchant-portal', '生产', 'v2.5.1', '灰度 20%', '王倩', '已回滚', '6m 12s', '昨天 15:02'],
+   ['REL-0723-01', 'risk-engine', '测试', 'v2.9.0-rc1', '直接', 'CI 自动', '成功', '3m 18s', '昨天 10:20'],
+   ['REL-0722-11', 'risk-engine', '生产', 'v2.8.0', '滚动', '郑宇', '成功', '15m 22s', '07-22 01:40']
+  ].map(function (r) {
+    return '<tr><td class="mono fz11">' + r[0] + '</td><td class="mono fz11">' + r[1] + '</td>' +
+      '<td><span class="tag ' + (r[2] === '生产' ? 'danger' : r[2] === '预发' ? 'warning' : '') + '">' + r[2] + '</span></td>' +
+      '<td class="fz12">' + r[3] + '</td><td class="dim fz12">' + r[4] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[5], 'sm') + '<span class="fz12">' + r[5] + '</span></div></td>' +
+      '<td><span class="tag ' + (r[6] === '成功' ? 'success' : 'danger') + '">' + r[6] + '</span></td>' +
+      '<td class="mono fz11 dim">' + r[7] + '</td><td class="muted fz11">' + r[8] + '</td></tr>';
+  }).join('') + '</tbody>';
+Charts.line('#deployTrend', {
+  height: 190, labels: ['W24', 'W25', 'W26', 'W27', 'W28', 'W29', 'W30'],
+  series: [{ name: '生产部署', data: [3, 4, 4, 5, 6, 6, 7], color: '#2b5cff', area: true },
+    { name: '变更失败', data: [1, 1, 0, 1, 0, 0, 1], color: '#e5484d' }]
+});
+document.getElementById('strategy').innerHTML = [
+  ['生产发布', '蓝绿 + 灰度（1% → 10% → 50% → 100%）'], ['回滚 SLA', '≤ 3 分钟（保留上一版本镜像与配置）'],
+  ['发布窗口', '工作日 22:00 ~ 次日 06:00（大促期间冻结）'], ['审批链', '技术负责人 → 测试经理 → SRE → 研发总裁（P0 变更）'],
+  ['自动回滚', '错误率 > 1% 或 P99 > 300ms 持续 2 分钟']
+].map(function (s) {
+  return '<div style="padding:8px 0;border-bottom:1px solid var(--ink-100)"><div class="fz12 fw6">' + s[0] + '</div>' +
+    '<div class="muted fz11 mt4">' + s[1] + '</div></div>';
+}).join('');
+
+/* 质量 */
+document.getElementById('qStats').innerHTML = [
+  { l: '代码总量', v: '186', u: '万行', i: 'file', c: '#2b5cff' }, { l: '平均覆盖率', v: '73.4', u: '%', i: 'target', c: '#15a86b' },
+  { l: '静态扫描问题', v: 428, u: '个', i: 'warn', c: '#f59e0b' }, { l: '高危漏洞', v: 0, u: '个', i: 'shieldCheck', c: '#15a86b' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div></div>';
+}).join('');
+Charts.heatmap('#heat', {
+  weeks: 26, cell: 12,
+  data: Array.from({ length: 182 }, function (_, i) { var d = i % 7; return d > 4 ? (Math.random() > 0.7 ? 1 : 0) : Math.floor(Math.random() * 5); }),
+  monthLabels: [{ week: 0, label: '2月' }, { week: 4, label: '3月' }, { week: 9, label: '4月' }, { week: 13, label: '5月' }, { week: 17, label: '6月' }, { week: 22, label: '7月' }],
+  tip: function (i, v) { return '第 ' + (Math.floor(i / 7) + 1) + ' 周 · ' + v * 26 + ' 次提交'; }
+});
+Charts.hbar('#contribRank', { unit: ' 当量', data: [
+  { name: '何俊', value: 4820 }, { name: '王倩', value: 3960 }, { name: '郑宇', value: 3410 },
+  { name: '李思远', value: 2280 }, { name: '陈立', value: 1840 }, { name: '林小满', value: 1620 }] });
+Charts.line('#covTrend', {
+  height: 200, yMax: 100, labels: ['3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '行覆盖率', data: [61, 64, 68, 71, 73.4], color: '#15a86b', area: true },
+    { name: '分支覆盖率', data: [52, 55, 58, 62, 64], color: '#2b5cff' }]
+});
+Charts.donut('#lintDonut', { size: 140, thickness: 18, center: { value: '428', label: '待处理' }, data: [
+  { name: '阻断', value: 0, color: '#b3182c' }, { name: '严重', value: 26, color: '#e5484d' },
+  { name: '主要', value: 142, color: '#f59e0b' }, { name: '次要', value: 260, color: '#b3bfd0' }] });
+Charts.hbar('#debtBar', { unit: ' 人日', data: [
+  { name: '重复代码', value: 12 }, { name: '圈复杂度过高', value: 9 }, { name: '缺少测试', value: 11 },
+  { name: '过时依赖', value: 6 }, { name: '架构违例', value: 4 }] });
+</script>
+</body>
+</html>

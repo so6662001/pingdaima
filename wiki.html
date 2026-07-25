@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>知识库 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="wiki" data-crumb="组织协同/知识库/研发流程规范 V4.2">
+<div class="app">
+  <div class="main">
+    <div class="content flush">
+      <div style="display:grid;grid-template-columns:246px 1fr;min-height:calc(100vh - 56px)">
+
+        <!-- 空间与目录 -->
+        <aside style="border-right:1px solid var(--ink-200);background:#fff;padding:12px 10px;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px">
+          <div class="flex items-center gap8 mb12" style="padding:0 4px">
+            <div style="width:26px;height:26px;border-radius:7px;background:var(--brand-50);color:var(--brand-600);display:grid;place-items:center">
+              <span data-icon="book" data-size="14"></span></div>
+            <div style="flex:1;min-width:0"><div class="fw6 fz13 ellipsis">研发中心知识库</div>
+              <div class="muted fz11">1,286 篇文档</div></div>
+            <button class="icon-btn" style="width:24px;height:24px" id="spaceBtn"><span data-icon="down" data-size="13"></span></button>
+          </div>
+          <div class="search-box mb12" style="display:block"><span data-icon="search" data-size="14"></span>
+            <input placeholder="搜索文档" style="width:100%"></div>
+          <button class="btn btn-primary btn-sm btn-block mb12" data-modal="mNewDoc"><span data-icon="plus" data-size="13"></span>新建页面</button>
+          <div class="doc-tree" id="tree"></div>
+          <div class="divider"></div>
+          <div class="nav-group-title" style="color:var(--ink-400);padding-left:8px">快捷入口</div>
+          <div class="doc-node"><span data-icon="clock" data-size="13"></span><span>最近浏览</span></div>
+          <div class="doc-node"><span data-icon="star" data-size="13"></span><span>我的收藏</span></div>
+          <div class="doc-node"><span data-icon="edit" data-size="13"></span><span>我创建的</span></div>
+          <div class="doc-node"><span data-icon="trash" data-size="13"></span><span>回收站</span></div>
+        </aside>
+
+        <!-- 文档 -->
+        <div style="padding:18px 22px 60px;min-width:0">
+          <div class="flex items-center gap8 mb16">
+            <div class="btn-group">
+              <button class="active" data-view="doc">文档</button>
+              <button data-view="space">空间概览</button>
+            </div>
+            <div class="ml-auto flex gap6">
+              <button class="btn btn-sm"><span data-icon="star" data-size="13"></span>收藏</button>
+              <button class="btn btn-sm"><span data-icon="share" data-size="13"></span>分享</button>
+              <button class="btn btn-sm"><span data-icon="history" data-size="13"></span>版本历史</button>
+              <button class="btn btn-sm"><span data-icon="download" data-size="13"></span>导出</button>
+              <button class="btn btn-sm btn-primary"><span data-icon="edit" data-size="13"></span>编辑</button>
+              <button class="icon-btn" id="docMore"><span data-icon="more" data-size="16"></span></button>
+            </div>
+          </div>
+
+          <!-- 文档视图 -->
+          <div id="viewDoc">
+            <div style="display:grid;grid-template-columns:1fr 210px;gap:26px;align-items:start">
+              <div>
+                <div class="card"><div class="card-body" style="padding:28px 34px">
+                  <div class="flex items-center gap8 mb12">
+                    <span class="tag brand">流程规范</span><span class="tag success">已生效</span>
+                    <span class="tag">V4.2</span>
+                    <span class="muted fz11 ml-auto">阅读 2,486 · 收藏 168</span>
+                  </div>
+                  <div class="prose" id="docBody"></div>
+                  <div class="divider" style="margin:26px 0"></div>
+                  <div class="flex items-center gap8">
+                    <button class="btn btn-sm"><span data-icon="thumb" data-size="13"></span>有帮助 (86)</button>
+                    <button class="btn btn-sm"><span data-icon="star" data-size="13"></span>收藏</button>
+                    <span class="ml-auto muted fz11">最后由 徐磊 更新于 2026-07-20 · 审批人 沈知远</span>
+                  </div>
+                </div></div>
+
+                <div class="card mt16">
+                  <div class="card-head"><div class="card-title"><span data-icon="comment"></span>评论 <span class="card-sub">4 条</span></div></div>
+                  <div class="card-body" id="docComments"></div>
+                  <div class="card-foot" style="background:var(--ink-50)">
+                    <div class="flex gap8 items-start"><span class="avatar" style="background:linear-gradient(135deg,#2b5cff,#7c5cff)">SZ</span>
+                      <input class="input" style="flex:1;background:#fff" placeholder="写下你的评论…">
+                      <button class="btn btn-sm btn-primary" data-toast="评论已发布">发送</button></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid" style="gap:14px;align-content:start;position:sticky;top:74px">
+                <div class="card"><div class="card-head" style="padding:10px 14px"><div class="card-title fz12"><span data-icon="list" data-size="14"></span>本页目录</div></div>
+                  <div class="card-body" style="padding:8px"><div class="toc" id="toc"></div></div></div>
+                <div class="card"><div class="card-head" style="padding:10px 14px"><div class="card-title fz12"><span data-icon="user" data-size="14"></span>文档信息</div></div>
+                  <div class="card-body" style="padding:10px 14px"><div class="props" id="docInfo"></div></div></div>
+                <div class="card"><div class="card-head" style="padding:10px 14px"><div class="card-title fz12"><span data-icon="link" data-size="14"></span>相关文档</div></div>
+                  <div class="card-body" style="padding:8px 12px" id="related"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 空间概览 -->
+          <div id="viewSpace" style="display:none">
+            <div class="grid g4 mb16" id="wikiStats"></div>
+            <div class="grid g3 mb16" id="spaces"></div>
+            <div class="grid g-2-1">
+              <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>最近更新</div></div>
+                <div class="card-body flush"><table class="tbl" id="recentTable"></table></div></div>
+              <div class="grid" style="gap:14px;align-content:start">
+                <div class="card"><div class="card-head"><div class="card-title"><span data-icon="trendUp"></span>热门文档</div></div>
+                  <div class="card-body" id="hotDocs"></div></div>
+                <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>知识贡献榜</div>
+                  <div class="card-sub">本季度</div></div>
+                  <div class="card-body"><div id="contribRank"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mNewDoc">
+  <div class="modal-head"><span data-icon="file"></span><span class="modal-title">新建页面</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>页面标题<span class="req">*</span></label><input class="input" placeholder="例如：智能路由技术方案 V1.3"></div>
+    <div class="form-row">
+      <div class="field"><label>所属空间</label><select class="select"><option>研发中心知识库</option><option>产品中心</option><option>质量保障</option></select></div>
+      <div class="field"><label>上级页面</label><select class="select"><option>技术方案</option><option>流程规范</option><option>复盘沉淀</option></select></div>
+    </div>
+    <div class="field"><label>选择模板</label>
+      <div class="grid g3" style="gap:8px" id="tpls"></div></div>
+    <div class="field"><label>阅读权限</label>
+      <div class="pills"><span class="pill active">空间成员可见</span><span class="pill">全中心可见</span><span class="pill">指定人员</span></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="页面已创建，进入编辑模式">创建并编辑</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* 目录树 */
+var TREE = [
+  { n: '研发流程规范', i: 'workflow', open: 1, ch: [
+    { n: '研发流程规范 V4.2', active: 1 }, { n: '需求管理规范' }, { n: '迭代管理规范' }, { n: '代码评审规范' }, { n: '发布与变更管理' }] },
+  { n: '技术架构', i: 'layers', open: 1, ch: [
+    { n: '技术架构总览' }, { n: '支付网关 3.0 架构设计' }, { n: '智能路由技术方案 V1.2' }, { n: '微服务治理规范' }, { n: '技术选型清单' }] },
+  { n: '质量保障', i: 'shieldCheck', ch: [{ n: '质量门禁标准 V3' }, { n: '测试用例设计指南' }, { n: '自动化测试框架' }] },
+  { n: '运维与稳定性', i: 'server', ch: [{ n: '生产变更 SOP' }, { n: '故障应急预案' }, { n: '容量规划指南' }] },
+  { n: '产品与业务', i: 'box', ch: [{ n: '支付业务知识地图' }, { n: '监管合规要点' }, { n: '竞品分析报告' }] },
+  { n: '团队与文化', i: 'users', ch: [{ n: '新人入职指南' }, { n: '技术分享归档' }, { n: '复盘纪要' }] }
+];
+document.getElementById('tree').innerHTML = TREE.map(function (t) {
+  return '<div class="tree-node' + (t.open ? '' : ' closed') + '">' +
+    '<div class="doc-node" onclick="this.parentElement.classList.toggle(\'closed\')">' +
+    '<span class="caret open">' + icon('right', 12) + '</span>' + icon(t.i, 14) + '<span style="flex:1">' + t.n + '</span>' +
+    '<span class="muted fz11">' + t.ch.length + '</span></div>' +
+    '<div class="doc-children">' + t.ch.map(function (c) {
+      return '<div class="doc-node' + (c.active ? ' active' : '') + '">' + icon('file', 13) + '<span>' + c.n + '</span></div>';
+    }).join('') + '</div></div>';
+}).join('');
+var st = document.createElement('style');
+st.textContent = '.tree-node.closed > .doc-children{display:none}.tree-node.closed .caret{transform:none}';
+document.head.appendChild(st);
+
+/* 文档正文 */
+document.getElementById('docBody').innerHTML = [
+  '<h1>星链数科研发中心 · 研发流程规范 V4.2</h1>',
+  '<p>本规范定义研发中心从需求提出到上线运营的端到端流程、角色职责、质量门禁与度量口径，适用于研发中心全部产品线与项目。自 <b>2026 年 7 月 20 日</b> 起生效，替代 V4.1。</p>',
+  '<blockquote>修订摘要（V4.1 → V4.2）：① 新增「需求就绪度 DoR」门禁；② 评审频次由不定期改为每周二 / 周四固定批量评审；③ 明确 P0 缺陷 4 小时响应机制；④ 发布准入新增性能压测达标项。</blockquote>',
+
+  '<h2 id="h1">一、端到端流程总览</h2>',
+  '<p>研发流程分为 <b>需求 → 规划 → 设计 → 开发 → 测试 → 发布 → 运营</b> 七个阶段，每个阶段设有明确的准入准出条件：</p>',
+  '<pre>需求提出 ──▶ 产品初审 ──▶ 架构评审 ──▶ 价值评审会 ──▶ 排期立项\n                                                    │\n                                                    ▼\n运营复盘 ◀── 灰度发布 ◀── 发布评审 ◀── 测试验收 ◀── 开发与自测</pre>',
+  '<h3>1.1 角色与职责（RACI）</h3>',
+  '<table><thead><tr><th>阶段</th><th>负责 R</th><th>批准 A</th><th>咨询 C</th><th>知会 I</th></tr></thead><tbody>' +
+  '<tr><td>需求评审</td><td>产品经理</td><td>产品总监</td><td>架构师 / 研发负责人</td><td>测试 / 运营</td></tr>' +
+  '<tr><td>技术方案</td><td>研发负责人</td><td>首席架构师</td><td>SRE / 安全</td><td>产品 / 测试</td></tr>' +
+  '<tr><td>迭代交付</td><td>研发工程师</td><td>项目经理</td><td>测试工程师</td><td>产品经理</td></tr>' +
+  '<tr><td>发布准入</td><td>SRE</td><td>研发中心总裁（P0 变更）</td><td>测试经理 / 安全</td><td>全体</td></tr>' +
+  '</tbody></table>',
+
+  '<h2 id="h2">二、需求管理</h2>',
+  '<h3>2.1 需求就绪度（DoR）</h3>',
+  '<p>需求进入迭代前必须满足以下条件，未满足者不得排期：</p>',
+  '<ul><li>业务背景与目标用户清晰，收益<b>可量化</b>（GMV / 成功率 / 成本 / 效率）</li>' +
+  '<li>验收标准（AC）不少于 3 条，且可测试、可验证</li>' +
+  '<li>已完成 RICE 价值评分并进入排序池</li>' +
+  '<li>技术方案已评审，依赖项已识别且有明确的对接人</li>' +
+  '<li>预估工作量偏差不超过 ±30%，且已拆分为 ≤ 8 故事点的用户故事</li></ul>',
+  '<h3>2.2 优先级定义</h3>',
+  '<table><thead><tr><th>级别</th><th>定义</th><th>响应要求</th></tr></thead><tbody>' +
+  '<tr><td>P0 最高</td><td>监管合规、生产故障、影响核心交易链路</td><td>24 小时内进入排期，可插队</td></tr>' +
+  '<tr><td>P1 高</td><td>季度 OKR 关键举措、重点客户承诺</td><td>本迭代或下迭代排期</td></tr>' +
+  '<tr><td>P2 中</td><td>常规功能优化与体验改进</td><td>按价值排序自然排期</td></tr>' +
+  '<tr><td>P3 低</td><td>长尾需求、内部效率改进</td><td>季度池，视容量安排</td></tr>' +
+  '</tbody></table>',
+
+  '<h2 id="h3">三、迭代与工程实践</h2>',
+  '<h3>3.1 迭代节奏</h3>',
+  '<p>统一采用 <b>2 周迭代</b>：D1 迭代规划会（≤2h）、每日站会（≤15min）、D9 演示评审、D10 复盘。迭代承诺量按团队近 3 个迭代速率均值的 <b>85%</b> 设定，预留 15% 应对插入需求。</p>',
+  '<h3>3.2 分支与代码规范</h3>',
+  '<pre>main        生产分支，仅接受 release / hotfix 合并，受保护\ndevelop     集成分支，日常合并目标\nfeature/*   特性分支，生命周期 ≤ 5 天\nrelease/*   发布分支，仅允许缺陷修复\nhotfix/*    紧急修复，需 P0 审批</pre>',
+  '<ul><li>单个 PR 变更行数建议 ≤ 400 行，超出需拆分</li>' +
+  '<li>PR 必须关联需求 / 缺陷编号，否则 CI 拒绝合并</li>' +
+  '<li>至少 <b>2 名</b>评审人批准且 CI 全绿方可合并，核心链路需架构师参与</li>' +
+  '<li>评审响应 SLA：4 小时内首次响应，24 小时内完成评审</li></ul>',
+
+  '<h2 id="h4">四、质量门禁</h2>',
+  '<table><thead><tr><th>门禁点</th><th>准出条件</th><th>责任人</th></tr></thead><tbody>' +
+  '<tr><td>提交阶段</td><td>单元测试 100% 通过，增量覆盖率 ≥ 70%</td><td>研发工程师</td></tr>' +
+  '<tr><td>合并阶段</td><td>2 人评审通过 + 静态扫描无高危 + 无新增技术债</td><td>研发负责人</td></tr>' +
+  '<tr><td>提测阶段</td><td>冒烟用例 100% 通过，一次通过率 ≥ 85%</td><td>测试工程师</td></tr>' +
+  '<tr><td>发布准入</td><td>回归通过率 ≥ 98%、P0/P1 缺陷清零、性能压测达标、安全评审通过、回滚预案就绪</td><td>SRE + 测试经理</td></tr>' +
+  '</tbody></table>',
+  '<blockquote>门禁不达标需走豁免流程：由项目经理提交豁免申请，说明风险与补偿措施，<b>P0/P1 门禁豁免须研发中心总裁审批</b>。</blockquote>',
+
+  '<h2 id="h5">五、缺陷与故障管理</h2>',
+  '<ul><li><b>P0 缺陷</b>：15 分钟响应，4 小时内给出修复方案或降级措施，全程在应急群同步</li>' +
+  '<li><b>P1 缺陷</b>：2 小时响应，24 小时内修复</li>' +
+  '<li>生产故障须在 <b>48 小时</b>内完成复盘，输出根因、改进项与责任人，纳入知识库</li>' +
+  '<li>同类故障重复发生视为改进措施未落地，纳入团队季度考核</li></ul>',
+
+  '<h2 id="h6">六、度量与考核</h2>',
+  '<p>研发中心统一采用以下口径度量，数据由 DevFlow 平台自动采集，禁止人工修改：</p>',
+  '<ul><li><b>交付效率</b>：需求交付周期（提出→上线）、吞吐量、按时交付率</li>' +
+  '<li><b>交付质量</b>：缺陷密度、缺陷逃逸率、线上故障数与 MTTR</li>' +
+  '<li><b>交付能力</b>：DORA 四指标（部署频率、变更前置时间、变更失败率、服务恢复时间）</li>' +
+  '<li><b>组织人效</b>：人均交付故事点、有效投入率、故事点成本</li></ul>',
+  '<blockquote>度量用于<b>发现系统性瓶颈</b>而非考核个人。严禁将代码行数、提交次数等过程指标直接用于绩效排名。</blockquote>'
+].join('');
+
+/* 目录 */
+document.getElementById('toc').innerHTML = [
+  ['h1', '一、端到端流程总览', 0], ['h2', '二、需求管理', 0], ['h3', '三、迭代与工程实践', 0],
+  ['h4', '四、质量门禁', 0], ['h5', '五、缺陷与故障管理', 0], ['h6', '六、度量与考核', 0]
+].map(function (t, i) {
+  return '<a href="#' + t[0] + '" class="' + (i === 0 ? 'active' : '') + '">' + t[1] + '</a>';
+}).join('');
+
+document.getElementById('docInfo').innerHTML = [
+  ['创建人', UI.avatar('徐磊', 'sm') + ' 徐磊'], ['审批人', UI.avatar('沈知远', 'sm') + ' 沈知远'],
+  ['版本', 'V4.2（第 12 次修订）'], ['生效日期', '2026-07-20'], ['复审周期', '每半年'],
+  ['适用范围', '研发中心全员'], ['密级', '<span class="tag warning">内部公开</span>'], ['关联流程', '需求 / 迭代 / 发布']
+].map(function (p) { return '<div class="prop"><span class="k" style="width:56px">' + p[0] + '</span><span class="v">' + p[1] + '</span></div>'; }).join('');
+
+document.getElementById('related').innerHTML = [
+  ['质量门禁标准 V3', '质量保障'], ['生产变更 SOP', '运维与稳定性'], ['代码评审规范', '研发流程规范'],
+  ['需求管理规范', '研发流程规范'], ['故障应急预案', '运维与稳定性']
+].map(function (r) {
+  return '<div class="flex items-center gap6" style="padding:6px 0;cursor:pointer">' + icon('file', 13) +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + r[0] + '</div><div class="muted fz11">' + r[1] + '</div></div></div>';
+}).join('');
+
+document.getElementById('docComments').innerHTML = [
+  { u: '陈立', t: '2 天前', c: '建议在 3.2 分支规范中补充「长期特性分支」的处理方式，目前部分重构类需求超过 5 天无法拆分。' },
+  { u: '徐磊', t: '2 天前', c: '@陈立 收到，V4.3 会增加「特性开关（Feature Flag）+ 主干开发」的补充说明。' },
+  { u: '赵鹏', t: '昨天', c: '四、质量门禁中的「一次通过率 ≥ 85%」建议区分产品线，风控类需求复杂度更高，达标压力较大。' },
+  { u: '沈知远', t: '昨天', c: '同意分层设定，请质量保障部在 8 月前给出分产品线的基线值，届时一并修订。' }
+].map(function (c, i) {
+  return '<div class="flex gap10" style="padding:11px 0;' + (i ? 'border-top:1px solid var(--ink-100)' : 'padding-top:0') + '">' +
+    UI.avatar(c.u, 'sm') + '<div style="flex:1"><div class="flex items-center gap6"><b class="fz12">' + c.u + '</b>' +
+    '<span class="muted fz11 ml-auto">' + c.t + '</span></div>' +
+    '<div class="fz12 mt4" style="color:var(--ink-600);line-height:1.75">' + c.c + '</div></div></div>';
+}).join('');
+
+/* 空间概览 */
+document.getElementById('wikiStats').innerHTML = [
+  { l: '文档总数', v: '1,286', u: '篇', i: 'file', c: '#2b5cff' }, { l: '本月新增', v: 68, u: '篇', i: 'plus', c: '#15a86b' },
+  { l: '本月阅读', v: '12.4k', u: '次', i: 'eye', c: '#7c5cff' }, { l: '待复审文档', v: 23, u: '篇', i: 'clock', c: '#f59e0b' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div></div>';
+}).join('');
+document.getElementById('spaces').innerHTML = [
+  ['研发流程规范', 'workflow', '#2b5cff', 86, '徐磊', '流程、规范、SOP 的唯一权威来源'],
+  ['技术架构', 'layers', '#7c5cff', 214, '陈立', '架构设计、技术方案、选型决策记录'],
+  ['质量保障', 'shieldCheck', '#15a86b', 162, '赵鹏', '测试策略、用例设计、质量门禁'],
+  ['运维与稳定性', 'server', '#f59e0b', 138, '林小满', '变更 SOP、应急预案、容量规划'],
+  ['产品与业务', 'box', '#0fb5ba', 396, '周雅', '业务知识地图、监管合规、竞品分析'],
+  ['团队与文化', 'users', '#e93d82', 290, '沈知远', '入职指南、技术分享、复盘沉淀']
+].map(function (s) {
+  return '<div class="card hover-card pointer"><div class="card-body">' +
+    '<div class="flex items-center gap10"><div style="width:34px;height:34px;border-radius:9px;background:' + s[2] + '18;color:' + s[2] + ';display:grid;place-items:center">' + icon(s[1], 16) + '</div>' +
+    '<div style="flex:1"><div class="fw6 fz13">' + s[0] + '</div><div class="muted fz11 mt4">' + s[3] + ' 篇文档</div></div></div>' +
+    '<div class="muted fz12 mt12">' + s[5] + '</div>' +
+    '<div class="flex items-center gap6 mt12" style="padding-top:10px;border-top:1px solid var(--ink-100)">' +
+    UI.avatar(s[4], 'sm') + '<span class="fz11 muted">' + s[4] + ' 维护</span>' +
+    '<span class="ml-auto fz11" style="color:var(--brand-600)">进入空间 ›</span></div></div></div>';
+}).join('');
+document.getElementById('recentTable').innerHTML =
+  '<thead><tr><th>文档</th><th>空间</th><th>更新人</th><th>版本</th><th>状态</th><th>更新时间</th></tr></thead><tbody>' +
+  [['研发流程规范 V4.2', '研发流程规范', '徐磊', 'V4.2', '已生效', 'success', '5 天前'],
+   ['智能路由技术方案 V1.2', '技术架构', '李思远', 'V1.2', '评审中', 'warning', '昨天'],
+   ['支付网关 3.0 架构设计', '技术架构', '陈立', 'V2.0', '已生效', 'success', '2 天前'],
+   ['质量门禁标准 V3', '质量保障', '赵鹏', 'V3.0', '已生效', 'success', '3 天前'],
+   ['Sprint 26-13 复盘纪要', '团队与文化', '徐磊', '—', '归档', '', '07-13'],
+   ['数字人民币受理业务说明', '产品与业务', '周雅', 'V1.1', '已生效', 'success', '07-16'],
+   ['K8s 1.29 升级操作手册', '运维与稳定性', '林小满', 'V1.0', '已生效', 'success', '07-11']
+  ].map(function (r) {
+    return '<tr onclick="UI.toast(\'打开文档：' + r[0] + '\')"><td><div class="row-flex"><span class="tico doc">' + icon('file', 11) + '</span>' +
+      '<span class="t-main">' + r[0] + '</span></div></td><td class="dim fz12">' + r[1] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[2], 'sm') + '<span class="fz12">' + r[2] + '</span></div></td>' +
+      '<td class="dim fz12">' + r[3] + '</td><td><span class="tag ' + r[5] + '">' + r[4] + '</span></td>' +
+      '<td class="muted fz11">' + r[6] + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('hotDocs').innerHTML = [
+  ['研发流程规范 V4.2', 2486], ['新人入职指南', 1862], ['支付业务知识地图', 1524],
+  ['质量门禁标准 V3', 1286], ['生产变更 SOP', 1104]
+].map(function (h, i) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100);cursor:pointer">' +
+    '<span class="tag ' + (i < 3 ? 'brand' : '') + '" style="width:20px;justify-content:center">' + (i + 1) + '</span>' +
+    '<span class="fz12 ellipsis" style="flex:1">' + h[0] + '</span>' +
+    '<span class="muted fz11">' + icon('eye', 12) + ' ' + h[1] + '</span></div>';
+}).join('');
+Charts.hbar('#contribRank', { unit: ' 篇', data: [
+  { name: '陈立', value: 28 }, { name: '徐磊', value: 21 }, { name: '林小满', value: 18 },
+  { name: '周雅', value: 16 }, { name: '赵鹏', value: 14 }] });
+
+document.getElementById('tpls').innerHTML = [['技术方案', 'layers'], ['需求文档', 'bulb'], ['复盘纪要', 'history'], ['会议纪要', 'users'], ['操作手册', 'book'], ['空白页面', 'file']]
+  .map(function (t, i) {
+    return '<div style="border:1.5px solid var(--' + (i === 0 ? 'brand-400' : 'ink-200') + ');border-radius:8px;padding:10px;text-align:center;cursor:pointer">' +
+      '<div style="color:var(--brand-500)">' + icon(t[1], 18) + '</div><div class="fz11 mt4">' + t[0] + '</div></div>';
+  }).join('');
+
+/* 视图切换 */
+document.querySelectorAll('[data-view]').forEach(function (b) {
+  b.onclick = function () {
+    var v = b.dataset.view;
+    document.getElementById('viewDoc').style.display = v === 'doc' ? '' : 'none';
+    document.getElementById('viewSpace').style.display = v === 'space' ? '' : 'none';
+    window.dispatchEvent(new Event('resize'));
+  };
+});
+document.getElementById('docMore').onclick = function () {
+  UI.menu(this, [{ label: '移动页面', icon: 'folder' }, { label: '复制页面', icon: 'copy' }, { label: '设为模板', icon: 'bookmark' },
+    { label: '权限设置', icon: 'lock' }, '-', { label: '删除', icon: 'trash', danger: true }], 'right');
+};
+document.getElementById('spaceBtn').onclick = function () {
+  UI.menu(this, [{ label: '研发中心知识库' }, { label: '产品中心' }, { label: '质量保障' }, { label: '运维中心' }, '-', { label: '新建空间', icon: 'plus' }]);
+};
+</script>
+</body>
+</html>

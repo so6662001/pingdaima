@@ -225,6 +225,12 @@
     UI.initToggles();
     UI.initKanban();
     UI.refreshBoardCounts();
+    // 支持 #tab=xxx 深链直接打开指定标签页
+    var h = location.hash.match(/tab=([\w-]+)/);
+    if (h) {
+      var t = document.querySelector('.tab[data-tab="' + h[1] + '"]');
+      if (t) t.click();
+    }
     // 通用触发器：data-drawer / data-modal / data-close / data-toast
     document.addEventListener('click', function (e) {
       var t = e.target.closest('[data-drawer]');
