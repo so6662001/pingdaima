@@ -44,6 +44,23 @@
         </div>
       </div>
 
+      <div class="card mb16">
+        <div class="card-head">
+          <div class="card-title"><span data-icon="calendar"></span>阶段排期与进度</div>
+          <div class="card-sub">计划 vs 实际 · 实际日期由工作项流转与代码提交自动回填</div>
+          <div class="card-head-actions">
+            <span class="tag success">当前按计划</span>
+            <button class="btn btn-sm" data-toast="已按新工作量重新推算阶段计划"><span data-icon="sparkles" data-size="13"></span>智能重排</button>
+            <button class="btn btn-sm"><span data-icon="edit" data-size="13"></span>调整计划</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="grid g4 mb16" style="gap:10px" id="keyDates"></div>
+          <div id="stageBar"></div>
+          <div class="table-wrap mt16"><table class="tbl" id="stageTable"></table></div>
+        </div>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start">
         <div>
           <div class="tabs">
@@ -196,6 +213,62 @@ document.getElementById('flow').innerHTML = [
     '<div><div class="fw5">' + f.n + '</div><div class="muted" style="font-size:10.5px">' + f.d + '</div></div></div>';
 }).join('');
 
+/* 阶段排期 */
+document.getElementById('keyDates').innerHTML = [
+  ['开始设计', '2026-07-21', '实际 07-21', 'success', '按时开始'],
+  ['开始编码', '2026-07-28', '实际 07-28', 'success', '按时开始'],
+  ['计划提测', '2026-09-13', '—', 'brand', '距今 50 天'],
+  ['计划上线', '2026-09-30', '—', 'brand', '距今 67 天']
+].map(function (k) {
+  return '<div style="background:var(--ink-50);border-radius:10px;padding:12px 14px;border-left:3px solid var(--' +
+    (k[3] === 'success' ? 'success' : 'brand-500') + ')">' +
+    '<div class="muted fz11">' + k[0] + '</div>' +
+    '<div class="fw6 mt4" style="font-size:15px;color:var(--ink-900)">' + k[1] + '</div>' +
+    '<div class="flex items-center gap6 mt4"><span class="tag ' + k[3] + '">' + k[2] + '</span>' +
+    '<span class="muted fz11">' + k[4] + '</span></div></div>';
+}).join('');
+
+(function () {
+  var stages = [
+    { n: '需求设计', s: '07-21', e: '07-27', pct: 100, c: '#7c5cff' },
+    { n: '编码开发', s: '07-28', e: '09-04', pct: 15, c: '#2b5cff' },
+    { n: '联调自测', s: '09-05', e: '09-12', pct: 0, c: '#0fb5ba' },
+    { n: '测试验收', s: '09-13', e: '09-25', pct: 0, c: '#f59e0b' },
+    { n: '发布上线', s: '09-26', e: '09-30', pct: 0, c: '#15a86b' }
+  ];
+  var total = stages.reduce(function (a, b) { return a + (dayNum(b.e) - dayNum(b.s) + 1); }, 0);
+  function dayNum(md) { var m = +md.split('-')[0], d = +md.split('-')[1]; return ({ 7: 0, 8: 31, 9: 62, 10: 92 })[m] + d; }
+  document.getElementById('stageBar').innerHTML =
+    '<div class="bar-multi" style="height:28px;border-radius:8px">' + stages.map(function (st) {
+      var w = (dayNum(st.e) - dayNum(st.s) + 1) / total * 100;
+      return '<i style="width:' + w + '%;background:' + st.c + ';position:relative;display:flex;align-items:center;justify-content:center;' +
+        'color:#fff;font-size:10.5px">' + (w > 10 ? st.n : '') + '</i>';
+    }).join('') + '</div>' +
+    '<div class="flex mt8" style="position:relative;height:16px">' +
+    '<span style="position:absolute;left:0;font-size:11px;color:var(--ink-400)">07-21</span>' +
+    '<span style="position:absolute;left:calc(' + ((dayNum('07-25') - dayNum('07-21')) / total * 100).toFixed(1) + '% );font-size:11px;color:var(--danger)">▲ 今天</span>' +
+    '<span style="position:absolute;right:0;font-size:11px;color:var(--ink-400)">09-30</span></div>';
+})();
+
+document.getElementById('stageTable').innerHTML =
+  '<thead><tr><th>阶段</th><th>负责人</th><th>计划开始</th><th>计划结束</th><th>实际开始</th><th>实际结束</th>' +
+  '<th style="width:110px">进度</th><th>状态</th><th>交付物</th></tr></thead><tbody>' +
+  [['需求设计', '周雅 / 陈立', '07-21', '07-27', '07-21', '07-27', 100, '已完成', 'success', '需求文档 + 技术方案 V1.2'],
+   ['编码开发', '李思远 / 何俊', '07-28', '09-04', '07-28', '—', 15, '进行中', 'brand', '3 个用户故事 + 2 个任务'],
+   ['联调自测', '何俊 / 王倩', '09-05', '09-12', '—', '—', 0, '未开始', '', '联调报告 + 自测清单'],
+   ['测试验收', '吴敏 / 赵鹏', '09-13', '09-25', '—', '—', 0, '未开始', '', '测试报告 + 26 条用例'],
+   ['发布上线', '林小满', '09-26', '09-30', '—', '—', 0, '未开始', '', '发布单 + 灰度方案']
+  ].map(function (r) {
+    return '<tr><td><div class="row-flex"><span class="dot-status ' + (r[7] === '已完成' ? 'green' : r[7] === '进行中' ? 'blue' : 'gray') + '"></span>' +
+      '<span class="t-main">' + r[0] + '</span></div></td>' +
+      '<td class="dim fz12">' + r[1] + '</td><td class="fz12">' + r[2] + '</td><td class="fz12">' + r[3] + '</td>' +
+      '<td class="fz12" style="color:' + (r[4] === '—' ? 'var(--ink-300)' : 'var(--success)') + '">' + r[4] + '</td>' +
+      '<td class="fz12" style="color:' + (r[5] === '—' ? 'var(--ink-300)' : 'var(--success)') + '">' + r[5] + '</td>' +
+      '<td>' + UI.bar(r[6], r[6] === 100 ? 'green' : '', 'thin') + '</td>' +
+      '<td><span class="tag ' + r[8] + '">' + r[7] + '</span></td>' +
+      '<td class="fz12 muted">' + r[9] + '</td></tr>';
+  }).join('') + '</tbody>';
+
 /* 验收标准 */
 document.getElementById('acBox').innerHTML = [
   ['支持成功率 / 费率 / 限额 / 白名单 4 类策略组合配置，配置生效 ≤ 30 秒', 1, '吴敏'],
@@ -333,7 +406,10 @@ document.getElementById('props').innerHTML = [
   ['产品负责人', UI.avatar('周雅', 'sm') + ' 周雅'], ['研发负责人', UI.avatar('李思远', 'sm') + ' 李思远'],
   ['测试负责人', UI.avatar('吴敏', 'sm') + ' 吴敏'], ['目标版本', '<span class="tag line">V3.0</span>'],
   ['关联项目', '<a style="color:var(--brand-600)" href="project-detail.html">PRJ-018</a>'],
-  ['预估工作量', '21 人日'], ['期望上线', '2026-09-30'], ['标签', '<span class="tag">核心链路</span><span class="tag">降本</span>']
+  ['预估工作量', '21 人日'],
+  ['开始设计', '07-21 <span class="tag success">已完成</span>'],
+  ['开始编码', '07-28 <span class="tag brand">进行中</span>'],
+  ['计划提测', '09-13'], ['计划上线', '2026-09-30'], ['标签', '<span class="tag">核心链路</span><span class="tag">降本</span>']
 ].map(function (p) { return '<div class="prop"><span class="k">' + p[0] + '</span><span class="v editable">' + p[1] + '</span></div>'; }).join('');
 
 document.getElementById('riceBox').innerHTML =

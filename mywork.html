@@ -68,6 +68,19 @@
               <button class="btn btn-sm btn-block mt12" data-toast="工时已登记"><span data-icon="plus" data-size="13"></span>登记工时</button></div>
           </div>
           <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="inbox"></span>可认领任务</div>
+              <div class="card-sub">按技能匹配推荐</div>
+              <div class="card-head-actions"><a class="btn btn-sm btn-ghost" href="project-detail.html#tab=s7">任务池<span data-icon="right"></span></a></div></div>
+            <div class="card-body" style="padding:10px 12px" id="claimBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="send"></span>企业微信推送</div>
+              <div class="card-head-actions"><span class="tag success">已绑定</span></div></div>
+            <div class="card-body" style="padding:10px 14px" id="pushBox"></div>
+          </div>
+
+          <div class="card">
             <div class="card-head"><div class="card-title"><span data-icon="star"></span>我的关注</div></div>
             <div class="card-body" style="padding:8px 12px" id="follows"></div>
           </div>
@@ -157,6 +170,30 @@ Charts.bar('#hourChart', {
   height: 180, padLeft: 28, labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
   series: [{ name: '工时', data: [8, 7.5, 8, 6.5, 2.5, 0, 0], color: '#7c5cff' }], unit: ' 小时'
 });
+
+document.getElementById('claimBox').innerHTML = [
+  ['STORY-3318', '通道限额中心对接', 8, 'P0', 96, '2 小时'],
+  ['TASK-5541', '老网关流量镜像回放工具', 5, 'P1', 88, '5 小时'],
+  ['STORY-3321', '风控前置调用并行化改造', 5, 'P1', 82, '1 小时']
+].map(function (t) {
+  return '<div style="padding:9px 10px;border:1px solid var(--ink-200);border-radius:9px;margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><span class="fz12 fw5" style="flex:1">' + t[1] + '</span>' + UI.priority(t[3]) + '</div>' +
+    '<div class="flex items-center gap6 mt4"><span class="id-link">' + t[0] + '</span>' +
+    '<span class="tag" style="height:17px">' + t[2] + ' 点</span>' +
+    '<span class="tag brand" style="height:17px">匹配 ' + t[4] + '%</span>' +
+    '<span class="muted fz11 ml-auto">等待 ' + t[5] + '</span></div>' +
+    '<button class="btn btn-sm btn-primary btn-block mt8" data-toast="认领成功，任务已进入你的看板">认领</button></div>';
+}).join('') + '<div class="muted fz11 tc">本迭代还可承接约 5 点</div>';
+
+document.getElementById('pushBox').innerHTML =
+  '<div class="flex items-center gap8 mb12"><span style="width:30px;height:30px;border-radius:8px;background:#07c16018;color:#07c160;display:grid;place-items:center">' + icon('comment', 15) + '</span>' +
+  '<div style="flex:1"><div class="fz12 fw5">DevFlow 研发助手</div><div class="muted fz11">今日已推送 14 条 · 已读 12</div></div></div>' +
+  [['需求进度与阶段提醒', 1], ['待认领任务推送', 1], ['指派给我的缺陷', 1], ['待我评审的 PR', 1], ['迭代日报', 0]]
+    .map(function (r) {
+      return '<div class="flex items-center gap8" style="padding:5px 0"><span class="fz12" style="flex:1">' + r[0] + '</span>' +
+        '<span class="switch ' + (r[1] ? 'on' : '') + '"></span></div>';
+    }).join('') +
+  '<a class="btn btn-sm btn-block mt8" href="notify.html">推送设置</a>';
 
 document.getElementById('follows').innerHTML = [
   ['bulb', 'req', 'REQ-2041 智能路由能力', '状态：评审中'],

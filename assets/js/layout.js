@@ -33,6 +33,7 @@
     },
     {
       group: '组织协同', items: [
+        { key: 'notify', name: '消息与推送', icon: 'send', href: 'notify.html' },
         { key: 'retro', name: '复盘中心', icon: 'history', href: 'retro.html' },
         { key: 'wiki', name: '知识库', icon: 'book', href: 'wiki.html' },
         { key: 'portal', name: '业务方门户', icon: 'share', href: 'portal.html' },

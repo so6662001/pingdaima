@@ -37,6 +37,7 @@
 
       <div class="tabs">
         <div class="tab active" data-tab="s1"><span data-icon="kanban" data-size="14"></span>迭代看板</div>
+        <div class="tab" data-tab="s7"><span data-icon="inbox" data-size="14"></span>任务池 · 自助认领 <span class="cnt">6</span></div>
         <div class="tab" data-tab="s2"><span data-icon="list" data-size="14"></span>迭代计划</div>
         <div class="tab" data-tab="s3"><span data-icon="chartArea" data-size="14"></span>计划与甘特</div>
         <div class="tab" data-tab="s4"><span data-icon="chart" data-size="14"></span>迭代度量</div>
@@ -60,6 +61,54 @@
           </div>
         </div>
         <div class="board" id="board"></div>
+      </div>
+
+      <!-- 任务池 · 自助认领 -->
+      <div class="tab-pane" data-pane="s7">
+        <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+          <div class="card-body" style="padding:12px 16px">
+            <div class="flex items-center gap12">
+              <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="thumb" data-size="17"></span>
+              <div style="flex:1">
+                <div class="fw6 fz13">任务自助认领已开启 · 研发可按技能与容量自主领取任务</div>
+                <div class="muted fz11 mt4">项目经理只做拆分与优先级排序，不做逐一指派；任务进入任务池后按技能标签匹配推送到企业微信，成员自助认领，超时无人认领才由负责人兜底指派。</div>
+              </div>
+              <div class="flex items-center gap16">
+                <div class="tc"><div class="fw6 fz15">78%</div><div class="muted fz11">自助认领率</div></div>
+                <div class="tc"><div class="fw6 fz15">2.4h</div><div class="muted fz11">平均认领时长</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--warning)">2</div><div class="muted fz11">超时未认领</div></div>
+                <a class="btn btn-sm" href="notify.html"><span data-icon="send" data-size="13"></span>推送规则</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g-3-2">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="inbox"></span>待认领任务池</div>
+              <div class="card-sub">按「优先级 × 技能匹配度」排序，与你匹配的任务已高亮</div>
+              <div class="card-head-actions">
+                <div class="btn-group"><button class="active">推荐给我</button><button>全部</button><button>超时未认领</button></div>
+                <button class="btn btn-sm"><span data-icon="plus" data-size="13"></span>投放任务</button></div></div>
+            <div class="card-body" style="padding:10px 14px" id="poolList"></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="user"></span>我的容量</div>
+              <div class="card-sub">何俊 · Sprint 26-15</div></div>
+              <div class="card-body" id="myCap"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="sliders"></span>认领规则</div></div>
+              <div class="card-body" id="claimRules"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>认领统计</div></div>
+              <div class="card-body"><div id="claimChart"></div>
+                <div class="divider"></div><div id="claimStats"></div></div></div>
+          </div>
+        </div>
+
+        <div class="card mt16">
+          <div class="card-head"><div class="card-title"><span data-icon="history"></span>认领记录</div>
+            <div class="card-sub">认领后自动进入个人看板并开始计时，进度通过代码提交自动回填</div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="claimLog"></table></div></div>
+        </div>
       </div>
 
       <!-- 迭代计划 -->
@@ -171,6 +220,22 @@
   </div>
 </div>
 
+<div class="modal" id="mClaim">
+  <div class="modal-head"><span data-icon="thumb"></span><span class="modal-title">确认认领任务</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16" id="claimInfo"></div>
+    <div class="form-row">
+      <div class="field"><label>预计开始</label><input class="input" value="2026-07-28"></div>
+      <div class="field"><label>预计完成</label><input class="input" value="2026-08-01"></div>
+    </div>
+    <div class="field"><label>容量校验</label>
+      <div id="claimCap"></div></div>
+    <div class="field"><label>备注（可选）</label><textarea class="textarea" style="min-height:56px" placeholder="例如：需要先与风控组对齐接口"></textarea></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">认领后通知需求负责人与项目经理（企业微信）</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="认领成功，任务已进入你的看板并已通知相关人">确认认领</button></div>
+</div>
+
 <div class="modal" id="mSprint">
   <div class="modal-head"><span data-icon="refresh"></span><span class="modal-title">规划新迭代</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
   <div class="modal-body">
@@ -227,7 +292,30 @@ var COLS = [
   { n: '测试中', c: '#f59e0b', wip: 'WIP 2/4' }, { n: '待验收', c: '#0fb5ba', wip: '' }, { n: '已完成', c: '#15a86b', wip: '' }
 ];
 var TYI = { story: 'file', task: 'kanban', bug: 'bug' };
-document.getElementById('board').innerHTML = COLS.map(function (col) {
+/* 看板首列：任务池（待认领） */
+var POOL_MINI = [
+  { id: 'STORY-3318', t: '通道限额中心对接', pt: 8, pri: 'P0', match: 96, wait: '2 小时' },
+  { id: 'TASK-5541', t: '老网关流量镜像回放工具', pt: 5, pri: 'P1', match: 88, wait: '5 小时', urgent: 1 },
+  { id: 'STORY-3321', t: '风控前置调用并行化改造', pt: 5, pri: 'P1', match: 82, wait: '1 小时' },
+  { id: 'TASK-5531', t: '路由引擎性能压测（12k TPS）', pt: 5, pri: 'P0', match: 46, wait: '9 小时', urgent: 1 }
+];
+var poolCol = '<div class="board-col" style="background:var(--brand-50)">' +
+  '<div class="board-col-head"><span class="dot-status purple"></span><span class="name">任务池 · 待认领</span>' +
+  '<span class="cnt">' + POOL_MINI.length + '</span>' +
+  '<span class="add">' + icon('plus', 14) + '</span></div>' +
+  '<div style="padding:0 12px 6px" class="muted fz11">研发可自助领取 · 超时自动指派</div>' +
+  '<div class="board-col-body">' + POOL_MINI.map(function (i) {
+    return '<div class="kcard" style="cursor:default">' +
+      '<div class="kcard-top"><span class="id-link">' + i.id + '</span>' + UI.priority(i.pri) +
+      (i.urgent ? '<span class="ml-auto tag danger" style="height:17px">超时</span>' : '') + '</div>' +
+      '<div class="kcard-title">' + i.t + '</div>' +
+      '<div class="kcard-meta"><span class="tag" style="height:17px">' + i.pt + ' 点</span>' +
+      '<span class="tag ' + (i.match >= 80 ? 'brand' : '') + '" style="height:17px">匹配 ' + i.match + '%</span>' +
+      '<span class="spacer"></span><span class="muted fz11">等待 ' + i.wait + '</span></div>' +
+      '<button class="btn btn-sm btn-primary btn-block mt8" onclick="openClaim(\'' + i.id + '\')">认领任务</button></div>';
+  }).join('') + '</div></div>';
+
+document.getElementById('board').innerHTML = poolCol + COLS.map(function (col) {
   var items = ITEMS.filter(function (i) { return i.st === col.n; });
   var pts = items.reduce(function (a, b) { return a + b.pt; }, 0);
   return '<div class="board-col"><div class="board-col-head"><span class="dot-status" style="background:' + col.c + '"></span>' +
@@ -247,6 +335,114 @@ document.getElementById('board').innerHTML = COLS.map(function (col) {
     }).join('') + '</div></div>';
 }).join('');
 UI.initKanban();
+
+/* ============ 任务池 · 自助认领 ============ */
+var POOL = [
+  { id: 'STORY-3318', t: '通道限额中心对接', pt: 8, pri: 'P0', req: 'REQ-2041', skills: ['Java', '支付核心', '限额中心'], match: 96, wait: '2 小时', urgent: 0, dep: '无', desc: '对接限额中心查询与冻结接口，支持多币种额度校验' },
+  { id: 'TASK-5541', t: '老网关流量镜像回放工具', pt: 5, pri: 'P1', req: '技术债', skills: ['Java', '中间件', '压测'], match: 88, wait: '5 小时', urgent: 1, dep: '压测环境', desc: '将生产流量镜像到新网关做对比回放，用于灰度前验证' },
+  { id: 'STORY-3321', t: '风控前置调用并行化改造', pt: 5, pri: 'P1', req: 'REQ-2041', skills: ['Java', '并发', '风控'], match: 82, wait: '1 小时', urgent: 0, dep: '风控算法组', desc: '风控调用改为并行 + 80ms 超时熔断，降低整体链路延迟' },
+  { id: 'STORY-3330', t: '商户后台账单异步导出', pt: 5, pri: 'P1', req: 'REQ-2036', skills: ['Java', '异步任务', '商户后台'], match: 74, wait: '3 小时', urgent: 0, dep: '客户承诺 08-20', desc: '大额账单改为异步生成 + 进度提醒 + 完成通知' },
+  { id: 'TASK-5531', t: '路由引擎性能压测（12k TPS）', pt: 5, pri: 'P0', req: '风险专项', skills: ['压测', 'SRE', '性能调优'], match: 46, wait: '9 小时', urgent: 1, dep: '压测环境扩容', desc: '搭建影子库，完成 12k TPS 全链路压测并输出报告' },
+  { id: 'STORY-3315', t: '路由决策链路可观测视图', pt: 3, pri: 'P1', req: 'REQ-2041', skills: ['前端', '可观测', 'Grafana'], match: 38, wait: '1 小时', urgent: 0, dep: '无', desc: '按订单号追溯选路原因，展示各通道评分明细' }
+];
+document.getElementById('poolList').innerHTML = POOL.map(function (t) {
+  var hot = t.match >= 80;
+  return '<div class="card mb8" style="box-shadow:none;border-color:' + (hot ? 'var(--brand-200)' : 'var(--ink-200)') + ';background:' + (hot ? 'var(--brand-50)' : '#fff') + '">' +
+    '<div class="card-body" style="padding:12px 14px">' +
+    '<div class="flex items-start gap10">' +
+    '<span class="tico ' + (t.id.indexOf('STORY') > -1 ? 'story' : 'task') + '">' + icon(t.id.indexOf('STORY') > -1 ? 'file' : 'kanban', 11) + '</span>' +
+    '<div style="flex:1;min-width:0">' +
+    '<div class="flex items-center gap8"><b class="fz13">' + t.t + '</b>' + UI.priority(t.pri) +
+    '<span class="tag">' + t.pt + ' 点</span>' +
+    (t.urgent ? '<span class="tag danger">超时未认领</span>' : '') + '</div>' +
+    '<div class="muted fz12 mt4">' + t.desc + '</div>' +
+    '<div class="flex items-center gap8 mt8 flex-wrap"><span class="id-link">' + t.id + '</span>' +
+    '<span class="muted fz11">·</span><a class="id-link" style="color:var(--brand-600)">' + t.req + '</a>' +
+    t.skills.map(function (k) { return '<span class="tag line" style="height:17px">' + k + '</span>'; }).join('') +
+    '<span class="muted fz11">依赖：' + t.dep + '</span></div></div>' +
+    '<div style="width:120px;flex:none;text-align:right">' +
+    '<div class="muted fz11">技能匹配度</div>' +
+    '<div class="fw6" style="font-size:17px;color:' + (hot ? 'var(--brand-600)' : 'var(--ink-400)') + '">' + t.match + '%</div>' +
+    '<div class="muted fz11">已等待 ' + t.wait + '</div>' +
+    '<button class="btn btn-sm ' + (hot ? 'btn-primary' : '') + ' mt8" onclick="openClaim(\'' + t.id + '\')">认领</button>' +
+    '</div></div></div></div>';
+}).join('');
+
+document.getElementById('myCap').innerHTML =
+  '<div class="flex items-center gap12 mb12">' + UI.avatar('何俊', 'lg') +
+  '<div style="flex:1"><div class="fw6 fz13">何俊 · 高级研发工程师</div>' +
+  '<div class="muted fz11 mt4">技能：Java · 支付核心 · 并发 · 中间件</div></div></div>' +
+  '<div class="flex items-center gap8 mb8"><span class="fz12 dim">本迭代已承接</span>' +
+  '<b class="ml-auto fz13">21 / 26 点</b></div>' + UI.bar(81, 'orange') +
+  '<div class="muted fz11 mt4">还可承接约 5 点，认领超出容量需负责人确认</div>' +
+  '<div class="divider"></div>' +
+  [['进行中任务', '3 项'], ['本迭代已完成', '13 点'], ['近 3 迭代平均速率', '12.6 点'], ['平均认领响应', '1.8 小时']].map(function (r) {
+    return '<div class="flex items-center" style="padding:5px 0"><span class="fz12 dim" style="flex:1">' + r[0] + '</span><b class="fz12">' + r[1] + '</b></div>';
+  }).join('');
+
+document.getElementById('claimRules').innerHTML = [
+  ['优先自助认领', '任务先进入任务池，成员自主选择，负责人不逐一指派', 1],
+  ['技能标签匹配推送', '按标签匹配度 ≥ 60% 推送到个人企业微信', 1],
+  ['容量上限校验', '认领总点数超过个人容量 110% 需负责人确认', 1],
+  ['P0 任务限时认领', 'P0 任务 2 小时无人认领自动指派给技能最匹配者', 1],
+  ['超时兜底指派', '普通任务 8 小时无人认领由技术负责人指派', 1],
+  ['认领可撤销', '开始前 24 小时内可释放回任务池（需说明原因）', 1],
+  ['禁止挑肥拣瘦', '连续 3 次只认领低难度任务会在回顾会提示', 0]
+].map(function (r) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + r[0] + '</div><div class="muted fz11 mt4">' + r[1] + '</div></div>' +
+    '<span class="switch ' + (r[2] ? 'on' : '') + '"></span></div>';
+}).join('');
+
+Charts.bar('#claimChart', {
+  height: 190, padLeft: 28, labels: ['26-10', '26-11', '26-12', '26-13', '26-14'],
+  series: [{ name: '自助认领', data: [12, 15, 18, 21, 24], color: '#2b5cff' },
+    { name: '指派', data: [16, 13, 11, 8, 7], color: '#b3bfd0' }], stacked: true, unit: ' 项'
+});
+document.getElementById('claimStats').innerHTML = [
+  ['自助认领率', '78%', 'green', '较上迭代 +9pt'], ['平均认领时长', '2.4 小时', '', '目标 ≤ 4 小时'],
+  ['超时未认领', '2 项', 'orange', '均为压测类任务'], ['认领后按时完成率', '91%', 'green', '高于指派任务 6pt']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:6px 0"><span class="fz12 dim" style="flex:1">' + r[0] + '</span>' +
+    '<b class="fz12" style="color:var(--' + (r[2] === 'green' ? 'success' : r[2] === 'orange' ? 'warning' : 'ink-800') + ')">' + r[1] + '</b>' +
+    '<span class="muted fz11" style="width:110px;text-align:right">' + r[3] + '</span></div>';
+}).join('');
+
+document.getElementById('claimLog').innerHTML =
+  '<thead><tr><th>任务</th><th>认领人</th><th>方式</th><th>投放时间</th><th>认领时间</th><th>等待时长</th><th>预计完成</th><th>当前状态</th><th>进度来源</th></tr></thead><tbody>' +
+  [['STORY-3312 路由策略配置界面', '王倩', '自助认领', '07-15 09:20', '07-15 10:05', '45 分钟', '07-26', '开发中 60%', '代码提交自动回填'],
+   ['STORY-3320 渠道适配层重构', '何俊', '自助认领', '07-16 14:00', '07-16 14:32', '32 分钟', '07-27', '开发中 45%', '代码提交自动回填'],
+   ['TASK-5540 对账差错工单自动派发', '何俊', '自助认领', '07-18 10:00', '07-18 13:40', '3.7 小时', '07-25', '开发中 70%', '代码提交自动回填'],
+   ['BUG-770 熔断后备用通道限额校验', '何俊', '系统指派（P0 超时）', '07-24 08:00', '07-24 10:00', '2 小时', '07-25', '开发中 80%', '代码提交自动回填'],
+   ['STORY-3311 路由决策日志埋点', '林小满', '自助认领', '07-14 16:20', '07-14 16:35', '15 分钟', '07-22', '待评审', 'PR #479'],
+   ['TASK-5532 技术方案评审与归档', '陈立', '自助认领', '07-12 09:00', '07-12 09:12', '12 分钟', '07-18', '已完成', '文档归档']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[1], 'sm') + '<span class="fz12">' + r[1] + '</span></div></td>' +
+      '<td><span class="tag ' + (r[2] === '自助认领' ? 'success' : 'warning') + '">' + r[2] + '</span></td>' +
+      '<td class="dim fz12">' + r[3] + '</td><td class="dim fz12">' + r[4] + '</td>' +
+      '<td class="fz12"><b>' + r[5] + '</b></td><td class="dim fz12">' + r[6] + '</td>' +
+      '<td><span class="tag ' + (r[7] === '已完成' ? 'success' : r[7] === '待评审' ? 'purple' : 'brand') + '">' + r[7] + '</span></td>' +
+      '<td class="muted fz11">' + r[8] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+function openClaim(id) {
+  var t = POOL.filter(function (x) { return x.id === id; })[0];
+  document.getElementById('claimInfo').innerHTML =
+    '<div class="flex items-center gap8"><b class="fz13">' + t.t + '</b>' + UI.priority(t.pri) +
+    '<span class="tag">' + t.pt + ' 点</span><span class="tag brand">匹配度 ' + t.match + '%</span></div>' +
+    '<div class="muted fz12 mt4">' + t.id + ' · ' + t.req + ' · ' + t.desc + '</div>' +
+    '<div class="muted fz11 mt4">依赖：' + t.dep + '</div>';
+  var after = 21 + t.pt;
+  var pct = Math.round(after / 26 * 100);
+  document.getElementById('claimCap').innerHTML =
+    '<div class="flex items-center gap8 mb4"><span class="fz12 dim">认领后负载</span>' +
+    '<b class="ml-auto fz12" style="color:' + (pct > 110 ? 'var(--danger)' : pct > 100 ? 'var(--warning)' : 'var(--success)') + '">' +
+    after + ' / 26 点（' + pct + '%）</b></div>' + UI.bar(Math.min(pct, 100), pct > 110 ? 'red' : pct > 100 ? 'orange' : 'green') +
+    '<div class="muted fz11 mt4">' + (pct > 110 ? '超出容量上限，提交后需技术负责人确认' : '在容量范围内，可直接认领') + '</div>';
+  UI.hydrateIcons(document.getElementById('mClaim'));
+  UI.openModal('mClaim');
+}
 
 /* Backlog */
 document.getElementById('backlogTable').innerHTML =

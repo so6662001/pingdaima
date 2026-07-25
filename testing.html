@@ -31,6 +31,7 @@
         <div class="tab" data-tab="t3"><span data-icon="flask" data-size="14"></span>测试计划与执行 <span class="cnt">6</span></div>
         <div class="tab" data-tab="t4"><span data-icon="bug" data-size="14"></span>缺陷管理 <span class="cnt">38</span></div>
         <div class="tab" data-tab="t5"><span data-icon="cpu" data-size="14"></span>自动化与门禁</div>
+        <div class="tab" data-tab="t6"><span data-icon="eyeOff" data-size="14"></span>漏测分析 <span class="cnt">6</span></div>
       </div>
 
       <!-- 质量概览 -->
@@ -152,6 +153,88 @@
         </div>
       </div>
 
+
+      <!-- 漏测分析 -->
+      <div class="tab-pane" data-pane="t6">
+        <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+          <div class="card-body" style="padding:12px 16px">
+            <div class="flex items-center gap12">
+              <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="sparkles" data-size="17"></span>
+              <div style="flex:1">
+                <div class="fw6 fz13">漏测自动识别已开启 · 以线上工单与生产缺陷反向评估测试有效性</div>
+                <div class="muted fz11 mt4">每条生产问题自动反查：是否有对应用例 → 用例是否执行 → 执行是否通过，据此判定漏测类型与责任环节，并自动生成补测用例任务。</div>
+              </div>
+              <div class="flex items-center gap16">
+                <div class="tc"><div class="fw6 fz15">38</div><div class="muted fz11">本月反查工单</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--danger)">6</div><div class="muted fz11">判定漏测</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--success)">92%</div><div class="muted fz11">自动判定准确率</div></div>
+                <button class="btn btn-sm" data-toast="已重新执行全量反查分析"><span data-icon="refresh" data-size="13"></span>重新分析</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g5 mb16" id="escStats"></div>
+
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="workflow"></span>工单 / 线上缺陷 反向评估漏测流程</div>
+            <div class="card-sub">全自动执行，人工只需复核判定结果</div></div>
+          <div class="card-body">
+            <div class="pipeline mb16" id="escFlow"></div>
+            <div class="grid g-2-1">
+              <div>
+                <div class="fz13 fw6 mb8">漏测判定规则</div>
+                <div class="table-wrap"><table class="tbl" id="escRule"></table></div>
+              </div>
+              <div>
+                <div class="fz13 fw6 mb8">反查匹配方式</div>
+                <div id="matchWay"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title" style="color:var(--danger)"><span data-icon="eyeOff"></span>漏测清单</div>
+            <div class="card-sub">近 90 天 · 由线上工单与生产缺陷反查得出</div>
+            <div class="card-head-actions">
+              <div class="btn-group"><button class="active">全部</button><button>用例缺失</button><button>用例失效</button><button>执行遗漏</button><button>非测试责任</button></div>
+              <button class="btn btn-sm" data-toast="补测用例任务已批量创建并分派">批量生成补测用例</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="escTable"></table></div></div>
+        </div>
+
+        <div class="grid g4 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>漏测类型分布</div></div>
+            <div class="card-body"><div id="escTypeDonut"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>模块漏测热度</div>
+            <div class="card-sub">近 90 天</div></div>
+            <div class="card-body"><div id="escModule"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>漏测率趋势</div></div>
+            <div class="card-body"><div id="escTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>缺陷探测率 DDP</div>
+            <div class="card-sub">各阶段拦截占比</div></div>
+            <div class="card-body"><div id="ddpBar"></div></div></div>
+        </div>
+
+        <div class="grid g-2-1">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="award"></span>测试有效性评估</div>
+              <div class="card-sub">不只看执行了多少用例，更看拦住了多少问题</div></div>
+            <div class="card-body">
+              <div class="grid g2" style="gap:14px">
+                <div id="effList"></div>
+                <div><div class="fz12 fw6 mb8">用例覆盖缺口（自动识别）</div><div id="gapList"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="cpu"></span>分析规则配置</div></div>
+              <div class="card-body" id="escConfig"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>补测闭环</div></div>
+              <div class="card-body" id="fixLoop"></div></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -503,6 +586,161 @@ document.getElementById('runTable').innerHTML =
   }).join('') + '</tbody>';
 
 document.getElementById('planMembers').innerHTML = UI.avatarGroup(['吴敏', '赵鹏', '林小满'], 3) + ' <span class="fz12 muted">吴敏、赵鹏、林小满</span>';
+
+/* ============ 漏测分析 ============ */
+document.getElementById('escStats').innerHTML = [
+  { l: '漏测（逃逸缺陷）', v: 6, u: '例', i: 'eyeOff', c: '#e5484d', bg: 'var(--danger-bg)', f: '近 90 天 · 环比 −3 例' },
+  { l: '漏测率', v: '2.4', u: '%', i: 'target', c: '#f59e0b', bg: 'var(--warning-bg)', f: '逃逸/(测试发现+逃逸)' },
+  { l: '缺陷探测率 DDP', v: '97.6', u: '%', i: 'shieldCheck', c: '#15a86b', bg: 'var(--success-bg)', f: '目标 ≥ 98%' },
+  { l: '工单反查命中', v: 38, u: '条', i: 'inbox', c: '#2b5cff', bg: 'var(--brand-50)', f: '自动关联 34 条' },
+  { l: '平均暴露时长', v: '6.2', u: '天', i: 'timer', c: '#7c5cff', bg: 'var(--purple-bg)', f: '上线到被发现' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+document.getElementById('escFlow').innerHTML = [
+  ['① 采集线上信号', 'ok', '工单 / 生产缺陷 / 告警'],
+  ['② 聚类去重', 'ok', '文本相似度 + 报错指纹'],
+  ['③ 关联需求与模块', 'ok', '按代码路径 / 版本 / 关键词'],
+  ['④ 检索用例覆盖', 'ok', '用例库全文 + 需求-用例矩阵'],
+  ['⑤ 判定漏测类型', 'run', '5 类判定规则'],
+  ['⑥ 生成补测与改进', 'wait', '补测用例 + 复盘改进项']
+].map(function (p, i) {
+  var ic = { ok: 'check', run: 'refresh', wait: 'clock' }[p[1]];
+  return (i ? '<div class="pconn"></div>' : '') + '<div class="pstage ' + p[1] + '"><span class="ico">' + icon(ic, 11) + '</span>' +
+    '<div><div class="fw5">' + p[0] + '</div><div class="muted" style="font-size:10.5px">' + p[2] + '</div></div></div>';
+}).join('');
+
+document.getElementById('escRule').innerHTML =
+  '<thead><tr><th>反查结果</th><th>判定类型</th><th>责任环节</th><th>自动动作</th></tr></thead><tbody>' +
+  [['无匹配用例', '用例缺失（场景遗漏）', '测试设计', '生成补测用例 + 用例评审改进项', 'danger'],
+   ['有用例但本轮未执行', '执行遗漏（范围裁剪不当）', '测试执行', '纳入回归基线，标记必测', 'warning'],
+   ['有用例且执行通过', '用例失效（断言/数据不足）', '测试设计', '优化用例断言与测试数据', 'danger'],
+   ['用例覆盖但环境不具备', '环境差异', '测试环境/SRE', '补充预发验证与影子数据', 'warning'],
+   ['需求本身未定义该场景', '需求遗漏（非测试责任）', '需求分析', '补充验收标准 + 需求评审改进项', ''],
+   ['第三方/生产配置变更引发', '外部因素（非测试责任）', '运维/供应商', '纳入变更评审与监控告警', '']
+  ].map(function (r) {
+    return '<tr><td class="fz12">' + r[0] + '</td><td><span class="tag ' + r[4] + '">' + r[1] + '</span></td>' +
+      '<td class="dim fz12">' + r[2] + '</td><td class="fz12 muted">' + r[3] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('matchWay').innerHTML = [
+  ['工单 → 缺陷', '按客户描述关键词 + 报错码 + 时间窗聚类，自动关联已存在的生产缺陷（命中率 89%）'],
+  ['缺陷 → 需求', '按堆栈中的代码路径反查最近变更的需求/PR（命中率 84%）'],
+  ['需求 → 用例', '通过需求-用例覆盖矩阵直接关联（覆盖率 94%）'],
+  ['缺陷 → 用例', '缺陷现象与用例步骤/断言做语义相似度匹配（阈值 0.72）'],
+  ['人工复核', '自动判定结果由测试经理每周复核，纠正样本回流用于模型校准']
+].map(function (m) {
+  return '<div style="padding:9px 11px;border-radius:9px;background:var(--ink-50);margin-bottom:8px">' +
+    '<div class="fz12 fw6">' + m[0] + '</div><div class="muted fz11 mt4" style="line-height:1.7">' + m[1] + '</div></div>';
+}).join('');
+
+var ESC = [
+  ['TK-3821 / BUG-771', '对账任务在 380 万条流水下超时中断', '清结算', 'REQ-2035', '用例缺失', 'danger',
+    '大数据量批处理场景未设计用例，测试数据量最大仅 30 万条', '测试设计', 'TC-9101 ~ TC-9104（4 条）', '已补测', 'success', 8, '2h18m'],
+  ['TK-3819 / BUG-762', '数字人民币签约回调重复通知导致重复入账', '交易受理', 'REQ-2040', '用例失效', 'danger',
+    '存在幂等用例但断言只校验返回码，未校验账务流水唯一性', '测试设计', 'TC-8802 优化 + TC-9110', '补测中', 'brand', 3, '4 天'],
+  ['TK-3809', '月结账单金额与商户自有系统差 0.02 元', '清结算', 'REQ-2032', '执行遗漏', 'warning',
+    '金额精度用例存在但本轮回归被裁剪（判定为低风险）', '测试执行', 'TC-7745 纳入必测基线', '已补测', 'success', 1, '11 天'],
+  ['TK-3813 / BUG-751', '风控规则灰度期间误拦截正常交易 14 笔', '风控决策', 'REQ-2038', '环境差异', 'warning',
+    '测试环境无真实灰度流量，规则冲突场景无法复现', '测试环境', '预发影子流量验证方案', '方案中', 'warning', 2, '3 天'],
+  ['TK-3814', '账单导出未提供 PDF 格式（客户预期落空）', '商户后台', 'REQ-2039', '需求遗漏', '',
+    '需求验收标准未定义导出格式范围，非测试责任', '需求分析', '补充 AC 并纳入下版本', '已闭环', 'success', 1, '6 天'],
+  ['TK-3748 / BUG-748', '开放平台文档示例返回码与实际不符', '开放平台', '—', '外部因素', '',
+    '文档由第三方协作维护，未纳入测试范围', '运维/文档', '文档纳入发布检查项', '已闭环', 'success', 1, '18 天']
+];
+document.getElementById('escTable').innerHTML =
+  '<thead><tr><th>来源（工单/缺陷）</th><th style="width:20%">线上问题</th><th>模块</th><th>关联需求</th><th>漏测判定</th>' +
+  '<th style="width:20%">根因</th><th>责任环节</th><th>补测用例</th><th class="num">同类工单</th><th>暴露时长</th><th>状态</th></tr></thead><tbody>' +
+  ESC.map(function (e) {
+    return '<tr onclick="UI.toast(\'打开漏测详情：\' + \'' + e[0] + '\')">' +
+      '<td class="id-link">' + e[0] + '</td>' +
+      '<td class="t-main">' + e[1] + '</td><td class="dim fz12">' + e[2] + '</td>' +
+      '<td>' + (e[3] === '—' ? '<span class="muted">—</span>' : '<a class="id-link" style="color:var(--brand-600)">' + e[3] + '</a>') + '</td>' +
+      '<td><span class="tag ' + e[5] + '">' + e[4] + '</span></td>' +
+      '<td class="fz12 muted">' + e[6] + '</td><td class="dim fz12">' + e[7] + '</td>' +
+      '<td class="fz12">' + e[8] + '</td><td class="num">' + e[11] + '</td>' +
+      '<td class="dim fz12">' + e[12] + '</td>' +
+      '<td><span class="tag ' + e[10] + '">' + e[9] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+Charts.donut('#escTypeDonut', { size: 140, thickness: 18, center: { value: '6', label: '近 90 天' }, data: [
+  { name: '用例缺失', value: 2, color: '#e5484d' }, { name: '用例失效', value: 1, color: '#b3182c' },
+  { name: '执行遗漏', value: 1, color: '#f59e0b' }, { name: '环境差异', value: 1, color: '#7c5cff' },
+  { name: '非测试责任', value: 1, color: '#b3bfd0' }] });
+Charts.hbar('#escModule', { unit: ' 例', data: [
+  { name: '清结算', value: 3, color: '#e5484d' }, { name: '交易受理', value: 1, color: '#f59e0b' },
+  { name: '风控决策', value: 1, color: '#f59e0b' }, { name: '商户后台', value: 1 }, { name: '路由与渠道', value: 0 }] });
+Charts.line('#escTrend', {
+  height: 200, padLeft: 28, labels: ['3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '漏测率(%)', data: [6.2, 5.4, 4.8, 3.1, 2.4], color: '#e5484d', area: true },
+    { name: '目标线', data: [2, 2, 2, 2, 2], color: '#15a86b', dashed: true, dots: false }]
+});
+Charts.hbar('#ddpBar', { unit: '%', data: [
+  { name: '需求评审拦截', value: 7, color: '#15a86b' }, { name: '代码评审拦截', value: 26, color: '#15a86b' },
+  { name: '单元测试拦截', value: 21, color: '#2b5cff' }, { name: '系统测试拦截', value: 35, color: '#2b5cff' },
+  { name: 'UAT 拦截', value: 8, color: '#f59e0b' }, { name: '生产逃逸', value: 2.4, color: '#e5484d' }] });
+
+document.getElementById('effList').innerHTML =
+  '<div class="fz12 fw6 mb8">有效性指标</div>' +
+  [['用例有效性（曾发现缺陷的用例占比）', 34, 'orange', '行业参考 30~40%'],
+   ['僵尸用例（12 个月未发现问题）', 28, 'red', '建议精简或重构'],
+   ['需求场景覆盖率', 94, 'green', '按验收标准逐条映射'],
+   ['异常/边界场景覆盖率', 71, 'orange', '漏测主要集中在此'],
+   ['大数据量/性能场景覆盖率', 46, 'red', '本次漏测根因所在'],
+   ['自动化回归拦截贡献', 62, '', '自动化发现缺陷占比']
+  ].map(function (r) {
+    return '<div class="mb12"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' +
+      UI.bar(r[1], r[2], 'thin') + '<div class="muted fz11 mt4">' + r[3] + '</div></div>';
+  }).join('');
+document.getElementById('gapList').innerHTML = [
+  ['清结算 · 大数据量批处理', '缺 4 条', 'danger', '已生成 TC-9101~9104'],
+  ['交易受理 · 幂等与重复通知', '断言不足', 'danger', '已优化 TC-8802'],
+  ['风控决策 · 灰度并存场景', '环境受限', 'warning', '预发影子流量方案中'],
+  ['路由与渠道 · 熔断恢复', '缺 2 条', 'warning', '待评审'],
+  ['商户后台 · 超大文件导出', '缺 3 条', 'warning', '待评审'],
+  ['开放平台 · 限额边界', '缺 2 条', '', '待排期']
+].map(function (g) {
+  return '<div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tico test">' + icon('flask', 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + g[0] + '</div><div class="muted fz11">' + g[3] + '</div></div>' +
+    '<span class="tag ' + g[2] + '">' + g[1] + '</span></div>';
+}).join('') + '<button class="btn btn-sm btn-block mt8" data-toast="缺口用例任务已创建并分派给用例负责人">一键生成补测任务</button>';
+
+document.getElementById('escConfig').innerHTML = [
+  ['线上信号采集范围', '生产工单 + 生产缺陷 + 告警事件', 1],
+  ['工单聚类相似度阈值', '0.78（低于则不自动合并）', 1],
+  ['缺陷-用例语义匹配阈值', '0.72（低于则判定为用例缺失）', 1],
+  ['自动创建补测用例任务', '判定为用例缺失/失效时自动创建', 1],
+  ['自动生成复盘改进项', '同一模块 90 天内漏测 ≥ 2 例时触发', 1],
+  ['漏测周报推送', '每周一 09:00 推送至质量保障群', 1],
+  ['自动判定结果人工复核', '测试经理每周复核并回流校准', 1]
+].map(function (c) {
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + c[0] + '</div><div class="muted fz11 mt4">' + c[1] + '</div></div>' +
+    '<span class="switch ' + (c[2] ? 'on' : '') + '"></span></div>';
+}).join('');
+document.getElementById('fixLoop').innerHTML =
+  '<div class="grid g2 mb12" style="gap:10px">' +
+  '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">补测用例</div>' +
+  '<div class="fw6 fz17">11 条</div><div class="muted fz11">已补 8 · 待补 3</div></div>' +
+  '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">改进项闭环率</div>' +
+  '<div class="fw6 fz17" style="color:var(--warning)">75%</div><div class="muted fz11">6 项中 4 项完成</div></div></div>' +
+  [['大数据量场景用例补齐（4 条）', '吴敏', '已完成', 'success'],
+   ['幂等断言标准化并纳入评审清单', '赵鹏', '已完成', 'success'],
+   ['回归裁剪需测试经理审批', '赵鹏', '已完成', 'success'],
+   ['预发环境接入影子流量', '林小满', '进行中', 'brand'],
+   ['需求验收标准补充「导出格式」维度', '周雅', '进行中', 'brand'],
+   ['性能/大数据量场景纳入 DoD', '陈立', '未开始', '']
+  ].map(function (f) {
+    return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+      '<span class="checkbox' + (f[3] === 'success' ? ' checked' : '') + '"></span>' +
+      '<span class="fz12" style="flex:1">' + f[0] + '</span>' + UI.avatar(f[1], 'sm') +
+      '<span class="tag ' + f[3] + '">' + f[2] + '</span></div>';
+  }).join('') +
+  '<div class="tl-box mt8">漏测改进项与复盘中心打通，闭环情况计入团队质量考核。</div>';
 
 if (location.search.indexOf('tab=bug') > -1) setTimeout(function () { document.querySelector('[data-tab="t4"]').click(); }, 100);
 /* 支持 testing.html#BUG-771 直接打开缺陷详情抽屉 */

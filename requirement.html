@@ -29,6 +29,7 @@
         <div class="tab active" data-tab="pool"><span data-icon="list" data-size="14"></span>需求池 <span class="cnt">128</span></div>
         <div class="tab" data-tab="board"><span data-icon="kanban" data-size="14"></span>需求看板</div>
         <div class="tab" data-tab="tree"><span data-icon="layers" data-size="14"></span>需求分解</div>
+        <div class="tab" data-tab="sched"><span data-icon="calendar" data-size="14"></span>阶段排期 <span class="cnt">3 延期</span></div>
         <div class="tab" data-tab="review"><span data-icon="workflow" data-size="14"></span>评审流程 <span class="cnt">7</span></div>
         <div class="tab" data-tab="insight"><span data-icon="pie" data-size="14"></span>需求分析</div>
       </div>
@@ -105,6 +106,38 @@
               <div class="card-head"><div class="card-title"><span data-icon="award"></span>价值评分 TOP 5</div></div>
               <div class="card-body"><div id="riceRank"></div></div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段排期 -->
+      <div class="tab-pane" data-pane="sched">
+        <div class="toolbar">
+          <div class="btn-group"><button class="active">按需求</button><button>按负责人</button><button>按版本</button></div>
+          <div class="filter on"><span data-icon="calendar"></span>2026-07 ~ 2026-10<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="warn"></span>仅看延期风险 <b>3</b></div>
+          <div class="ml-auto legend">
+            <span><i style="background:#7c5cff"></i>需求设计</span><span><i style="background:#2b5cff"></i>编码开发</span>
+            <span><i style="background:#0fb5ba"></i>联调自测</span><span><i style="background:#f59e0b"></i>测试验收</span>
+            <span><i style="background:#15a86b"></i>发布上线</span><span><i style="background:#e5484d"></i>延期</span>
+          </div>
+        </div>
+        <div class="card mb16"><div class="card-body flush"><div class="gantt" id="schedGantt"></div></div></div>
+        <div class="grid g-2-1">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="calendar"></span>关键节点清单</div>
+              <div class="card-sub">设计 / 编码 / 提测 / 上线四个关键日期，进入日期前自动推送提醒</div>
+              <div class="card-head-actions"><button class="btn btn-sm" data-toast="排期已导出"><span data-icon="download" data-size="13"></span>导出排期</button></div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="schedTable"></table></div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title" style="color:var(--danger)"><span data-icon="warn"></span>阶段延期预警</div></div>
+              <div class="card-body" id="delayBox"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>各阶段平均时长</div>
+              <div class="card-sub">计划 vs 实际（天）</div></div>
+              <div class="card-body"><div id="stageAvg"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="send"></span>阶段自动推送</div></div>
+              <div class="card-body" id="schedPush"></div></div>
           </div>
         </div>
       </div>
@@ -218,8 +251,17 @@
       <div class="field"><label>期望交付版本</label><select class="select"><option>V3.0（2026-09-30）</option><option>V3.1（2026-11-15）</option><option>待定</option></select></div>
       <div class="field"><label>产品负责人</label><select class="select"><option>周雅</option><option>孙悦</option></select></div>
     </div>
+    <div class="field"><label>阶段计划（可由模板按工作量自动推算）</label>
+      <div class="grid g4" style="gap:8px">
+        <div><div class="hint" style="margin:0 0 4px">开始设计</div><input class="input" placeholder="2026-08-01"></div>
+        <div><div class="hint" style="margin:0 0 4px">开始编码</div><input class="input" placeholder="2026-08-08"></div>
+        <div><div class="hint" style="margin:0 0 4px">计划提测</div><input class="input" placeholder="2026-08-26"></div>
+        <div><div class="hint" style="margin:0 0 4px">计划上线</div><input class="input" placeholder="2026-09-10"></div>
+      </div>
+      <div class="hint">保存后系统在每个节点前 1 天与当天自动推送企业微信提醒；实际日期由工作项流转与代码提交自动回填</div>
+    </div>
     <div class="field">
-      <label>RICE 价值评估</label>
+      <label>价值与紧迫性评估</label>
       <div class="grid g4" style="gap:8px">
         <input class="input" placeholder="Reach 触达"><input class="input" placeholder="Impact 影响"><input class="input" placeholder="Confidence 信心"><input class="input" placeholder="Effort 成本">
       </div>
@@ -409,6 +451,130 @@ Charts.hbar('#riceRank', {
   data: REQS.slice().sort(function (a, b) { return b.val - a.val; }).slice(0, 5).map(function (r) { return { name: r.id + ' ' + r.t.slice(0, 12), value: r.val }; }),
   unit: ' 分'
 });
+
+/* ---------- 阶段排期 ---------- */
+/* 阶段计划：[设计, 编码, 联调, 测试, 发布]，每项 [计划开始, 计划结束]；act 为实际进度（0-1）；delay 为延期天数 */
+var SCHED = [
+  { id: 'REQ-2041', t: '支付网关多渠道智能路由能力', own: '李思远', ver: 'V3.0',
+    st: [['07-21', '07-27'], ['07-28', '09-04'], ['09-05', '09-12'], ['09-13', '09-25'], ['09-26', '09-30']],
+    act: [1, 0.15, 0, 0, 0], delay: 0, cur: 1,
+    key: ['07-21', '07-28', '09-13', '09-30'], keyAct: ['07-21', '07-28', '—', '—'] },
+  { id: 'REQ-2040', t: '收银台支持数字人民币支付', own: '何俊', ver: 'V3.0',
+    st: [['07-01', '07-08'], ['07-09', '08-20'], ['08-21', '08-28'], ['08-29', '09-18'], ['09-19', '09-30']],
+    act: [1, 0.62, 0, 0, 0], delay: 0, cur: 1,
+    key: ['07-01', '07-09', '08-29', '09-30'], keyAct: ['07-01', '07-09', '—', '—'] },
+  { id: 'REQ-2039', t: '商户结算单据自助下载与批量归档', own: '王倩', ver: 'V2.6',
+    st: [['07-08', '07-12'], ['07-14', '08-05'], ['08-06', '08-08'], ['08-09', '08-15'], ['08-18', '08-20']],
+    act: [1, 0.78, 0, 0, 0], delay: 0, cur: 1,
+    key: ['07-08', '07-14', '08-09', '08-20'], keyAct: ['07-08', '07-14', '—', '—'] },
+  { id: 'REQ-2038', t: '风控规则热更新与灰度发布能力', own: '郑宇', ver: 'V2.9',
+    st: [['06-20', '06-26'], ['06-27', '07-18'], ['07-19', '07-22'], ['07-23', '08-12'], ['08-18', '08-22']],
+    act: [1, 1, 1, 0.6, 0], delay: 0, cur: 3,
+    key: ['06-20', '06-27', '07-23', '08-22'], keyAct: ['06-20', '06-27', '07-23', '—'] },
+  { id: 'REQ-2035', t: '交易对账文件自动核销与差错处理', own: '何俊', ver: 'V3.0',
+    st: [['07-05', '07-11'], ['07-14', '08-08'], ['08-11', '08-15'], ['08-18', '09-05'], ['09-26', '09-30']],
+    act: [1, 0.45, 0, 0, 0], delay: 2, cur: 1,
+    key: ['07-05', '07-14', '08-18', '09-30'], keyAct: ['07-06', '07-16', '—', '—'] },
+  { id: 'REQ-2036', t: '商户后台大额账单异步导出', own: '王倩', ver: 'V2.6',
+    st: [['07-28', '07-31'], ['08-01', '08-08'], ['08-09', '08-11'], ['08-12', '08-16'], ['08-18', '08-20']],
+    act: [0, 0, 0, 0, 0], delay: 0, cur: 0,
+    key: ['07-28', '08-01', '08-12', '08-20'], keyAct: ['—', '—', '—', '—'] },
+  { id: 'REQ-2032', t: '数据中台指标口径统一治理', own: '何俊', ver: 'V1.4',
+    st: [['06-10', '06-20'], ['06-23', '07-25'], ['07-26', '07-30'], ['07-31', '08-05'], ['08-06', '08-08']],
+    act: [1, 0.55, 0, 0, 0], delay: 5, cur: 1,
+    key: ['06-10', '06-23', '07-31', '08-08'], keyAct: ['06-10', '06-25', '—', '—'] },
+  { id: 'REQ-2037', t: '开放平台 API 限流策略可视化配置', own: '陈立', ver: 'V1.4',
+    st: [['09-01', '09-08'], ['09-09', '10-20'], ['10-21', '10-28'], ['10-29', '11-20'], ['11-24', '11-28']],
+    act: [0, 0, 0, 0, 0], delay: 0, cur: 0,
+    key: ['09-01', '09-09', '10-29', '11-28'], keyAct: ['—', '—', '—', '—'] },
+  { id: 'REQ-2034', t: '风控模型特征平台自助取数', own: '待分配', ver: 'V3.0',
+    st: [['08-10', '08-16'], ['08-17', '09-10'], ['09-11', '09-15'], ['09-16', '09-25'], ['09-26', '09-30']],
+    act: [0, 0, 0, 0, 0], delay: 0, cur: 0,
+    key: ['08-10', '08-17', '09-16', '09-30'], keyAct: ['—', '—', '—', '—'] }
+];
+var STAGE_NAME = ['需求设计', '编码开发', '联调自测', '测试验收', '发布上线'];
+var STAGE_COLOR = ['#7c5cff', '#2b5cff', '#0fb5ba', '#f59e0b', '#15a86b'];
+function dayIdx(md) { // 以 06-01 为 0，覆盖 6~11 月
+  var m = +md.split('-')[0], d = +md.split('-')[1];
+  var base = { 6: 0, 7: 30, 8: 61, 9: 92, 10: 122, 11: 153 };
+  return base[m] + d - 1;
+}
+var TOTAL_DAYS = 183; // 6/1 ~ 11/30
+(function () {
+  var months = [['6月', 0], ['7月', 30], ['8月', 61], ['9月', 92], ['10月', 122], ['11月', 153]];
+  var html = '<div class="gantt-grid" style="min-width:1000px"><div class="gantt-head"><div class="gantt-name" style="width:260px">需求 / 阶段排期</div>' +
+    '<div class="gantt-ticks">' + months.map(function (m) { return '<div>2026 ' + m[0] + '</div>'; }).join('') + '</div></div>';
+  SCHED.forEach(function (r) {
+    html += '<div class="gantt-row" style="height:40px"><div class="gantt-name" style="width:260px">' +
+      '<span class="dot-status ' + (r.delay ? 'red' : r.cur ? 'blue' : 'gray') + '"></span>' +
+      '<div style="overflow:hidden"><div class="fz12 ellipsis">' + r.t + '</div>' +
+      '<div class="id-link">' + r.id + ' · ' + r.own + ' · ' + r.ver + '</div></div></div>' +
+      '<div class="gantt-track">' +
+      r.st.map(function (seg, i) {
+        var l = dayIdx(seg[0]) / TOTAL_DAYS * 100, w = (dayIdx(seg[1]) - dayIdx(seg[0]) + 1) / TOTAL_DAYS * 100;
+        var isDelay = r.delay && i === r.cur;
+        return '<div class="gantt-bar" style="left:' + l.toFixed(2) + '%;width:' + w.toFixed(2) + '%;background:' +
+          (isDelay ? '#e5484d' : STAGE_COLOR[i]) + ';height:16px" title="' + STAGE_NAME[i] + ' ' + seg[0] + ' ~ ' + seg[1] + '">' +
+          '<i class="fill" style="width:' + (r.act[i] * 100) + '%"></i>' +
+          '<span>' + (w > 6 ? STAGE_NAME[i] : '') + '</span></div>';
+      }).join('') +
+      (r.delay ? '<span style="position:absolute;left:' + (dayIdx(r.st[r.cur][1]) / TOTAL_DAYS * 100 + 1).toFixed(2) +
+        '%;top:50%;transform:translateY(-50%);font-size:10px;color:var(--danger);white-space:nowrap">延期 ' + r.delay + ' 天</span>' : '') +
+      '</div></div>';
+  });
+  html += '<div class="gantt-today" style="left:calc(260px + (100% - 260px) * ' + (dayIdx('07-25') / TOTAL_DAYS).toFixed(3) + ')"></div></div>';
+  document.getElementById('schedGantt').innerHTML = html;
+})();
+
+document.getElementById('schedTable').innerHTML =
+  '<thead><tr><th>需求</th><th>负责人</th><th>开始设计</th><th>开始编码</th><th>计划提测</th><th>计划上线</th>' +
+  '<th>当前阶段</th><th style="width:100px">阶段进度</th><th>偏差</th></tr></thead><tbody>' +
+  SCHED.map(function (r) {
+    function cell(plan, act, i) {
+      if (act === '—') return '<td><div class="fz12">' + plan + '</div><div class="muted fz11">未开始</div></td>';
+      var late = act > plan;
+      return '<td><div class="fz12">' + plan + '</div><div class="fz11" style="color:' + (late ? 'var(--danger)' : 'var(--success)') + '">' +
+        '实际 ' + act + (late ? ' 延' : ' 准时') + '</div></td>';
+    }
+    return '<tr onclick="location.href=\'requirement-detail.html\'"><td><div><div class="t-main ellipsis" style="max-width:230px">' + r.t + '</div>' +
+      '<div class="id-link">' + r.id + '</div></div></td>' +
+      '<td><div class="row-flex">' + (r.own === '待分配' ? '<span class="muted fz12">待分配</span>' : UI.avatar(r.own, 'sm') + '<span class="fz12">' + r.own + '</span>') + '</div></td>' +
+      cell(r.key[0], r.keyAct[0]) + cell(r.key[1], r.keyAct[1]) + cell(r.key[2], r.keyAct[2]) + cell(r.key[3], r.keyAct[3]) +
+      '<td><span class="tag" style="background:' + STAGE_COLOR[r.cur] + '18;color:' + STAGE_COLOR[r.cur] + '">' + STAGE_NAME[r.cur] + '</span></td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(Math.round(r.act[r.cur] * 100), r.delay ? 'red' : '', 'thin') + '</div>' +
+      '<span class="fz11 muted">' + Math.round(r.act[r.cur] * 100) + '%</span></div></td>' +
+      '<td>' + (r.delay ? '<span class="tag danger">+' + r.delay + ' 天</span>' : '<span class="tag success">按计划</span>') + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('delayBox').innerHTML = [
+  ['REQ-2032 数据中台指标口径治理', '编码阶段延期 5 天', '口径与财务反复对齐 3 轮', '提测顺延至 08-05，上线时间有风险', '何俊'],
+  ['REQ-2035 交易对账自动核销', '编码阶段延期 2 天', '依赖限额中心接口未就绪', '当前仍可按 09-30 上线', '何俊'],
+  ['REQ-2041 智能路由（潜在）', '压测未达标', '8.2k / 12k TPS', '若 08-15 前不达标将影响 09-30 上线', '林小满']
+].map(function (d) {
+  return '<div style="padding:10px 12px;border-radius:9px;background:var(--danger-bg);margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><span class="tag danger">' + d[1] + '</span>' +
+    '<span class="ml-auto">' + UI.avatar(d[4], 'sm') + '</span></div>' +
+    '<div class="fz12 fw5 mt4" style="color:var(--ink-800)">' + d[0] + '</div>' +
+    '<div class="muted fz11 mt4">原因：' + d[2] + '</div>' +
+    '<div class="muted fz11 mt4">影响：' + d[3] + '</div>' +
+    '<button class="btn btn-sm mt8" data-toast="已推送延期预警至负责人与项目经理">推送预警</button></div>';
+}).join('');
+Charts.hbar('#stageAvg', { unit: ' 天', data: [
+  { name: '需求设计（计划 5.0）', value: 6.2, color: '#7c5cff' }, { name: '编码开发（计划 18.0）', value: 21.4, color: '#e5484d' },
+  { name: '联调自测（计划 4.0）', value: 3.6, color: '#0fb5ba' }, { name: '测试验收（计划 8.0）', value: 9.2, color: '#f59e0b' },
+  { name: '发布上线（计划 2.0）', value: 1.8, color: '#15a86b' }] });
+document.getElementById('schedPush').innerHTML = [
+  ['开始设计前 1 天', '产品 / 设计 / 研发负责人', 'brand'],
+  ['开始编码当天', '研发负责人 + 团队群', 'brand'],
+  ['计划提测前 2 天', '测试负责人（准备用例与环境）', 'warning'],
+  ['提测当天', '测试负责人 + 测试群', 'warning'],
+  ['上线前 3 天', '发布负责人 + 业务方 + 关联客户', 'success'],
+  ['任一阶段延期 ≥ 1 天', '负责人 + 项目经理 + 产品总监', 'danger']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag ' + r[2] + '" style="width:110px;justify-content:center">' + r[0] + '</span>' +
+    '<span class="fz12" style="flex:1;color:var(--ink-600)">' + r[1] + '</span></div>';
+}).join('') + '<a class="btn btn-sm btn-block mt8" href="notify.html"><span data-icon="send" data-size="13"></span>前往消息与推送中心</a>';
 
 /* ---------- 评审流程 ---------- */
 var FLOW = [
