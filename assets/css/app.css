@@ -584,7 +584,7 @@ table.tbl .num { font-variant-numeric: tabular-nums; text-align: right; }
 .gantt-ticks div { flex: 1; border-left: 1px solid var(--ink-100); font-size: 11px; color: var(--ink-400); padding: 5px 0 0 6px; }
 .gantt-today { position: absolute; top: 0; bottom: 0; width: 1.5px; background: var(--danger); z-index: 1; }
 .gantt-today::after {
-  content: '今天'; position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+  content: '今天'; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
   font-size: 10px; color: #fff; background: var(--danger); padding: 1px 5px; border-radius: 4px; white-space: nowrap;
 }
 .milestone { position: absolute; top: 50%; width: 12px; height: 12px; background: var(--warning); transform: translate(-50%, -50%) rotate(45deg); border-radius: 2px; }

@@ -67,7 +67,9 @@
     for (var g = 0; g <= steps; g++) {
       var v = min + (max - min) * g / steps, y = ys(v);
       s += '<line x1="' + pl + '" y1="' + y.toFixed(1) + '" x2="' + (W - pr) + '" y2="' + y.toFixed(1) + '" stroke="#eef2f7" stroke-width="1"/>';
-      s += '<text x="' + (pl - 7) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#8c9ab1">' + (o.yFmt ? o.yFmt(v) : fmtNum(v)) + '</text>';
+      if (o.yLabels !== false) {
+        s += '<text x="' + (pl - 7) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#8c9ab1">' + (o.yFmt ? o.yFmt(v) : fmtNum(v)) + '</text>';
+      }
     }
     // X 轴标签
     var every = Math.ceil(n / (o.xTicks || 8));

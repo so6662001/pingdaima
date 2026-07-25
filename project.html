@@ -208,22 +208,24 @@ document.getElementById('sprintCards').innerHTML = SPRINTS.map(function (s, i) {
     '</div></div>';
 }).join('');
 SPRINTS.forEach(function (s, i) {
-  var actual = [s.total], v = s.total;
-  var per = s.total / 10;
-  for (var d = 1; d <= 10; d++) { v -= per * (0.5 + Math.random() * 1.0); actual.push(Math.max(s.total - s.done, Math.round(v))); }
+  var remain = s.total - s.done;
+  var actual = Array.from({ length: 11 }, function (_, k) {
+    var burnt = (s.total - remain) * Math.pow(k / 10, 1.35);
+    return +Math.max(remain, s.total - burnt).toFixed(1);
+  });
   Charts.line('#bd' + i, {
-    height: 78, padLeft: 22, ySteps: 2, xTicks: 3,
+    height: 84, padLeft: 8, ySteps: 2, xTicks: 4, yLabels: false, yMax: s.total,
     labels: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11'],
     series: [
-      { name: '理想', data: Array.from({ length: 11 }, function (_, k) { return +(s.total - s.total * k / 10).toFixed(1); }), color: '#dde4ee', dashed: true, dots: false },
-      { name: '剩余', data: actual, color: '#2b5cff', area: true, dots: false }
+      { name: '理想剩余', data: Array.from({ length: 11 }, function (_, k) { return +(s.total - s.total * k / 10).toFixed(1); }), color: '#b3bfd0', dashed: true, dots: false },
+      { name: '实际剩余', data: actual, color: '#2b5cff', area: true, dots: false }
     ]
   });
 });
 
 /* 资源 */
 Charts.bar('#loadChart', {
-  height: 260, stacked: true, labels: ['交易平台组', '风控算法组', '前端体验组', '基础架构组', '质量保障部', '产品部'],
+  height: 260, stacked: true, barWidth: 44, labels: ['交易平台组', '风控算法组', '前端体验组', '基础架构组', '质量保障部', '产品部'],
   series: [
     { name: '需求交付', data: [186, 142, 128, 96, 88, 112], color: '#2b5cff' },
     { name: '缺陷修复', data: [42, 38, 26, 18, 64, 8], color: '#e5484d' },
@@ -236,11 +238,15 @@ Charts.donut('#effortDonut', { size: 170, thickness: 22, center: { value: '862',
   { name: '技术债与架构', value: 108, color: '#7c5cff' }, { name: '运维与值班', value: 84, color: '#b3bfd0' }] });
 
 var MEMS = [
-  ['李思远', '交易平台组', '后端负责人', 3, 21, 20, 105, '过载'], ['何俊', '交易平台组', '高级研发', 4, 22, 20, 110, '过载'],
-  ['王倩', '前端体验组', '前端负责人', 2, 18, 20, 90, '饱和'], ['郑宇', '风控算法组', '研发工程师', 2, 19, 20, 95, '饱和'],
-  ['林小满', '基础架构组', 'SRE 负责人', 3, 16, 20, 80, '正常'], ['吴敏', '质量保障部', '测试工程师', 4, 20, 20, 100, '饱和'],
-  ['陈立', '技术架构组', '首席架构师', 5, 14, 20, 70, '正常'], ['孙悦', '产品部', '产品经理', 2, 15, 20, 75, '正常'],
-  ['赵鹏', '质量保障部', '测试经理', 3, 12, 20, 60, '空闲']
+  ['李思远', '交易平台组', '后端负责人', 3, 21, 20, 105, '过载', 'PRJ-018 架构重构 · 70%'],
+  ['何俊', '交易平台组', '高级研发', 4, 22, 20, 110, '过载', 'PRJ-018 智能路由 · 60%'],
+  ['王倩', '前端体验组', '前端负责人', 2, 18, 20, 90, '饱和', 'PRJ-016 体验升级 · 65%'],
+  ['郑宇', '风控算法组', '研发工程师', 2, 19, 20, 95, '饱和', 'PRJ-021 决策引擎 · 85%'],
+  ['林小满', '基础架构组', 'SRE 负责人', 3, 16, 20, 80, '正常', 'PRJ-019 稳定性专项 · 55%'],
+  ['吴敏', '质量保障部', '测试工程师', 4, 20, 20, 100, '饱和', 'TP-2026-07 回归测试 · 75%'],
+  ['陈立', '技术架构组', '首席架构师', 5, 14, 20, 70, '正常', 'PRJ-023 OpenAPI 网关 · 40%'],
+  ['孙悦', '产品部', '产品经理', 2, 15, 20, 75, '正常', 'PRJ-016 需求梳理 · 60%'],
+  ['赵鹏', '质量保障部', '测试经理', 3, 12, 20, 60, '空闲', 'TP-2026-05 性能压测 · 45%']
 ];
 document.getElementById('memberTable').innerHTML =
   '<thead><tr><th>成员</th><th>团队</th><th>角色</th><th class="num">在研项目</th><th class="num">已投入</th><th class="num">容量</th>' +
@@ -253,7 +259,7 @@ document.getElementById('memberTable').innerHTML =
       '<td class="num">' + m[4] + '</td><td class="num muted">' + m[5] + '</td>' +
       '<td><div class="row-flex"><div style="flex:1">' + UI.bar(Math.min(m[6], 100), c) + '</div><b class="fz11">' + m[6] + '%</b></div></td>' +
       '<td><span class="tag ' + tg + '">' + m[7] + '</span></td>' +
-      '<td class="fz12 dim">PRJ-018 智能路由 · 60%</td></tr>';
+      '<td class="fz12 dim">' + m[8] + '</td></tr>';
   }).join('') + '</tbody>';
 
 /* 风险 */
