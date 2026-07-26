@@ -350,7 +350,8 @@ python3 -m http.server 8088
 ├── requirement-detail.html    需求详情（含价值与复盘）
 ├── ticket.html                工单管理 / 服务台
 ├── customer.html              客户跟踪（客户 360 / 呼声 / 承诺）
-├── product.html               产品管理
+├── product.html               产品管理（产品清单）
+├── product-detail.html        产品详情与维护（模块/需求/版本/客户/指标/配置）
 ├── project.html               项目管理
 ├── project-detail.html        项目详情 / 迭代执行
 ├── agile.html                 敏捷迭代中心（仪式 / 估算 / 依赖）
@@ -361,6 +362,7 @@ python3 -m http.server 8088
 ├── notify.html                消息与推送中心（企业微信）
 ├── metrics.html               效能度量
 ├── retro.html                 复盘中心
+├── retro-detail.html          复盘详情（回顾看板/行动项/纪要）
 ├── wiki.html                  知识库
 ├── portal.html                业务方门户（非研发只读视图）
 ├── settings.html              系统设置与集成中心
@@ -377,6 +379,25 @@ python3 -m http.server 8088
 ```
 
 ---
+
+## 五、原型交互完整度
+
+原型中的视图切换、分组、算法选择等控件都是**真实生效**的（会重算数据与重排列），不是装饰：
+
+| 位置 | 可切换项 | 深链示例 |
+| --- | --- | --- |
+| 需求看板 | 按状态 / 按产品 / 按负责人 / 按优先级 | `requirement.html#tab=board&g=own` |
+| 需求阶段排期 | 按需求 / 按负责人 / 按版本（带分组汇总行） | `requirement.html#tab=sched&sv=ver` |
+| 需求评审流程 | 7 个评审节点可点击查看 SLA、评审人、准入准出与该节点待处理清单；含价值评审会逐条投票表与流程配置 | `requirement.html#tab=review` |
+| 优先级模型 | 加权价值÷工作量 / RICE / WSJF / 纯加权 / 自定义表达式（因素表、公式与排序同步变化） | `requirement.html#tab=model&algo=1` |
+| 工单处理看板 | 按状态 / 按渠道 / 按客户等级（含 SLA 系数说明） | `ticket.html#tab=k2&g=lv` |
+| 客户呼声矩阵 | 按呼声数 / 按客户等级加权（战略×3 KA×2 普通×1，显示排名变化） | `customer.html#tab=u3&vm=w` |
+| 研发看板 | 迭代看板 / 需求看板 / 缺陷看板 / 发布看板 / 我的看板（列定义与卡片字段各自适配） | `board.html#bd=bug` |
+| 研发看板泳道 | 不分泳道 / 按需求 / 按优先级（加急泳道置顶）/ 按经办人 | `board.html#lane=pri` |
+| 产品路线图 | 时间轴 / 版本 / 迭代 / 里程碑 / Now-Next-Later | `product.html#tab=p2` |
+| 复盘看板模板 | 四象限 / Start-Stop-Continue / 帆船 | `retro-detail.html` |
+| 产品全景 | 点击产品卡片进入产品详情（7 个页签，含产品配置与维护） | `product-detail.html` |
+| 复盘创建 | 创建后进入复盘详情（流程条、反馈收集、投票、行动项、纪要发布） | `retro-detail.html` |
 
 ## 六、从原型到产品的落地建议
 
