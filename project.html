@@ -350,7 +350,7 @@ document.getElementById('allocTable').innerHTML =
           'onclick="UI.openModal(\'mAlloc\')" title="点击调整排期">' +
           '<div style="font-size:13px;font-weight:700">' + (isLeave ? '休假' : total + '%') + '</div>' +
           '<div style="font-size:10px;opacity:.9;line-height:1.5;margin-top:2px">' +
-          cell.map(function (c) { return c[0] === '休假' ? '' : c[0].replace('PRJ-', '') + ' ' + c[1] + '%'; }).filter(Boolean).join('<br>') + '</div>' +
+          cell.map(function (c) { return c[0] === '休假' ? '' : c[0].replace('PRJ-', '#') + ' ' + c[1] + '%'; }).filter(Boolean).join('<br>') + '</div>' +
           '</div></td>';
       }).join('') +
       '<td class="tc"><b style="color:' + (avg > 100 ? 'var(--danger)' : avg >= 91 ? 'var(--warning)' : 'var(--ink-800)') + '">' + avg + '%</b></td></tr>';
