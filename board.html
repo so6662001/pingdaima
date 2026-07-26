@@ -552,7 +552,7 @@ function colHtml(col, cards, inLane) {
       '<span onclick="event.stopPropagation();UI.toast(\'在此列新建工作项\')">' + icon('plus', 13) + '</span>' +
       '<span class="tip" data-tip="折叠此列" onclick="event.stopPropagation();toggleCol(\'' + col.k + '\')">' + icon('minus', 13) + '</span></span></div>' +
       '<div class="kb-sub"><span>' + pts + ' 点</span><span>·</span><span>' + col.hint + '</span></div></div>') +
-    '<div class="kb-body">' + (cards.length ? cards.map(cardHtml).join('')
+    '<div class="kb-body">' + (cards.length ? cards.map(renderCard).join('')
       : '<div class="kb-empty">' + (col.k === 'todo' ? '任务池为空' : '拖入卡片') + '</div>') + '</div></div>';
 }
 function render() {
@@ -902,6 +902,8 @@ function drawMetrics() {
       render();
     }
   }
+  var bm = h.match(/bd=(\w+)/);
+  if (bm) { var bb = document.querySelector('[data-bd="' + bm[1] + '"]'); if (bb) bb.click(); }
   if (h.indexOf('metrics=1') > -1) setTimeout(function () { UI.openDrawer('dMetrics'); drawMetrics(); }, 120);
   if (h.indexOf('card=1') > -1) setTimeout(function () { openCard('STORY-3313'); }, 120);
 })();

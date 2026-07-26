@@ -328,6 +328,8 @@ function renderVoice() {
     : '<div class="tl-box">当前按提出客户数量排序，未考虑客户量级差异。切换到「按客户等级加权」可看到战略客户诉求被放大后的真实优先顺序。</div>';
 }
 renderVoice();
+var hvm = location.hash.match(/vm=(\w+)/);
+if (hvm) { var vb = document.querySelector('#voiceMode [data-m="' + hvm[1] + '"]'); if (vb) vb.click(); }
 document.getElementById('voiceMode').onclick = function (e) {
   var b = e.target.closest('button'); if (!b) return;
   voiceMode = b.dataset.m; renderVoice();

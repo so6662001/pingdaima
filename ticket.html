@@ -787,6 +787,8 @@ function openTk(id) {
   UI.hydrateIcons(document.getElementById('dTk'));
   UI.openDrawer('dTk');
 }
+var htg = location.hash.match(/g=(\w+)/);
+if (htg) { var tb = document.querySelector('#tkGroup [data-g="' + htg[1] + '"]'); if (tb) tb.click(); }
 var deepTk = location.hash.match(/TK-\d+/);
 if (deepTk) setTimeout(function () { openTk(deepTk[0]); }, 150);
 </script>

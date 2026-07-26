@@ -152,9 +152,25 @@
           <div class="card-head">
             <div class="card-title"><span data-icon="workflow"></span>需求分级评审流程</div>
             <div class="card-sub">P0/P1 需求走完整评审，P2 及以下由产品线自决</div>
-            <div class="card-head-actions"><a class="btn btn-sm" href="settings.html"><span data-icon="settings" data-size="13"></span>配置流程</a></div>
+            <div class="card-head-actions"><button class="btn btn-sm" data-modal="mFlowCfg"><span data-icon="settings" data-size="13"></span>配置评审流程</button></div>
           </div>
-          <div class="card-body"><div class="pipeline" id="reviewFlow"></div></div>
+          <div class="card-body"><div class="pipeline" id="reviewFlow"></div>
+            <div class="mt12" id="flowNodeDetail"></div>
+          </div>
+        </div>
+
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="users"></span>价值评审会 · 2026-07-27 14:00</div>
+            <div class="card-sub">议程 7 条 · 参会 6 人 · 主持 周雅 · 决策人 沈知远</div>
+            <div class="card-head-actions">
+              <span id="mtAvatars"></span>
+              <button class="btn btn-sm" data-toast="评审会纪要已生成并推送至知识库">生成纪要</button>
+              <button class="btn btn-sm btn-primary" data-toast="评审结论已保存，7 条需求状态已更新">保存全部结论</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="meetingTable"></table></div></div>
+          <div class="card-foot flex items-center gap12">
+            <span class="fz12">评审规则：<b>3 人以上同意</b>且决策人未否决即通过；分歧超过 2 档需现场澄清后重投</span>
+            <span class="ml-auto fz12 muted">已完成 3 / 7 条 · 预计剩余 18 分钟</span>
+          </div>
         </div>
         <div class="grid g-2-1">
           <div class="card">
@@ -1033,7 +1049,7 @@ function renderSchedGantt() {
     return '<div class="gantt-row" style="background:var(--ink-50);height:36px"><div class="gantt-name" style="width:260px">' +
       (schGroup === 'own' && name !== '待分配' ? UI.avatar(name, 'sm') : '<span class="tico req">' + icon(schGroup === 'own' ? 'user' : 'rocket', 11) + '</span>') +
       '<div style="overflow:hidden"><b class="fz12">' + name + '</b>' +
-      '<div class="muted fz11">' + list.length + ' 条需求 · ' + list.reduce(function (a, b) { return a + 0; }, 0) +
+      '<div class="muted fz11">' + list.length + ' 条需求' +
       (delayed ? '<span style="color:var(--danger)"> · ' + delayed + ' 条延期</span>' : ' · 全部按计划') + (extra ? ' · ' + extra : '') + '</div></div></div>' +
       '<div class="gantt-track"><div class="gantt-bar" style="left:' + l.toFixed(2) + '%;width:' + w.toFixed(2) +
       '%;background:' + (delayed ? '#f7b0b2' : '#c9dbff') + ';height:10px;border-radius:3px"><span></span></div></div></div>';
@@ -1370,6 +1386,12 @@ document.querySelector('[data-icon-holder]').innerHTML = icon('bulb', 11);
 document.getElementById('btnImport').onclick = function () { UI.toast('支持从 Excel / Jira / TAPD 导入需求'); };
 if (location.search.indexOf('new=1') > -1) setTimeout(function () { UI.openModal('mNewReq'); }, 200);
 /* 支持 requirement.html#REQ-2041 直接打开需求详情抽屉 */
+var hg = location.hash.match(/g=(\w+)/);
+if (hg) { var gb = document.querySelector('#bdGroup [data-g="' + hg[1] + '"]'); if (gb) gb.click(); }
+var hs = location.hash.match(/sv=(\w+)/);
+if (hs) { var sb = document.querySelector('#schGroup [data-g="' + hs[1] + '"]'); if (sb) sb.click(); }
+var ha = location.hash.match(/algo=(\d)/);
+if (ha) { var asel = document.getElementById('algoSel'); asel.selectedIndex = +ha[1]; asel.onchange(); }
 var deep = location.hash.match(/REQ-\d+/);
 if (deep) setTimeout(function () { openReq(deep[0]); }, 150);
 </script>
