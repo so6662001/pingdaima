@@ -112,31 +112,54 @@
         </div>
       </div>
 
-      <!-- 迭代计划 -->
+      <!-- 迭代计划（多版本 · 多迭代） -->
       <div class="tab-pane" data-pane="s2">
-        <div class="grid g-3-2">
+        <div class="card mb12">
+          <div class="card-head">
+            <div class="card-title"><span data-icon="rocket"></span>版本 → 迭代映射</div>
+            <div class="card-sub">一个版本由哪几个迭代交付，一眼看清发布节奏与风险</div>
+            <div class="card-head-actions">
+              <div class="btn-group"><button class="active">V3.0</button><button>V3.1</button><button>全部版本</button></div>
+              <button class="btn btn-sm" data-modal="mSprint"><span data-icon="plus" data-size="13"></span>新建迭代</button>
+            </div>
+          </div>
+          <div class="card-body"><div id="verMap"></div></div>
+        </div>
+
+        <div class="toolbar" style="margin-bottom:10px">
+          <span class="fz12 muted">规划视图</span>
+          <div class="btn-group"><button class="active">多迭代规划</button><button>按需求分组</button><button>按负责人</button></div>
+          <div class="vdivider"></div>
+          <div class="filter"><span data-icon="flag"></span>仅看 P0/P1</div>
+          <div class="filter"><span data-icon="alert"></span>仅看有依赖 <b>3</b></div>
+          <div class="filter"><span data-icon="warn"></span>仅看未就绪 <b>4</b></div>
+          <span class="ml-auto fz12 muted">拖拽卡片可在迭代间移动，超出容量会实时告警 · 规划结果实时保存</span>
+        </div>
+
+        <div id="planWipAlert"></div>
+        <div class="kb-wrap" style="overflow-x:auto;padding-bottom:12px"><div class="kb" id="planBoard" style="display:flex;gap:12px;align-items:flex-start"></div></div>
+
+        <div class="grid g-2-1 mt16">
           <div class="card">
-            <div class="card-head"><div class="card-title"><span data-icon="inbox"></span>产品待办列表 Backlog</div>
-              <div class="card-sub">按优先级排序 · 共 46 项 / 214 点</div>
-              <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="sparkles" data-size="13"></span>AI 拆分建议</button></div></div>
-            <div class="card-body flush"><table class="tbl" id="backlogTable"></table></div>
+            <div class="card-head"><div class="card-title"><span data-icon="sort"></span>迭代优先级与目标</div>
+              <div class="card-sub">Master 视角：多个迭代的目标、优先级与里程碑对齐</div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="sprintTable"></table></div></div>
           </div>
           <div class="grid" style="gap:14px;align-content:start">
-            <div class="card">
-              <div class="card-head"><div class="card-title"><span data-icon="refresh"></span>Sprint 26-15 规划</div>
-                <div class="card-sub">07-28 ~ 08-10</div></div>
-              <div class="card-body">
-                <div class="flex items-center gap8 mb8"><span class="fz12 dim">已规划容量</span><b class="fz13 ml-auto">38 / 44 点</b></div>
-                <div id="capBar"></div>
-                <div class="mt12" id="planList"></div>
-              </div>
-              <div class="card-foot flex gap8"><button class="btn btn-sm">自动填充</button><button class="btn btn-sm btn-primary ml-auto" data-toast="Sprint 26-15 已启动">启动迭代</button></div>
-            </div>
-            <div class="card">
-              <div class="card-head"><div class="card-title"><span data-icon="users"></span>成员容量分配</div></div>
-              <div class="card-body"><div id="capChart"></div></div>
-            </div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>成员容量分配</div>
+              <div class="card-sub">Sprint 26-15</div></div>
+              <div class="card-body"><div id="capChart"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="alert"></span>规划风险提示</div></div>
+              <div class="card-body" id="planRisk"></div></div>
           </div>
+        </div>
+
+        <div class="card mt16">
+          <div class="card-head"><div class="card-title"><span data-icon="inbox"></span>产品待办列表 Backlog</div>
+            <div class="card-sub">按优先级得分排序 · 共 46 项 / 214 点 · 就绪项才可拖入迭代</div>
+            <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="sparkles" data-size="13"></span>AI 拆分建议</button>
+              <button class="btn btn-sm btn-primary" data-toast="已按容量与优先级自动填充 3 个迭代">自动排布 3 个迭代</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="backlogTable"></table></div></div>
         </div>
       </div>
 
@@ -445,43 +468,181 @@ function openClaim(id) {
   UI.openModal('mClaim');
 }
 
-/* Backlog */
-document.getElementById('backlogTable').innerHTML =
-  '<thead><tr><th style="width:30px"></th><th>工作项</th><th>类型</th><th>优先级</th><th class="num">估点</th><th>负责人</th><th>目标迭代</th><th>就绪</th></tr></thead><tbody>' +
-  [['STORY-3315', '路由决策链路可观测视图', 'story', 'P1', 3, '林小满', 'Sprint 26-16', 1],
-   ['STORY-3316', '多币种金额精度处理', 'story', 'P1', 5, '何俊', 'Sprint 26-16', 1],
-   ['STORY-3317', '商户路由偏好配置', 'story', 'P2', 5, '王倩', 'Sprint 26-16', 0],
-   ['STORY-3318', '通道限额中心对接', 'story', 'P1', 8, '何俊', 'Sprint 26-15', 1],
-   ['TASK-5541', '老网关流量镜像回放工具', 'task', 'P1', 5, '林小满', 'Sprint 26-15', 1],
-   ['STORY-3319', '收银台失败重试策略优化', 'story', 'P2', 3, '王倩', '待定', 0],
-   ['TASK-5542', '数据库分库分表方案落地', 'task', 'P0', 13, '陈立', 'Sprint 26-16', 0],
-   ['STORY-3321', '风控前置调用并行化改造', 'story', 'P1', 5, '何俊', 'Sprint 26-15', 1]
+/* ================= 多版本迭代规划 ================= */
+var SPRINTS_PLAN = [
+  { k: 'backlog', n: 'Backlog（待规划）', d: '按优先级得分排序', cap: 0, goal: '就绪需求缓冲池，保持 1.5 个迭代的储备', ms: '', pri: '' },
+  { k: 's15', n: 'Sprint 26-15', d: '07-28 ~ 08-10', cap: 44, goal: '完成智能路由灰度框架与配置界面，支持 10% 流量灰度', ms: 'V3.0 灰度（08-12）', pri: 'P0' },
+  { k: 's16', n: 'Sprint 26-16', d: '08-11 ~ 08-24', cap: 44, goal: '完成性能压测达标与跨渠道适配，进入预发验证', ms: '压测达标门禁（08-20）', pri: 'P0' },
+  { k: 's17', n: 'Sprint 26-17', d: '08-25 ~ 09-07', cap: 40, goal: '对账核销与可观测收尾，准备全量切流', ms: '', pri: 'P1' }
+];
+var PLAN_ITEMS = [
+  { id: 'STORY-3318', t: '通道限额中心对接', ty: 'story', pt: 8, pri: 'P0', req: 'REQ-2041', own: '', sp: 's15', ready: 1, dep: '' },
+  { id: 'STORY-3313', t: '成本与成功率实时计算引擎', ty: 'story', pt: 8, pri: 'P0', req: 'REQ-2041', own: '何俊', sp: 's15', ready: 1, dep: '' },
+  { id: 'STORY-3314', t: '灰度切流与回滚机制', ty: 'story', pt: 5, pri: 'P0', req: 'REQ-2041', own: '林小满', sp: 's15', ready: 1, dep: '基础架构组' },
+  { id: 'STORY-3321', t: '风控前置调用并行化改造', ty: 'story', pt: 5, pri: 'P1', req: 'REQ-2041', own: '', sp: 's15', ready: 1, dep: '风控算法组' },
+  { id: 'STORY-3330', t: '商户后台账单异步导出', ty: 'story', pt: 5, pri: 'P1', req: 'REQ-2036', own: '王倩', sp: 's15', ready: 1, dep: '客户承诺 08-20' },
+  { id: 'TASK-5541', t: '老网关流量镜像回放工具', ty: 'task', pt: 5, pri: 'P1', req: '技术债', own: '', sp: 's15', ready: 1, dep: '' },
+  { id: 'TASK-5531', t: '路由引擎性能压测（12k TPS）', ty: 'task', pt: 5, pri: 'P0', req: '风险专项', own: '林小满', sp: 's15', ready: 0, dep: '压测环境扩容' },
+  { id: 'STORY-3315', t: '路由决策链路可观测视图', ty: 'story', pt: 3, pri: 'P1', req: 'REQ-2041', own: '', sp: 's16', ready: 1, dep: '' },
+  { id: 'STORY-3316', t: '多币种金额精度处理', ty: 'story', pt: 5, pri: 'P1', req: 'REQ-2040', own: '', sp: 's16', ready: 1, dep: '' },
+  { id: 'TASK-5542', t: '数据库分库分表方案落地', ty: 'task', pt: 13, pri: 'P0', req: '技术债', own: '陈立', sp: 's16', ready: 0, dep: '架构评审' },
+  { id: 'STORY-3322', t: '渠道适配层：建行/农行接入', ty: 'story', pt: 8, pri: 'P1', req: 'REQ-2041', own: '', sp: 's16', ready: 1, dep: '' },
+  { id: 'TASK-5546', t: '预发环境影子流量验证', ty: 'task', pt: 5, pri: 'P0', req: '风险专项', own: '', sp: 's16', ready: 1, dep: 'SRE' },
+  { id: 'STORY-3323', t: '对账差错自动补单', ty: 'story', pt: 8, pri: 'P1', req: 'REQ-2035', own: '', sp: 's17', ready: 1, dep: '' },
+  { id: 'STORY-3324', t: '路由明细按订单号追溯', ty: 'story', pt: 5, pri: 'P2', req: 'REQ-2041', own: '', sp: 's17', ready: 1, dep: '' },
+  { id: 'TASK-5548', t: '老网关下线预案与演练', ty: 'task', pt: 5, pri: 'P1', req: '风险专项', own: '', sp: 's17', ready: 1, dep: '' },
+  { id: 'STORY-3317', t: '商户路由偏好配置', ty: 'story', pt: 5, pri: 'P2', req: 'REQ-2041', own: '', sp: 'backlog', ready: 0, dep: '' },
+  { id: 'STORY-3319', t: '收银台失败重试策略优化', ty: 'story', pt: 3, pri: 'P2', req: 'REQ-2041', own: '', sp: 'backlog', ready: 0, dep: '' },
+  { id: 'STORY-3325', t: '跨境多币种结算能力预研', ty: 'story', pt: 8, pri: 'P2', req: 'REQ-2045', own: '', sp: 'backlog', ready: 0, dep: '' },
+  { id: 'TASK-5549', t: '监控告警规则治理', ty: 'task', pt: 3, pri: 'P2', req: '技术债', own: '', sp: 'backlog', ready: 1, dep: '' }
+];
+var TYI2 = { story: 'file', task: 'kanban', bug: 'bug' };
+function renderPlanBoard() {
+  var html = SPRINTS_PLAN.map(function (sp) {
+    var items = PLAN_ITEMS.filter(function (i) { return i.sp === sp.k; });
+    var pts = items.reduce(function (a, b) { return a + b.pt; }, 0);
+    var over = sp.cap && pts > sp.cap;
+    var pct = sp.cap ? Math.round(pts / sp.cap * 100) : 0;
+    return '<div class="kb-col" data-sp="' + sp.k + '" style="width:290px;flex:none;background:' + (over ? '#fdeeee' : '#eef1f6') +
+      ';border-radius:12px;display:flex;flex-direction:column;max-height:calc(100vh - 400px)' + (over ? ';box-shadow:inset 0 0 0 1.5px var(--danger)' : '') + '">' +
+      '<div style="padding:10px 12px 8px">' +
+      '<div class="flex items-center gap6"><b class="fz13">' + sp.n + '</b>' +
+      (sp.pri ? '<span class="tag ' + (sp.pri === 'P0' ? 'danger' : 'warning') + '" style="height:17px">' + sp.pri + '</span>' : '') +
+      '<span class="tag ml-auto" style="height:17px">' + items.length + ' 项 · ' + pts + ' 点</span></div>' +
+      '<div class="muted fz11 mt4">' + sp.d + '</div>' +
+      (sp.cap ? '<div class="mt8">' + UI.bar(Math.min(pct, 100), over ? 'red' : pct >= 90 ? 'orange' : 'green', 'thin') +
+        '<div class="flex fz11 mt4"><span class="' + (over ? '' : 'muted') + '" style="' + (over ? 'color:var(--danger);font-weight:600' : '') + '">' +
+        pts + ' / ' + sp.cap + ' 点（' + pct + '%）</span>' +
+        '<span class="ml-auto muted">' + (over ? '超出 ' + (pts - sp.cap) + ' 点' : '余量 ' + (sp.cap - pts) + ' 点') + '</span></div></div>' : '') +
+      '<div class="tl-box" style="margin-top:8px;padding:6px 9px;font-size:11px">' + (sp.k === 'backlog' ? '' : '目标：') + sp.goal + '</div>' +
+      (sp.ms ? '<div class="flex items-center gap4 mt4"><span style="color:var(--warning)">' + icon('flag', 11) + '</span><span class="fz11" style="color:#b8760a">' + sp.ms + '</span></div>' : '') +
+      '</div>' +
+      '<div class="kb-body" style="padding:2px 8px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;flex:1;min-height:80px">' +
+      (items.length ? items.map(function (i) {
+        return '<div class="kb-card" draggable="true" data-id="' + i.id + '" style="background:#fff;border-radius:9px;padding:9px 11px;box-shadow:var(--shadow-xs);cursor:grab;border:1px solid ' +
+          (i.ready ? 'transparent' : '#f3d9a8') + '">' +
+          '<div class="flex items-center gap5 mb6"><span class="tico ' + i.ty + '" style="width:16px;height:16px">' + icon(TYI2[i.ty], 10) + '</span>' +
+          '<span class="id-link">' + i.id + '</span>' + UI.priority(i.pri) +
+          '<span class="tag ml-auto" style="height:17px">' + i.pt + ' 点</span></div>' +
+          '<div class="fz12" style="line-height:1.5;color:var(--ink-800)">' + i.t + '</div>' +
+          '<div class="flex items-center gap4 mt8 flex-wrap"><span class="tag line" style="height:16px">' + i.req + '</span>' +
+          (i.dep ? '<span class="tag warning" style="height:16px">' + icon('link', 10) + i.dep + '</span>' : '') +
+          (i.ready ? '' : '<span class="tag warning" style="height:16px">未就绪</span>') + '</div>' +
+          '<div class="flex items-center gap6 mt8" style="padding-top:7px;border-top:1px solid var(--ink-100)">' +
+          (i.own ? UI.avatar(i.own, 'sm') + '<span class="fz11 dim">' + i.own + '</span>'
+            : '<span class="tag" style="height:17px">' + icon('user', 10) + '待认领</span>') + '</div></div>';
+      }).join('') : '<div style="border:1.5px dashed var(--ink-200);border-radius:9px;padding:14px;text-align:center;color:var(--ink-300);font-size:11.5px">拖入工作项</div>') +
+      '</div></div>';
+  }).join('');
+  document.getElementById('planBoard').innerHTML = html;
+  var overs = SPRINTS_PLAN.filter(function (sp) {
+    if (!sp.cap) return false;
+    return PLAN_ITEMS.filter(function (i) { return i.sp === sp.k; }).reduce(function (a, b) { return a + b.pt; }, 0) > sp.cap;
+  });
+  document.getElementById('planWipAlert').innerHTML = overs.length ?
+    '<div class="card mb10" style="border-color:#f3b4b6;background:var(--danger-bg)"><div class="card-body" style="padding:9px 14px">' +
+    '<div class="flex items-center gap8"><span style="color:var(--danger)">' + icon('alert', 16) + '</span>' +
+    '<span class="fz12" style="color:#a3282c"><b>容量超限：</b>' + overs.map(function (o) { return o.n; }).join('、') +
+    ' 规划量超过团队容量，会挤压质量或造成延期。建议把低优先级项移到下个迭代，或先补充人力。</span>' +
+    '<button class="btn btn-sm ml-auto" data-toast="已按优先级把 2 项移入 Sprint 26-17">自动调平</button></div></div></div>' : '';
+  UI.hydrateIcons(document.getElementById('planBoard'));
+}
+renderPlanBoard();
+
+/* 规划板拖拽（跨迭代移动 + 容量校验） */
+(function () {
+  var pb = document.getElementById('planBoard'), dragging = null;
+  pb.addEventListener('dragstart', function (e) {
+    var c = e.target.closest('.kb-card'); if (!c) return;
+    dragging = c; c.style.opacity = '.4';
+  });
+  pb.addEventListener('dragend', function () { if (dragging) dragging.style.opacity = ''; dragging = null; });
+  pb.addEventListener('dragover', function (e) { if (dragging) e.preventDefault(); });
+  pb.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var col = e.target.closest('.kb-col'); if (!col || !dragging) return;
+    var item = PLAN_ITEMS.filter(function (i) { return i.id === dragging.dataset.id; })[0];
+    var sp = SPRINTS_PLAN.filter(function (x) { return x.k === col.dataset.sp; })[0];
+    if (!item || !sp) return;
+    if (!item.ready && sp.k !== 'backlog') {
+      UI.toast('⚠ ' + item.id + ' 未通过就绪度检查（DoR），不能进入迭代', 'error');
+      return;
+    }
+    item.sp = sp.k;
+    renderPlanBoard();
+    var pts = PLAN_ITEMS.filter(function (i) { return i.sp === sp.k; }).reduce(function (a, b) { return a + b.pt; }, 0);
+    if (sp.cap && pts > sp.cap) UI.toast('已移入 ' + sp.n + '，但容量已超限（' + pts + '/' + sp.cap + ' 点）', 'error');
+    else UI.toast('已移入 ' + sp.n);
+  });
+})();
+
+/* 版本 → 迭代映射 */
+(function () {
+  var maps = [
+    { v: 'V3.0 统一支付网关', rel: '2026-09-30', sprints: [
+      { n: 'Sprint 26-14', d: '07-14~07-27', st: 'doing', pts: '28/42' },
+      { n: 'Sprint 26-15', d: '07-28~08-10', st: 'plan', pts: '41/44' },
+      { n: 'Sprint 26-16', d: '08-11~08-24', st: 'plan', pts: '39/44' },
+      { n: 'Sprint 26-17', d: '08-25~09-07', st: 'plan', pts: '18/40' },
+      { n: 'Sprint 26-18', d: '09-08~09-21', st: 'idea', pts: '— 预留' }
+    ], ms: ['08-12 灰度 10%', '08-20 压测门禁', '09-30 全量切流'] },
+    { v: 'V3.1 跨境与多币种', rel: '2026-11-15', sprints: [
+      { n: 'Sprint 26-19', d: '09-22~10-05', st: 'idea', pts: '— 预留' },
+      { n: 'Sprint 26-20', d: '10-06~10-19', st: 'idea', pts: '— 预留' }
+    ], ms: ['11-15 GA'] }
+  ];
+  var C = { doing: '#15a86b', plan: '#2b5cff', idea: '#b3bfd0' };
+  document.getElementById('verMap').innerHTML = maps.map(function (m) {
+    return '<div style="padding:11px 0;border-bottom:1px solid var(--ink-100)">' +
+      '<div class="flex items-center gap8 mb8"><span class="tico req">' + icon('rocket', 11) + '</span>' +
+      '<b class="fz13">' + m.v + '</b><span class="tag warning">发布 ' + m.rel + '</span>' +
+      '<span class="muted fz11 ml-auto">' + m.ms.map(function (x) { return '◆ ' + x; }).join('　') + '</span></div>' +
+      '<div class="flex gap8 flex-wrap">' + m.sprints.map(function (sp) {
+        return '<div style="flex:1;min-width:150px;border:1px solid var(--ink-200);border-left:3px solid ' + C[sp.st] + ';border-radius:8px;padding:8px 10px">' +
+          '<div class="fz12 fw6">' + sp.n + '</div>' +
+          '<div class="muted fz11 mt4">' + sp.d + '</div>' +
+          '<div class="fz11 mt4" style="color:' + C[sp.st] + '">' + sp.pts + ' 点</div></div>';
+      }).join('') + '</div></div>';
+  }).join('') +
+    '<div class="tl-box mt12">V3.0 由 5 个迭代交付，当前第 2 个迭代规划量已达容量 93%；若 Sprint 26-16 的分库分表（13 点）无法按期完成，将影响 09-30 全量切流，建议提前拆分或前置。</div>';
+})();
+
+document.getElementById('sprintTable').innerHTML =
+  '<thead><tr><th style="width:34px"></th><th>迭代</th><th>周期</th><th style="width:26%">迭代目标</th><th>优先级</th><th>关联里程碑</th>' +
+  '<th class="num">规划/容量</th><th style="width:100px">水位</th><th>状态</th></tr></thead><tbody>' +
+  [['1', 'Sprint 26-14', '07-14 ~ 07-27', '完成路由引擎核心链路与灰度框架', 'P0', '—', '42/42', 100, '进行中', 'brand'],
+   ['2', 'Sprint 26-15', '07-28 ~ 08-10', '智能路由灰度框架与配置界面，支持 10% 流量灰度', 'P0', 'V3.0 灰度 08-12', '41/44', 93, '已规划', 'purple'],
+   ['3', 'Sprint 26-16', '08-11 ~ 08-24', '性能压测达标与跨渠道适配，进入预发验证', 'P0', '压测门禁 08-20', '39/44', 89, '已规划', 'purple'],
+   ['4', 'Sprint 26-17', '08-25 ~ 09-07', '对账核销与可观测收尾，准备全量切流', 'P1', '—', '18/40', 45, '规划中', ''],
+   ['5', 'Sprint 26-18', '09-08 ~ 09-21', '全量切流与老网关下线（预留缓冲）', 'P1', 'V3.0 GA 09-30', '0/40', 0, '未开始', '']
   ].map(function (r) {
-    return '<tr onclick="openItem(\'' + r[0] + '\')"><td><span data-icon="moreV" data-size="13" class="muted"></span></td>' +
-      '<td><div class="row-flex"><span class="tico ' + r[2] + '">' + icon(TYI[r[2]], 11) + '</span>' +
-      '<div><div class="t-main">' + r[1] + '</div><div class="id-link">' + r[0] + '</div></div></div></td>' +
-      '<td class="dim fz12">' + (r[2] === 'story' ? '用户故事' : '任务') + '</td><td>' + UI.priority(r[3]) + '</td>' +
-      '<td class="num">' + r[4] + '</td><td><div class="row-flex">' + UI.avatar(r[5], 'sm') + '<span class="fz12">' + r[5] + '</span></div></td>' +
-      '<td class="dim fz12">' + r[6] + '</td>' +
-      '<td>' + (r[7] ? '<span class="tag success">就绪</span>' : '<span class="tag warning">待细化</span>') + '</td></tr>';
+    return '<tr><td class="tc"><span class="muted fz11">' + r[0] + '</span></td>' +
+      '<td class="t-main">' + r[1] + '</td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td class="fz12" style="color:var(--ink-600)">' + r[3] + '</td>' +
+      '<td>' + UI.priority(r[4]) + '</td>' +
+      '<td>' + (r[5] === '—' ? '<span class="muted">—</span>' : '<span class="tag warning">' + r[5] + '</span>') + '</td>' +
+      '<td class="num">' + r[6] + '</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(r[7], r[7] >= 95 ? 'red' : r[7] >= 85 ? 'orange' : 'green', 'thin') + '</div>' +
+      '<span class="fz11">' + r[7] + '%</span></div></td>' +
+      '<td><span class="tag ' + r[9] + '">' + r[8] + '</span></td></tr>';
   }).join('') + '</tbody>';
 
-document.getElementById('capBar').innerHTML = UI.bar(86, 'orange', 'lg');
-document.getElementById('planList').innerHTML = [
-  ['STORY-3318', '通道限额中心对接', 8, '何俊'], ['TASK-5541', '老网关流量镜像回放工具', 5, '林小满'],
-  ['STORY-3321', '风控前置调用并行化改造', 5, '何俊'], ['STORY-3313', '成本与成功率实时计算引擎', 8, '何俊'],
-  ['STORY-3314', '灰度切流与回滚机制', 5, '林小满'], ['STORY-3312', '路由策略配置界面（延续）', 2, '王倩'],
-  ['TASK-5531', '路由引擎性能压测', 5, '林小满']
+document.getElementById('planRisk').innerHTML = [
+  ['danger', 'Sprint 26-16 含 13 点大故事', '分库分表方案落地未拆分，13 点以上估算准确度仅 52%，建议拆为 3 个 ≤5 点故事'],
+  ['danger', '4 项未通过就绪度检查', '压测环境扩容、架构评审未完成，不能进入迭代（拖拽会被拦截）'],
+  ['warning', 'Sprint 26-15 水位 93%', '预留缓冲不足 10%，插入需求将直接挤出既有内容'],
+  ['warning', '3 项存在跨团队依赖', '风控算法组、基础架构组、SRE，需在迭代规划会上确认对方排期']
 ].map(function (r) {
-  return '<div class="flex items-center gap8" style="padding:6px 0;border-bottom:1px solid var(--ink-100)">' +
-    '<span class="id-link" style="width:88px">' + r[0] + '</span>' +
-    '<span class="fz12 ellipsis" style="flex:1">' + r[1] + '</span>' +
-    '<span class="tag">' + r[2] + ' 点</span>' + UI.avatar(r[3], 'sm') + '</div>';
+  return '<div style="padding:9px 11px;border-radius:9px;background:var(--' + r[0] + '-bg);margin-bottom:8px">' +
+    '<div class="fz12 fw6" style="color:var(--ink-800)">' + r[1] + '</div>' +
+    '<div class="muted fz11 mt4" style="line-height:1.7">' + r[2] + '</div></div>';
 }).join('');
-Charts.hbar('#capChart', { unit: ' 点', data: [
-  { name: '何俊（容量 13）', value: 21, color: '#e5484d' }, { name: '林小满（容量 13）', value: 15, color: '#f59e0b' },
-  { name: '王倩（容量 10）', value: 7, color: '#15a86b' }, { name: '吴敏（容量 8）', value: 6, color: '#15a86b' }] });
 
+Charts.hbar('#capChart', { unit: ' 点', data: [
+  { name: '何俊（容量 13）', value: 16, color: '#e5484d' }, { name: '林小满（容量 13）', value: 10, color: '#15a86b' },
+  { name: '王倩（容量 10）', value: 5, color: '#15a86b' }, { name: '待认领（任务池）', value: 10, color: '#7c5cff' }] });
+
+/* Backlog */
 /* WBS 甘特 */
 (function () {
   var months = ['4月', '5月', '6月', '7月', '8月', '9月'];

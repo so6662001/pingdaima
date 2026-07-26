@@ -29,7 +29,7 @@
         <div class="tab active" data-tab="l1"><span data-icon="list" data-size="14"></span>项目列表 <span class="cnt">9</span></div>
         <div class="tab" data-tab="l2"><span data-icon="chartArea" data-size="14"></span>项目组合甘特</div>
         <div class="tab" data-tab="l3"><span data-icon="refresh" data-size="14"></span>迭代总览</div>
-        <div class="tab" data-tab="l4"><span data-icon="users" data-size="14"></span>资源与工时</div>
+        <div class="tab" data-tab="l4"><span data-icon="users" data-size="14"></span>资源排期与容量</div>
         <div class="tab" data-tab="l5"><span data-icon="warn" data-size="14"></span>风险与问题 <span class="cnt">11</span></div>
       </div>
 
@@ -59,16 +59,74 @@
       </div>
 
       <div class="tab-pane" data-pane="l4">
-        <div class="grid g-2-1 mb16">
-          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>团队资源负载</div>
-            <div class="card-sub">本月人力投入 / 容量（人日）</div></div>
-            <div class="card-body"><div id="loadChart"></div></div></div>
-          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>工时投入结构</div></div>
-            <div class="card-body"><div id="effortDonut"></div></div></div>
+        <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+          <div class="card-body" style="padding:12px 16px">
+            <div class="flex items-center gap12">
+              <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="users" data-size="17"></span>
+              <div style="flex:1">
+                <div class="fw6 fz13">资源排期与容量管理：先算清可用容量，再做排期承诺</div>
+                <div class="muted fz11 mt4">可用容量 = 基准容量 − 请假/公休 − 会议与协作 − 运维值班 − 缓冲；排期后自动检测跨项目冲突与超载，超过 100% 会实时告警。</div>
+              </div>
+              <div class="flex items-center gap16">
+                <div class="tc"><div class="fw6 fz15">940</div><div class="muted fz11">本月基准容量（人日）</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--brand-600)">712</div><div class="muted fz11">可用容量</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--danger)">3</div><div class="muted fz11">超载成员</div></div>
+                <button class="btn btn-sm btn-primary" data-modal="mAlloc"><span data-icon="plus" data-size="13"></span>快速排期</button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <div class="grid g5 mb16" id="capStats"></div>
+
+        <div class="card mb16">
+          <div class="card-head">
+            <div class="card-title"><span data-icon="calendar"></span>资源排期表（成员 × 周）</div>
+            <div class="card-sub">格子内为该成员当周的分配率与所属项目，红色表示超载，可拖拽调整</div>
+            <div class="card-head-actions">
+              <div class="btn-group"><button class="active">按周</button><button>按天</button><button>按迭代</button></div>
+              <div class="filter"><span data-icon="users"></span>团队：<b>全部</b><span data-icon="down"></span></div>
+              <button class="btn btn-sm" data-toast="已按可用容量与技能自动调平，3 名超载成员降至 95% 以内">一键调平</button>
+            </div>
+          </div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="allocTable"></table></div></div>
+          <div class="card-foot flex items-center gap12">
+            <span class="legend">
+              <span><i style="background:#dbe4ff"></i>≤70% 有余量</span><span><i style="background:#8ea8ff"></i>71~90% 合理</span>
+              <span><i style="background:#f59e0b"></i>91~100% 饱和</span><span><i style="background:#e5484d"></i>&gt;100% 超载</span>
+              <span><i style="background:#eef1f6"></i>请假/公休</span>
+            </span>
+            <span class="ml-auto fz12 muted">分配率 = 该周分配人日 ÷ 该周可用人日</span>
+          </div>
+        </div>
+
+        <div class="grid g-2-1 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title" style="color:var(--danger)"><span data-icon="alert"></span>排期冲突与超载</div>
+              <div class="card-sub">同一人同期被多个项目占用、或超出可用容量</div></div>
+            <div class="card-body" id="conflictBox"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="pie"></span>容量构成</div>
+              <div class="card-sub">本月 940 人日基准容量的去向</div></div>
+            <div class="card-body"><div id="capDonut"></div></div>
+          </div>
+        </div>
+
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>团队资源负载</div>
+            <div class="card-sub">本月人力投入 / 可用容量（人日）</div></div>
+            <div class="card-body"><div id="loadChart"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="calendar"></span>容量日历（扣减项）</div>
+            <div class="card-sub">请假、公休、培训、值班自动扣减</div></div>
+            <div class="card-body flush"><table class="tbl" id="calTable"></table></div></div>
+        </div>
+
         <div class="card">
-          <div class="card-head"><div class="card-title"><span data-icon="timer"></span>成员工时与负载明细</div>
-            <div class="card-head-actions"><button class="btn btn-sm" data-toast="工时报表已导出"><span data-icon="download" data-size="13"></span>导出</button></div></div>
+          <div class="card-head"><div class="card-title"><span data-icon="timer"></span>成员容量与饱和度明细</div>
+            <div class="card-head-actions">
+              <div class="filter"><span data-icon="warn"></span>仅看超载 <b>3</b></div>
+              <button class="btn btn-sm" data-toast="工时与容量报表已导出"><span data-icon="download" data-size="13"></span>导出</button></div></div>
           <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="memberTable"></table></div></div>
         </div>
       </div>
@@ -82,6 +140,29 @@
 
     </div>
   </div>
+</div>
+
+<div class="modal" id="mAlloc" style="width:640px">
+  <div class="modal-head"><span data-icon="calendar"></span><span class="modal-title">快速排期（资源分配）</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>成员<span class="req">*</span></label><select class="select" id="allocWho"><option>何俊（交易平台组 · Java/支付核心）</option><option>王倩（前端体验组）</option><option>林小满（基础架构组 · SRE）</option></select></div>
+      <div class="field"><label>投入项目<span class="req">*</span></label><select class="select"><option>PRJ-018 统一支付网关 3.0 重构</option><option>PRJ-016 商户运营中心体验升级</option><option>PRJ-021 智能风控决策引擎 V2</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>起始日期</label><input class="input" value="2026-07-28"></div>
+      <div class="field"><label>结束日期</label><input class="input" value="2026-08-24"></div>
+    </div>
+    <div class="field"><label>投入比例</label>
+      <div class="pills"><span class="pill">20%</span><span class="pill">50%</span><span class="pill active">80%</span><span class="pill">100%</span></div>
+      <div class="hint">建议不超过 80%，预留 20% 应对缺陷、评审与临时插入</div></div>
+    <div class="field"><label>容量校验</label>
+      <div id="allocCheck"></div></div>
+    <div class="field"><label>排期后影响</label>
+      <div id="allocImpact"></div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">排期结果同步到迭代规划与个人日历，并通过企业微信通知本人与项目经理</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="排期已保存，已通知何俊与项目经理">确认排期</button></div>
 </div>
 
 <div class="modal" id="mNewPrj" style="width:640px">
@@ -223,7 +304,82 @@ SPRINTS.forEach(function (s, i) {
   });
 });
 
-/* 资源 */
+/* ================= 资源排期与容量管理 ================= */
+document.getElementById('capStats').innerHTML = [
+  { l: '基准容量', v: 940, u: '人日/月', i: 'users', c: '#2b5cff', f: '86 人 × 21.9 天 × 50%（研发投入系数）' },
+  { l: '可用容量', v: 712, u: '人日', i: 'circleCheck', c: '#15a86b', f: '扣除请假/会议/值班/缓冲' },
+  { l: '已排期', v: 686, u: '人日', i: 'calendar', c: '#7c5cff', f: '占可用容量 96%' },
+  { l: '未排期余量', v: 26, u: '人日', i: 'inbox', c: '#f59e0b', f: '仅够应对小型插入需求' },
+  { l: '超载成员', v: 3, u: '人', i: 'alert', c: '#e5484d', f: '何俊 116% · 吴敏 108% · 李思远 104%' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+/* 资源排期表：成员 × 周 */
+var WEEKS = ['07-28~08-03', '08-04~08-10', '08-11~08-17', '08-18~08-24', '08-25~08-31', '09-01~09-07'];
+var PRJ_COLOR = { 'PRJ-018': '#2b5cff', 'PRJ-021': '#e5484d', 'PRJ-016': '#15a86b', 'PRJ-014': '#7c5cff', 'PRJ-023': '#f59e0b', '值班': '#8c9ab1', '休假': '#dde4ee' };
+var ALLOC = [
+  { n: '何俊', t: '交易平台组', r: '高级研发', w: [[['PRJ-018', 80], ['PRJ-014', 36]], [['PRJ-018', 80], ['PRJ-014', 36]], [['PRJ-018', 90], ['PRJ-014', 26]], [['PRJ-018', 90]], [['PRJ-018', 70], ['PRJ-016', 20]], [['PRJ-018', 70]]] },
+  { n: '李思远', t: '交易平台组', r: '后端负责人', w: [[['PRJ-018', 70], ['PRJ-023', 34]], [['PRJ-018', 70], ['PRJ-023', 34]], [['PRJ-018', 80], ['PRJ-023', 20]], [['PRJ-018', 80]], [['PRJ-018', 60]], [['PRJ-018', 60], ['PRJ-025', 20]]] },
+  { n: '王倩', t: '前端体验组', r: '前端负责人', w: [[['PRJ-016', 60], ['PRJ-018', 30]], [['PRJ-016', 60], ['PRJ-018', 30]], [['PRJ-016', 80]], [['休假', 100]], [['PRJ-016', 70]], [['PRJ-016', 70], ['PRJ-018', 20]]] },
+  { n: '郑宇', t: '风控算法组', r: '研发工程师', w: [[['PRJ-021', 90]], [['PRJ-021', 90]], [['PRJ-021', 80], ['PRJ-018', 10]], [['PRJ-021', 80]], [['PRJ-021', 70]], [['PRJ-021', 70]]] },
+  { n: '林小满', t: '基础架构组', r: 'SRE 负责人', w: [[['PRJ-018', 50], ['值班', 30]], [['PRJ-018', 60], ['值班', 20]], [['PRJ-018', 60], ['值班', 20]], [['PRJ-018', 70], ['值班', 20]], [['PRJ-019', 50], ['值班', 20]], [['PRJ-019', 50]]] },
+  { n: '吴敏', t: '质量保障部', r: '测试工程师', w: [[['PRJ-018', 60], ['PRJ-021', 48]], [['PRJ-018', 60], ['PRJ-021', 48]], [['PRJ-018', 80], ['PRJ-021', 20]], [['PRJ-018', 90]], [['PRJ-018', 80]], [['PRJ-016', 60]]] },
+  { n: '陈立', t: '技术架构组', r: '首席架构师', w: [[['PRJ-023', 40], ['PRJ-018', 20]], [['PRJ-023', 40], ['PRJ-018', 20]], [['PRJ-023', 50]], [['PRJ-023', 50]], [['PRJ-024', 40]], [['PRJ-024', 40]]] },
+  { n: '张诚', t: '数据平台组', r: '数据研发', w: [[['PRJ-014', 80]], [['PRJ-014', 80]], [['PRJ-014', 70]], [['PRJ-014', 70]], [['PRJ-014', 60]], [['休假', 100]]] }
+];
+function cellColor(total) {
+  return total > 100 ? '#e5484d' : total >= 91 ? '#f59e0b' : total >= 71 ? '#8ea8ff' : '#dbe4ff';
+}
+document.getElementById('allocTable').innerHTML =
+  '<thead><tr><th style="width:150px">成员</th>' + WEEKS.map(function (w) { return '<th class="tc" style="min-width:132px">' + w + '</th>'; }).join('') +
+  '<th class="tc">平均分配率</th></tr></thead><tbody>' +
+  ALLOC.map(function (m) {
+    var rates = m.w.map(function (cell) { return cell.reduce(function (a, b) { return a + b[1]; }, 0); });
+    var avg = Math.round(rates.reduce(function (a, b) { return a + b; }, 0) / rates.length);
+    return '<tr><td><div class="row-flex">' + UI.avatar(m.n, 'sm') +
+      '<div><div class="t-main">' + m.n + '</div><div class="muted fz11">' + m.r + '</div></div></div></td>' +
+      m.w.map(function (cell, i) {
+        var total = rates[i];
+        var isLeave = cell.length === 1 && cell[0][0] === '休假';
+        var bg = isLeave ? '#eef1f6' : cellColor(total);
+        var fg = isLeave ? 'var(--ink-400)' : total > 90 ? '#fff' : '#1637b4';
+        return '<td class="tc" style="padding:5px"><div style="background:' + bg + ';color:' + fg + ';border-radius:7px;padding:6px 5px;cursor:pointer" ' +
+          'onclick="UI.openModal(\'mAlloc\')" title="点击调整排期">' +
+          '<div style="font-size:13px;font-weight:700">' + (isLeave ? '休假' : total + '%') + '</div>' +
+          '<div style="font-size:10px;opacity:.9;line-height:1.5;margin-top:2px">' +
+          cell.map(function (c) { return c[0] === '休假' ? '' : c[0].replace('PRJ-', '') + ' ' + c[1] + '%'; }).filter(Boolean).join('<br>') + '</div>' +
+          '</div></td>';
+      }).join('') +
+      '<td class="tc"><b style="color:' + (avg > 100 ? 'var(--danger)' : avg >= 91 ? 'var(--warning)' : 'var(--ink-800)') + '">' + avg + '%</b></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('conflictBox').innerHTML = [
+  ['danger', '何俊 · 07-28 ~ 08-17 分配率 116%', 'PRJ-018 智能路由 80% + PRJ-014 指标治理 36%，两个项目同时冲刺',
+    '建议：把 PRJ-014 的 36% 转给张诚（当前 80%，可承接 20%）或延后 2 周'],
+  ['danger', '吴敏 · 07-28 ~ 08-10 分配率 108%', 'PRJ-018 回归测试 60% + PRJ-021 风控验证 48%，两个版本测试窗口重叠',
+    '建议：PRJ-021 测试推迟 1 周，或临时借调赵鹏（当前 60%）'],
+  ['warning', '李思远 · 07-28 ~ 08-10 分配率 104%', 'PRJ-018 70% + PRJ-023 OpenAPI 34%，管理与技术双线',
+    '建议：PRJ-023 架构工作转由陈立承担（当前 60%）'],
+  ['warning', '王倩 · 08-18 ~ 08-24 休假', 'V2.6 发布窗口（08-20）与休假重叠',
+    '建议：把发布前的前端验证提前到 08-17 前完成，或指定备份人']
+].map(function (c) {
+  return '<div style="padding:10px 12px;border-radius:9px;background:var(--' + c[0] + '-bg);margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><span class="tag ' + c[0] + '">' + (c[0] === 'danger' ? '冲突' : '风险') + '</span>' +
+    '<b class="fz12">' + c[1] + '</b></div>' +
+    '<div class="muted fz11 mt4">' + c[2] + '</div>' +
+    '<div class="fz11 mt4" style="color:var(--brand-600)">' + c[3] + '</div>' +
+    '<div class="flex gap6 mt8"><button class="btn btn-sm" data-modal="mAlloc">调整排期</button>' +
+    '<button class="btn btn-sm" data-toast="已按建议自动调平并通知相关人">采纳建议</button></div></div>';
+}).join('');
+
+Charts.donut('#capDonut', { size: 170, thickness: 22, center: { value: '940', label: '人日/月' }, data: [
+  { name: '项目排期', value: 686, color: '#2b5cff' }, { name: '会议与协作', value: 84, color: '#7c5cff' },
+  { name: '运维值班', value: 62, color: '#8c9ab1' }, { name: '请假与公休', value: 52, color: '#dde4ee' },
+  { name: '培训与分享', value: 30, color: '#0fb5ba' }, { name: '未排期余量', value: 26, color: '#15a86b' }] });
+
 Charts.bar('#loadChart', {
   height: 260, stacked: true, barWidth: 44, labels: ['交易平台组', '风控算法组', '前端体验组', '基础架构组', '质量保障部', '产品部'],
   series: [
@@ -231,37 +387,69 @@ Charts.bar('#loadChart', {
     { name: '缺陷修复', data: [42, 38, 26, 18, 64, 8], color: '#e5484d' },
     { name: '技术债/架构', data: [36, 22, 18, 62, 12, 4], color: '#7c5cff' },
     { name: '运维值班', data: [18, 12, 8, 48, 16, 0], color: '#b3bfd0' }
-  ], unit: ' 人日'
+  ], unit: ' 人日',
+  lineSeries: { name: '可用容量', data: [248, 190, 172, 196, 172, 132], color: '#15a86b' }, lineMax: 300
 });
-Charts.donut('#effortDonut', { size: 170, thickness: 22, center: { value: '862', label: '本月人日' }, data: [
-  { name: '需求交付', value: 512, color: '#2b5cff' }, { name: '缺陷修复', value: 158, color: '#e5484d' },
-  { name: '技术债与架构', value: 108, color: '#7c5cff' }, { name: '运维与值班', value: 84, color: '#b3bfd0' }] });
 
-var MEMS = [
-  ['李思远', '交易平台组', '后端负责人', 3, 21, 20, 105, '过载', 'PRJ-018 架构重构 · 70%'],
-  ['何俊', '交易平台组', '高级研发', 4, 22, 20, 110, '过载', 'PRJ-018 智能路由 · 60%'],
-  ['王倩', '前端体验组', '前端负责人', 2, 18, 20, 90, '饱和', 'PRJ-016 体验升级 · 65%'],
-  ['郑宇', '风控算法组', '研发工程师', 2, 19, 20, 95, '饱和', 'PRJ-021 决策引擎 · 85%'],
-  ['林小满', '基础架构组', 'SRE 负责人', 3, 16, 20, 80, '正常', 'PRJ-019 稳定性专项 · 55%'],
-  ['吴敏', '质量保障部', '测试工程师', 4, 20, 20, 100, '饱和', 'TP-2026-07 回归测试 · 75%'],
-  ['陈立', '技术架构组', '首席架构师', 5, 14, 20, 70, '正常', 'PRJ-023 OpenAPI 网关 · 40%'],
-  ['孙悦', '产品部', '产品经理', 2, 15, 20, 75, '正常', 'PRJ-016 需求梳理 · 60%'],
-  ['赵鹏', '质量保障部', '测试经理', 3, 12, 20, 60, '空闲', 'TP-2026-05 性能压测 · 45%']
-];
-document.getElementById('memberTable').innerHTML =
-  '<thead><tr><th>成员</th><th>团队</th><th>角色</th><th class="num">在研项目</th><th class="num">已投入</th><th class="num">容量</th>' +
-  '<th style="width:160px">负载率</th><th>状态</th><th>本月主要投入</th></tr></thead><tbody>' +
-  MEMS.map(function (m) {
-    var c = m[6] > 100 ? 'red' : m[6] >= 90 ? 'orange' : m[6] >= 70 ? '' : 'green';
-    var tg = { '过载': 'danger', '饱和': 'warning', '正常': 'success', '空闲': '' }[m[7]];
-    return '<tr><td><div class="row-flex">' + UI.avatar(m[0], 'sm') + '<span class="t-main">' + m[0] + '</span></div></td>' +
-      '<td class="dim fz12">' + m[1] + '</td><td class="dim fz12">' + m[2] + '</td><td class="num">' + m[3] + '</td>' +
-      '<td class="num">' + m[4] + '</td><td class="num muted">' + m[5] + '</td>' +
-      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(Math.min(m[6], 100), c) + '</div><b class="fz11">' + m[6] + '%</b></div></td>' +
-      '<td><span class="tag ' + tg + '">' + m[7] + '</span></td>' +
-      '<td class="fz12 dim">' + m[8] + '</td></tr>';
+document.getElementById('calTable').innerHTML =
+  '<thead><tr><th>成员</th><th>类型</th><th>时间</th><th class="num">扣减</th><th>影响</th></tr></thead><tbody>' +
+  [['王倩', '年假', '08-18 ~ 08-24', '5 人日', 'V2.6 发布窗口重叠', 'danger'],
+   ['张诚', '调休', '09-01 ~ 09-07', '5 人日', '数据中台一期已验收，影响小', 'success'],
+   ['全员', '中秋公休', '09-25 ~ 09-27', '258 人日', 'V3.0 全量切流前，需提前完成', 'warning'],
+   ['林小满', '生产值班', '每周轮值', '20% 常驻', '已计入可用容量', ''],
+   ['何俊 等 6 人', '架构培训', '08-14 下午', '3 人日', '影响小', '']
+  ].map(function (c) {
+    return '<tr><td class="t-main fz12">' + c[0] + '</td><td><span class="tag">' + c[1] + '</span></td>' +
+      '<td class="dim fz12">' + c[2] + '</td><td class="num">' + c[3] + '</td>' +
+      '<td>' + (c[5] ? '<span class="tag ' + c[5] + '">' + c[4] + '</span>' : '<span class="muted fz11">' + c[4] + '</span>') + '</td></tr>';
   }).join('') + '</tbody>';
 
+var MEMS = [
+  ['何俊', '交易平台组', '高级研发', 4, 22, 19, 116, '超载', 'PRJ-018 智能路由 80% · PRJ-014 36%'],
+  ['吴敏', '质量保障部', '测试工程师', 4, 20, 18.5, 108, '超载', 'PRJ-018 回归 60% · PRJ-021 48%'],
+  ['李思远', '交易平台组', '后端负责人', 3, 21, 20, 104, '超载', 'PRJ-018 70% · PRJ-023 34%'],
+  ['郑宇', '风控算法组', '研发工程师', 2, 19, 20, 90, '饱和', 'PRJ-021 决策引擎 90%'],
+  ['王倩', '前端体验组', '前端负责人', 2, 18, 20, 88, '饱和', 'PRJ-016 60% · PRJ-018 30%'],
+  ['林小满', '基础架构组', 'SRE 负责人', 3, 16, 20, 80, '正常', 'PRJ-018 50% · 值班 30%'],
+  ['张诚', '数据平台组', '数据研发', 1, 16, 20, 78, '正常', 'PRJ-014 数据中台 80%'],
+  ['陈立', '技术架构组', '首席架构师', 5, 14, 20, 62, '有余量', 'PRJ-023 40% · PRJ-018 20%'],
+  ['赵鹏', '质量保障部', '测试经理', 3, 12, 20, 60, '有余量', 'TP-2026-05 性能压测 45%']
+];
+document.getElementById('memberTable').innerHTML =
+  '<thead><tr><th>成员</th><th>团队</th><th>角色</th><th class="num">在研项目</th><th class="num">已排期</th><th class="num">可用容量</th>' +
+  '<th style="width:150px">饱和度</th><th>状态</th><th style="width:24%">主要投入</th><th style="width:34px"></th></tr></thead><tbody>' +
+  MEMS.map(function (m) {
+    var c = m[6] > 100 ? 'red' : m[6] >= 90 ? 'orange' : m[6] >= 70 ? '' : 'green';
+    var tg = { '超载': 'danger', '饱和': 'warning', '正常': 'success', '有余量': 'brand' }[m[7]];
+    return '<tr><td><div class="row-flex">' + UI.avatar(m[0], 'sm') + '<span class="t-main">' + m[0] + '</span></div></td>' +
+      '<td class="dim fz12">' + m[1] + '</td><td class="dim fz12">' + m[2] + '</td><td class="num">' + m[3] + '</td>' +
+      '<td class="num">' + m[4] + ' 人日</td><td class="num muted">' + m[5] + ' 人日</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(Math.min(m[6], 100), c) + '</div><b class="fz11" style="color:' + (m[6] > 100 ? 'var(--danger)' : '') + '">' + m[6] + '%</b></div></td>' +
+      '<td><span class="tag ' + tg + '">' + m[7] + '</span></td>' +
+      '<td class="fz12 dim">' + m[8] + '</td>' +
+      '<td><button class="icon-btn" style="width:24px;height:24px" onclick="UI.openModal(\'mAlloc\')">' + icon('calendar', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('allocCheck').innerHTML =
+  '<div style="background:var(--danger-bg);border-radius:9px;padding:10px 12px">' +
+  '<div class="flex items-center gap6 mb4"><span style="color:var(--danger)">' + icon('alert', 14) + '</span>' +
+  '<b class="fz12" style="color:#a3282c">容量冲突：何俊当前已排 116%</b></div>' +
+  '<div class="fz11" style="color:var(--ink-600);line-height:1.7">已有排期：PRJ-018 智能路由 80%（07-28 ~ 09-07）、PRJ-014 指标治理 36%（07-28 ~ 08-17）。' +
+  '再排 80% 将达到 <b>196%</b>，严重超载。</div>' +
+  '<div class="mt8">' + UI.bar(100, 'red') + '</div></div>' +
+  '<div class="tl-box mt8"><b>可选方案：</b>① 把 PRJ-014 的 36% 转给张诚（可承接 20%）与陈立（可承接 38%）；② 本次排期降为 40%；③ 起始日期推迟到 08-18（PRJ-014 结束后）。</div>';
+document.getElementById('allocImpact').innerHTML = [
+  ['PRJ-018 统一支付网关 3.0', '+4 人日/周', '有助于 09-30 全量切流按期', 'success'],
+  ['PRJ-014 数据资产中台', '−1.8 人日/周', '一期验收（08-08）存在延期风险', 'danger'],
+  ['何俊个人负载', '116% → 196%', '连续加班风险，不建议', 'danger']
+].map(function (i) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="fz12" style="flex:1">' + i[0] + '</span>' +
+    '<b class="fz12" style="color:var(--' + (i[3] === 'success' ? 'success' : 'danger') + ')">' + i[1] + '</b>' +
+    '<span class="muted fz11" style="width:180px;text-align:right">' + i[2] + '</span></div>';
+}).join('');
+
+/* 风险 */
 /* 风险 */
 document.getElementById('riskStats').innerHTML = [
   { l: '高风险', v: 3, c: '#e5484d' }, { l: '中风险', v: 5, c: '#f59e0b' }, { l: '低风险', v: 3, c: '#15a86b' }, { l: '本月已关闭', v: 8, c: '#2b5cff' }

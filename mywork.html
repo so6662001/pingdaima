@@ -50,6 +50,18 @@
           </div>
 
           <div class="card">
+            <div class="card-head">
+              <div class="card-title"><span data-icon="kanban"></span>我的任务（跨项目）</div>
+              <div class="card-sub">6 项进行中 · 21 故事点 · 展开可拆解子任务并勾选进度</div>
+              <div class="card-head-actions">
+                <div class="btn-group"><button class="active">按优先级</button><button>按项目</button><button>按截止</button></div>
+                <a class="btn btn-sm btn-soft" href="board.html#tab=mine"><span data-icon="maximize" data-size="13"></span>我的看板</a>
+              </div>
+            </div>
+            <div class="card-body" style="padding:10px 14px" id="myTasks"></div>
+          </div>
+
+          <div class="card">
             <div class="card-head"><div class="card-title"><span data-icon="kanban"></span>我参与的项目</div></div>
             <div class="card-body flush"><table class="tbl" id="myPrj"></table></div>
           </div>
@@ -136,6 +148,70 @@ render(TODOS.filter(function (t) { return t.g === 'b'; }), 'listB');
 render(TODOS.filter(function (t) { return t.g === 'c'; }), 'listC');
 render(TODOS.filter(function (t) { return t.g === 'd'; }), 'listD');
 render(TODOS.filter(function (t) { return t.late; }), 'listE');
+
+/* 研发工程师：多任务管理 */
+var MY_TASKS = [
+  { id: 'STORY-3313', ty: 'story', t: '成本与成功率实时计算引擎', prj: 'PRJ-018 支付网关 3.0', sp: 'Sprint 26-14', pri: 'P0', pt: 8, pg: 60,
+    due: '07-27', st: '开发中', br: 'feature/smart-router', ci: 'fail', hours: '18.4 / 48h',
+    subs: [['策略权重计算主流程', 1], ['熔断器与半开探活', 1], ['配置中心变更推送', 0], ['单元测试与覆盖率达标', 0]] },
+  { id: 'STORY-3320', ty: 'story', t: '渠道适配层重构（招行/工行）', prj: 'PRJ-018 支付网关 3.0', sp: 'Sprint 26-14', pri: 'P1', pt: 8, pg: 45,
+    due: '07-27', st: '开发中', br: 'feature/adapter-v2', ci: 'ok', hours: '14.2 / 48h',
+    subs: [['招行通道适配', 1], ['工行通道适配', 0], ['通道能力矩阵配置', 0]] },
+  { id: 'BUG-770', ty: 'bug', t: '熔断后备用通道限额校验缺失', prj: 'PRJ-018 支付网关 3.0', sp: 'Sprint 26-14', pri: 'P1', pt: 2, pg: 80,
+    due: '今天', st: '开发中', br: 'hotfix/limit-check', ci: 'run', hours: '3.2 / 12h',
+    subs: [['定位与复现', 1], ['修复与自测', 1], ['补充回归用例', 0]] },
+  { id: 'TASK-5540', ty: 'task', t: '对账差错工单自动派发', prj: 'PRJ-018 支付网关 3.0', sp: 'Sprint 26-14', pri: 'P1', pt: 3, pg: 70,
+    due: '07-25', st: '阻塞', br: 'feature/settle-dispatch', ci: 'ok', hours: '8.6 / 18h', blocked: '限额中心接口未就绪（已等待 3 天）',
+    subs: [['工单模板与规则', 1], ['派发服务对接', 0]] },
+  { id: 'STORY-3318', ty: 'story', t: '通道限额中心对接', prj: 'PRJ-018 支付网关 3.0', sp: 'Sprint 26-15', pri: 'P0', pt: 8, pg: 0,
+    due: '08-01', st: '待开始', br: '', ci: '', hours: '0 / 48h',
+    subs: [['接口契约确认', 0], ['查询与冻结接口实现', 0], ['多币种额度校验', 0]] },
+  { id: 'TASK-5556', ty: 'task', t: '单元测试与覆盖率达标（REQ-2041）', prj: 'PRJ-018 支付网关 3.0', sp: 'Sprint 26-15', pri: 'P1', pt: 2, pg: 0,
+    due: '08-03', st: '待认领', br: '', ci: '', hours: '0 / 12h', claim: 1,
+    subs: [] }
+];
+var TYI3 = { story: ['story', 'file'], task: ['task', 'kanban'], bug: ['bug', 'bug'] };
+document.getElementById('myTasks').innerHTML = MY_TASKS.map(function (t, i) {
+  var ti = TYI3[t.ty];
+  var doneSub = t.subs.filter(function (x) { return x[1]; }).length;
+  return '<div class="card mb8" style="box-shadow:none;border-color:' + (t.blocked ? '#f3b4b6' : 'var(--ink-200)') + '">' +
+    '<div class="card-body" style="padding:11px 13px">' +
+    '<div class="flex items-start gap8">' +
+    '<span class="tico ' + ti[0] + '" style="margin-top:2px">' + icon(ti[1], 11) + '</span>' +
+    '<div style="flex:1;min-width:0">' +
+    '<div class="flex items-center gap6 flex-wrap"><b class="fz13">' + t.t + '</b>' + UI.priority(t.pri) +
+    '<span class="tag">' + t.pt + ' 点</span>' +
+    '<span class="tag ' + (t.st === '阻塞' ? 'danger' : t.st === '开发中' ? 'brand' : t.st === '待认领' ? 'warning' : '') + '">' + t.st + '</span>' +
+    (t.ci ? '<span class="tag ' + (t.ci === 'ok' ? 'success' : t.ci === 'fail' ? 'danger' : 'warning') + '">' + icon('zap', 10) + 'CI ' + (t.ci === 'ok' ? '通过' : t.ci === 'fail' ? '失败' : '运行中') + '</span>' : '') + '</div>' +
+    '<div class="flex items-center gap8 mt4 flex-wrap"><span class="id-link">' + t.id + '</span>' +
+    '<span class="muted fz11">' + t.prj + ' · ' + t.sp + '</span>' +
+    (t.br ? '<span class="branch-chip">' + icon('branch', 10) + t.br + '</span>' : '') +
+    '<span class="muted fz11">工时 ' + t.hours + '</span>' +
+    '<span class="tag ' + (t.due === '今天' ? 'danger' : '') + '">' + icon('clock', 10) + t.due + '</span></div>' +
+    (t.blocked ? '<div class="blk" style="margin-top:7px;background:var(--danger-bg);color:#a3282c;font-size:11px;border-radius:6px;padding:5px 8px">' +
+      icon('alert', 11) + ' ' + t.blocked + '</div>' : '') +
+    '<div class="flex items-center gap8 mt8"><div style="flex:1">' + UI.bar(t.pg, t.pg === 100 ? 'green' : t.blocked ? 'red' : '', 'thin') + '</div>' +
+    '<span class="fz11 muted">' + t.pg + '%</span>' +
+    (t.subs.length ? '<span class="fz11 muted">子任务 ' + doneSub + '/' + t.subs.length + '</span>' : '') +
+    '<span class="fz11 pointer" style="color:var(--brand-600)" onclick="var e=this.closest(\'.card\').querySelector(\'.subs\');e.style.display=e.style.display===\'none\'?\'\':\'none\'">展开拆解 ›</span></div>' +
+    '<div class="subs" style="display:' + (i === 0 ? '' : 'none') + ';margin-top:8px;padding-top:8px;border-top:1px solid var(--ink-100)">' +
+    (t.subs.length ? t.subs.map(function (sb) {
+      return '<div class="flex items-center gap8" style="padding:5px 0">' +
+        '<span class="checkbox' + (sb[1] ? ' checked' : '') + '"></span>' +
+        '<span class="fz12" style="flex:1;' + (sb[1] ? 'color:var(--ink-400);text-decoration:line-through' : '') + '">' + sb[0] + '</span>' +
+        '<button class="btn btn-sm" style="height:22px;padding:0 7px">登记工时</button></div>';
+    }).join('') : '<div class="muted fz11">尚未拆解子任务</div>') +
+    '<div class="flex gap6 mt8"><input class="input" placeholder="添加子任务后回车" style="flex:1;height:26px">' +
+    '<button class="btn btn-sm">添加</button></div></div>' +
+    '</div>' +
+    '<div style="flex:none;display:flex;flex-direction:column;gap:6px">' +
+    (t.claim ? '<button class="btn btn-sm btn-primary" data-toast="认领成功，已进入你的看板">认领</button>'
+      : '<button class="btn btn-sm btn-primary" data-toast="已流转到下一状态并同步看板">流转</button>') +
+    '<button class="btn btn-sm" data-toast="已登记工时（系统已按提交自动推算）">工时</button>' +
+    '</div></div></div></div>';
+}).join('') +
+  '<div class="flex items-center gap8 mt8"><span class="fz12 muted">合计 6 项 · 21 故事点 · 本迭代容量 13 点</span>' +
+  '<span class="tag danger ml-auto">负载 110%，建议转出 5 点</span></div>';
 
 document.getElementById('myPrj').innerHTML =
   '<thead><tr><th>项目</th><th>我的角色</th><th>当前迭代</th><th style="width:120px">进度</th><th>我的待办</th><th>健康度</th></tr></thead><tbody>' +

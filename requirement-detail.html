@@ -126,10 +126,40 @@
           </div>
 
           <div class="tab-pane" data-pane="d2">
+            <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+              <div class="card-body" style="padding:12px 16px">
+                <div class="flex items-center gap12">
+                  <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="layers" data-size="17"></span>
+                  <div style="flex:1">
+                    <div class="fw6 fz13">需求拆解工作台：把一条需求拆成可交付、可估算、可认领的颗粒度</div>
+                    <div class="muted fz11 mt4">支持四级颗粒度：业务主题 → 需求 → 用户故事 → 任务/子任务；可用模板一键拆解，拆完直接估点并投放任务池。</div>
+                  </div>
+                  <div class="flex items-center gap12">
+                    <div class="tc"><div class="fw6 fz15">8</div><div class="muted fz11">子项</div></div>
+                    <div class="tc"><div class="fw6 fz15">34</div><div class="muted fz11">故事点</div></div>
+                    <div class="tc"><div class="fw6 fz15" style="color:var(--success)">100%</div><div class="muted fz11">拆解覆盖率</div></div>
+                    <button class="btn btn-sm btn-primary" data-modal="mSplit"><span data-icon="layers" data-size="13"></span>拆解需求</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="grid g-3-2 mb16">
+              <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>拆解结构（可拖拽调整层级）</div>
+                <div class="card-sub">拖动卡片可改变父子关系与顺序</div>
+                <div class="card-head-actions"><div class="btn-group"><button class="active">树形</button><button>列表</button></div></div></div>
+                <div class="card-body" id="splitTree"></div></div>
+              <div class="grid" style="gap:14px;align-content:start">
+                <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>拆解质量检查</div></div>
+                  <div class="card-body" id="splitCheck"></div></div>
+                <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>颗粒度分布</div></div>
+                  <div class="card-body"><div id="grainChart"></div></div></div>
+              </div>
+            </div>
             <div class="card"><div class="card-head">
-              <div class="card-title"><span data-icon="layers"></span>子工作项</div>
+              <div class="card-title"><span data-icon="list"></span>子工作项列表</div>
               <div class="card-sub">8 项 · 3 已完成 · 34 故事点</div>
-              <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="plus" data-size="13"></span>创建子项</button></div></div>
+              <div class="card-head-actions"><button class="btn btn-sm">批量估点</button><button class="btn btn-sm">批量投放任务池</button>
+                <button class="btn btn-sm"><span data-icon="plus" data-size="13"></span>创建子项</button></div></div>
               <div class="card-body flush"><table class="tbl" id="subTable"></table></div>
             </div>
           </div>
@@ -191,6 +221,26 @@
 
     </div>
   </div>
+</div>
+
+<div class="modal" id="mSplit" style="width:720px">
+  <div class="modal-head"><span data-icon="layers"></span><span class="modal-title">拆解需求为工作项</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>拆解模板</label>
+      <div class="grid g4" style="gap:8px" id="splitTpl"></div>
+      <div class="hint">模板只是起点，生成后可自由增删改与调整层级</div></div>
+    <div class="field"><label>拆解预览（可编辑）</label>
+      <div id="splitPreview"></div>
+      <button class="btn btn-sm mt8"><span data-icon="plus" data-size="13"></span>添加一项</button>
+      <button class="btn btn-sm mt8" style="margin-left:6px"><span data-icon="sparkles" data-size="13"></span>AI 再拆一层（任务级）</button></div>
+    <div class="form-row">
+      <div class="field"><label>估点方式</label><select class="select"><option>规划扑克（团队共识）</option><option>参考相似需求自动估算</option><option>人工直接填写</option></select></div>
+      <div class="field"><label>生成后处理</label><select class="select"><option>投放任务池（自助认领）</option><option>按技能自动指派</option><option>仅创建不分发</option></select></div>
+    </div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">子项全部完成时自动更新需求进度与状态</span></div>
+    <div class="flex items-center gap8 mt8"><span class="switch on"></span><span class="fz12 dim">继承需求的阶段计划、目标版本与客户关联</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="已生成 4 个用户故事 + 3 个任务，并投放到任务池">生成工作项</button></div>
 </div>
 
 <script src="assets/js/icons.js"></script>
@@ -318,6 +368,78 @@ document.getElementById('subTable').innerHTML =
       '<td><span class="tag ' + stMap[r[5]] + '">' + r[5] + '</span></td><td class="num">' + r[6] + '</td>' +
       '<td>' + UI.bar(r[7], r[7] === 100 ? 'green' : '', 'thin') + '</td><td class="dim fz12">' + r[8] + '</td></tr>';
   }).join('') + '</tbody>';
+
+/* 需求拆解工作台 */
+var TREE_DATA = [
+  { lv: 0, ty: 'req', t: 'REQ-2041 支付网关多渠道智能路由能力', meta: '需求 · 21 人日 · 34 点', pg: 15 },
+  { lv: 1, ty: 'story', t: 'STORY-3312 路由策略配置界面', meta: '用户故事 · 王倩 · 5 点', pg: 40 },
+  { lv: 2, ty: 'task', t: 'TASK-5551 策略表单组件开发', meta: '任务 · 王倩 · 2 点', pg: 100 },
+  { lv: 2, ty: 'task', t: 'TASK-5552 条件组合逻辑与校验', meta: '任务 · 王倩 · 2 点', pg: 60 },
+  { lv: 2, ty: 'task', t: 'TASK-5553 权限与操作审计', meta: '任务 · 待认领 · 1 点', pg: 0 },
+  { lv: 1, ty: 'story', t: 'STORY-3313 成本与成功率实时计算引擎', meta: '用户故事 · 何俊 · 8 点', pg: 60 },
+  { lv: 2, ty: 'task', t: 'TASK-5554 策略权重计算主流程', meta: '任务 · 何俊 · 3 点', pg: 100 },
+  { lv: 2, ty: 'task', t: 'TASK-5555 熔断器与半开探活', meta: '任务 · 何俊 · 3 点', pg: 80 },
+  { lv: 2, ty: 'task', t: 'TASK-5556 单元测试与覆盖率达标', meta: '任务 · 待认领 · 2 点', pg: 0 },
+  { lv: 1, ty: 'story', t: 'STORY-3314 灰度切流与回滚机制', meta: '用户故事 · 林小满 · 5 点', pg: 0 },
+  { lv: 1, ty: 'story', t: 'STORY-3315 路由决策链路可观测视图', meta: '用户故事 · 待认领 · 3 点', pg: 0 },
+  { lv: 1, ty: 'task', t: 'TASK-5531 路由引擎性能压测（12k TPS）', meta: '任务 · 林小满 · 5 点', pg: 0 },
+  { lv: 1, ty: 'task', t: 'TASK-5532 技术方案评审与文档归档', meta: '任务 · 陈立 · 2 点', pg: 100 },
+  { lv: 1, ty: 'task', t: 'TASK-5533 灰度运营 SOP 编写', meta: '任务 · 周雅 · 3 点', pg: 100 }
+];
+var TYICO = { req: ['req', 'bulb'], story: ['story', 'file'], task: ['task', 'kanban'] };
+document.getElementById('splitTree').innerHTML = TREE_DATA.map(function (n) {
+  var ti = TYICO[n.ty];
+  return '<div draggable="true" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-left:' + (n.lv * 26) + 'px;' +
+    'border:1px solid var(--ink-200);border-radius:9px;margin-bottom:6px;cursor:grab;background:' + (n.lv === 0 ? 'var(--brand-50)' : '#fff') + '">' +
+    '<span style="color:var(--ink-300)">' + icon('moreV', 13) + '</span>' +
+    '<span class="tico ' + ti[0] + '">' + icon(ti[1], 11) + '</span>' +
+    '<span class="fz12' + (n.lv === 0 ? ' fw6' : '') + '" style="flex:1">' + n.t + '</span>' +
+    '<span class="muted fz11">' + n.meta + '</span>' +
+    '<div style="width:70px">' + UI.bar(n.pg, n.pg === 100 ? 'green' : '', 'thin') + '</div>' +
+    '<button class="icon-btn" style="width:22px;height:22px">' + icon('more', 13) + '</button></div>';
+}).join('') +
+  '<div class="tl-box mt8">拆解原则：用户故事要能<b>独立交付价值</b>且 ≤ 8 点；任务是故事内部的执行步骤，可以按技术分层或按步骤拆；超过 8 点的故事必须继续拆，否则估算准确度会从 84% 降到 52%。</div>';
+
+document.getElementById('splitCheck').innerHTML = [
+  ['所有故事 ≤ 8 点', 1, '最大 8 点（STORY-3313）'],
+  ['每个故事可独立交付价值', 1, '4 个故事均可独立演示'],
+  ['任务颗粒度 ≤ 3 点', 1, '最大 3 点'],
+  ['已覆盖全部验收标准', 0, 'AC5 灰度比例调整暂无对应故事'],
+  ['非功能需求已拆出（性能/安全）', 1, '压测任务已拆出'],
+  ['依赖已识别并登记', 1, '2 项跨团队依赖已登记']
+].map(function (c) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span style="color:' + (c[1] ? 'var(--success)' : 'var(--danger)') + '">' + icon(c[1] ? 'circleCheck' : 'alert', 15) + '</span>' +
+    '<span class="fz12" style="flex:1">' + c[0] + '</span>' +
+    '<span class="muted fz11">' + c[2] + '</span></div>';
+}).join('') + '<button class="btn btn-sm btn-block mt8" data-modal="mSplit">补充拆解 AC5 对应故事</button>';
+
+Charts.donut('#grainChart', { size: 148, thickness: 18, center: { value: '34', label: '故事点' }, data: [
+  { name: '用户故事（4）', value: 21, color: '#15a86b' }, { name: '任务（7）', value: 13, color: '#2b5cff' }] });
+
+document.getElementById('splitTpl').innerHTML = [
+  ['前后端分层', 'layers', 1], ['按业务流程', 'workflow', 0], ['按技术模块', 'cpu', 0], ['自定义', 'edit', 0]
+].map(function (t) {
+  return '<div style="border:1.5px solid var(--' + (t[2] ? 'brand-400' : 'ink-200') + ');border-radius:8px;padding:10px;text-align:center;cursor:pointer">' +
+    '<div style="color:var(--brand-500)">' + icon(t[1], 18) + '</div><div class="fz11 mt4">' + t[0] + '</div></div>';
+}).join('');
+document.getElementById('splitPreview').innerHTML = [
+  ['用户故事', '路由策略配置界面（前端）', 5, '前端'],
+  ['用户故事', '成本与成功率实时计算引擎（后端）', 8, '后端'],
+  ['用户故事', '灰度切流与回滚机制', 5, 'SRE'],
+  ['用户故事', '路由决策链路可观测视图', 3, 'SRE/前端'],
+  ['任务', '接口契约定义与联调', 3, '后端'],
+  ['任务', '性能压测（12k TPS）', 5, 'SRE'],
+  ['任务', '技术方案评审与归档', 2, '架构']
+].map(function (t) {
+  return '<div class="flex items-center gap8" style="padding:7px 9px;background:var(--ink-50);border-radius:8px;margin-bottom:6px">' +
+    '<span style="color:var(--ink-300)">' + icon('moreV', 12) + '</span>' +
+    '<span class="tag ' + (t[0] === '用户故事' ? 'success' : 'brand') + '">' + t[0] + '</span>' +
+    '<input class="input" value="' + t[1] + '" style="flex:1;height:26px;background:#fff">' +
+    '<input class="input" value="' + t[2] + '" style="width:52px;height:26px;background:#fff">' +
+    '<span class="tag line">' + t[3] + '</span>' +
+    '<button class="icon-btn" style="width:22px;height:22px">' + icon('x', 13) + '</button></div>';
+}).join('');
 
 /* 测试与质量 */
 Charts.donut('#caseDonut', { size: 148, thickness: 18, center: { value: '26', label: '用例总数' }, data: [

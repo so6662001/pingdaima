@@ -118,15 +118,23 @@
       <!-- 工作流 -->
       <div class="tab-pane" data-pane="g3">
         <div class="toolbar">
-          <div class="btn-group"><button class="active">需求</button><button>用户故事</button><button>任务</button><button>缺陷</button><button>测试用例</button></div>
+          <div class="btn-group" id="wfType"><button class="active" data-t="req">需求</button><button data-t="story">用户故事</button>
+            <button data-t="task">任务</button><button data-t="bug">缺陷</button><button data-t="case">测试用例</button></div>
           <div class="ml-auto flex gap8"><button class="btn btn-sm"><span data-icon="copy" data-size="13"></span>复制流程</button>
             <button class="btn btn-sm btn-primary"><span data-icon="plus" data-size="13"></span>添加状态</button></div>
         </div>
         <div class="card mb16">
-          <div class="card-head"><div class="card-title"><span data-icon="workflow"></span>需求状态流转</div>
+          <div class="card-head"><div class="card-title"><span data-icon="workflow"></span><span id="wfTitle">需求</span>状态流转</div>
             <div class="card-sub">拖拽连线可调整流转路径，点击节点配置准入条件</div></div>
           <div class="card-body"><div id="flowGraph"></div></div>
         </div>
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="layers"></span>工作项类型与颗粒度</div>
+            <div class="card-sub">每种类型可自定义图标、颜色、可用状态、专属属性与允许的子类型</div>
+            <div class="card-head-actions"><button class="btn btn-sm btn-primary"><span data-icon="plus" data-size="13"></span>新建工作项类型</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="wiTypeTable"></table></div></div>
+        </div>
+
         <div class="grid g2">
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="check"></span>流转规则与准入条件</div></div>
             <div class="card-body flush"><table class="tbl" id="transTable"></table></div></div>
@@ -294,33 +302,93 @@ document.getElementById('permTable').innerHTML =
     }).join('') + '</tr>';
   }).join('') + '</tbody>';
 
-/* 工作流图 */
-(function () {
-  var nodes = [
+/* 工作流图（按工作项类型切换） */
+var WF = {
+  req: { n: '需求', nodes: [
+    { n: '待评审', x: 20, y: 60, c: '#b3bfd0' }, { n: '评审中', x: 160, y: 60, c: '#f59e0b' },
+    { n: '待排期', x: 300, y: 60, c: '#7c5cff' }, { n: '开发中', x: 440, y: 60, c: '#2b5cff' },
+    { n: '联调中', x: 580, y: 60, c: '#2b5cff' }, { n: '测试中', x: 720, y: 60, c: '#0fb5ba' },
+    { n: '待发布', x: 860, y: 60, c: '#0ea5e9' }, { n: '已发布', x: 1000, y: 60, c: '#15a86b' },
+    { n: '已挂起', x: 300, y: 150, c: '#b3bfd0' }, { n: '已驳回', x: 160, y: 150, c: '#e5484d' }] },
+  story: { n: '用户故事', nodes: [
+    { n: '待办', x: 20, y: 60, c: '#b3bfd0' }, { n: '设计中', x: 180, y: 60, c: '#7c5cff' },
+    { n: '开发中', x: 340, y: 60, c: '#2b5cff' }, { n: '代码评审', x: 500, y: 60, c: '#0ea5e9' },
+    { n: '测试中', x: 660, y: 60, c: '#f59e0b' }, { n: '待验收', x: 820, y: 60, c: '#0fb5ba' },
+    { n: '已完成', x: 980, y: 60, c: '#15a86b' }, { n: '已阻塞', x: 340, y: 150, c: '#e5484d' },
+    { n: '已取消', x: 180, y: 150, c: '#b3bfd0' }] },
+  task: { n: '任务', nodes: [
+    { n: '待认领', x: 20, y: 60, c: '#b3bfd0' }, { n: '已认领', x: 200, y: 60, c: '#7c5cff' },
+    { n: '进行中', x: 380, y: 60, c: '#2b5cff' }, { n: '待验证', x: 560, y: 60, c: '#f59e0b' },
+    { n: '已完成', x: 740, y: 60, c: '#15a86b' }, { n: '已阻塞', x: 380, y: 150, c: '#e5484d' },
+    { n: '已取消', x: 200, y: 150, c: '#b3bfd0' }] },
+  bug: { n: '缺陷', nodes: [
+    { n: '新建', x: 20, y: 60, c: '#b3bfd0' }, { n: '已确认', x: 180, y: 60, c: '#f59e0b' },
+    { n: '修复中', x: 340, y: 60, c: '#2b5cff' }, { n: '待验证', x: 500, y: 60, c: '#7c5cff' },
+    { n: '已修复', x: 660, y: 60, c: '#15a86b' }, { n: '已关闭', x: 820, y: 60, c: '#15a86b' },
+    { n: '重开', x: 500, y: 150, c: '#e5484d' }, { n: '不予修复', x: 180, y: 150, c: '#b3bfd0' }] },
+  case: { n: '测试用例', nodes: [
+    { n: '草稿', x: 20, y: 60, c: '#b3bfd0' }, { n: '评审中', x: 200, y: 60, c: '#f59e0b' },
+    { n: '已生效', x: 380, y: 60, c: '#2b5cff' }, { n: '已自动化', x: 560, y: 60, c: '#7c5cff' },
+    { n: '已废弃', x: 380, y: 150, c: '#b3bfd0' }] }
+};
+function drawWF(type) {
+  var conf = WF[type] || WF.req;
+  var nodes = conf.nodes;
     { n: '待评审', x: 20, y: 60, c: '#b3bfd0' }, { n: '评审中', x: 160, y: 60, c: '#f59e0b' },
     { n: '待排期', x: 300, y: 60, c: '#7c5cff' }, { n: '开发中', x: 440, y: 60, c: '#2b5cff' },
     { n: '联调中', x: 580, y: 60, c: '#2b5cff' }, { n: '测试中', x: 720, y: 60, c: '#0fb5ba' },
     { n: '待发布', x: 860, y: 60, c: '#0ea5e9' }, { n: '已发布', x: 1000, y: 60, c: '#15a86b' },
     { n: '已挂起', x: 300, y: 150, c: '#b3bfd0' }, { n: '已驳回', x: 160, y: 150, c: '#e5484d' }
   ];
+  var main = nodes.filter(function (n) { return n.y === 60; });
   var W = 1120, H = 210;
   var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;min-width:900px" height="' + H + '">' +
     '<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">' +
     '<path d="M0,0 L7,3 L0,6 Z" fill="#b3bfd0"/></marker></defs>';
-  for (var i = 0; i < 7; i++) {
-    s += '<line x1="' + (nodes[i].x + 96) + '" y1="74" x2="' + (nodes[i + 1].x - 6) + '" y2="74" stroke="#b3bfd0" stroke-width="1.5" marker-end="url(#ar)"/>';
+  for (var i = 0; i < main.length - 1; i++) {
+    s += '<line x1="' + (main[i].x + 96) + '" y1="74" x2="' + (main[i + 1].x - 6) + '" y2="74" stroke="#b3bfd0" stroke-width="1.5" marker-end="url(#ar)"/>';
   }
-  s += '<path d="M208,90 L208,150" stroke="#e5484d" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>';
-  s += '<path d="M348,90 L348,150" stroke="#b3bfd0" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>';
-  s += '<path d="M488,90 Q488,180 396,164" stroke="#b3bfd0" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>';
+  nodes.filter(function (n) { return n.y === 150; }).forEach(function (n) {
+    s += '<path d="M' + (n.x + 48) + ',90 L' + (n.x + 48) + ',150" stroke="' + (n.c === '#e5484d' ? '#e5484d' : '#b3bfd0') +
+      '" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>';
+  });
   nodes.forEach(function (n) {
     s += '<g style="cursor:pointer"><rect x="' + n.x + '" y="' + n.y + '" width="96" height="30" rx="8" fill="#fff" stroke="' + n.c + '" stroke-width="1.6"/>' +
       '<circle cx="' + (n.x + 14) + '" cy="' + (n.y + 15) + '" r="4" fill="' + n.c + '"/>' +
       '<text x="' + (n.x + 26) + '" y="' + (n.y + 19) + '" font-size="12" fill="#2c3a55">' + n.n + '</text></g>';
   });
-  s += '<text x="20" y="196" font-size="11" fill="#8c9ab1">实线：主流程　虚线：异常流转（驳回 / 挂起 / 打回）</text></svg>';
+  s += '<text x="20" y="196" font-size="11" fill="#8c9ab1">实线：主流程　虚线：异常流转（驳回 / 挂起 / 阻塞 / 重开）· 状态、颜色与流转规则均可自定义</text></svg>';
   document.getElementById('flowGraph').innerHTML = '<div style="overflow-x:auto">' + s + '</div>';
-})();
+  document.getElementById('wfTitle').textContent = conf.n;
+}
+drawWF('req');
+document.getElementById('wfType').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  drawWF(b.dataset.t);
+});
+
+document.getElementById('wiTypeTable').innerHTML =
+  '<thead><tr><th>工作项类型</th><th>图标/颜色</th><th>颗粒度层级</th><th>允许的子类型</th><th style="width:26%">专属属性</th><th class="num">状态数</th><th>估算单位</th><th>可自助认领</th><th style="width:34px"></th></tr></thead><tbody>' +
+  [['业务主题 Epic', 'target', '#7c5cff', 'L1', '需求', '战略目标、负责人、季度', 5, '—', 0],
+   ['需求 Requirement', 'bulb', '#0ea5e9', 'L2', '用户故事、任务', '来源渠道、客户呼声、业务价值、紧迫性、阶段计划', 10, '人日', 0],
+   ['用户故事 Story', 'file', '#15a86b', 'L3', '任务、子任务', '验收标准、故事点、依赖', 9, '故事点', 1],
+   ['任务 Task', 'kanban', '#2b5cff', 'L3/L4', '子任务', '技能标签、预估工时', 7, '故事点/工时', 1],
+   ['缺陷 Bug', 'bug', '#e5484d', 'L3', '子任务', '严重程度、发现环境、根因分类、影响面', 8, '工时', 1],
+   ['技术债 Debt', 'database', '#7c5cff', 'L3', '任务', '债务类型、偿还收益、利息（影响面）', 7, '故事点', 1],
+   ['测试用例 Case', 'flask', '#0fb5ba', 'L4', '—', '用例类型、自动化标识、覆盖需求', 5, '—', 0]
+  ].map(function (t) {
+    return '<tr><td class="t-main">' + t[0] + '</td>' +
+      '<td><div class="row-flex"><span class="tico" style="background:' + t[2] + '">' + icon(t[1], 11) + '</span>' +
+      '<span class="mono fz11 muted">' + t[2] + '</span></div></td>' +
+      '<td><span class="tag brand">' + t[3] + '</span></td>' +
+      '<td class="dim fz12">' + t[4] + '</td>' +
+      '<td class="fz12 muted">' + t[5] + '</td>' +
+      '<td class="num">' + t[6] + '</td><td class="dim fz12">' + t[7] + '</td>' +
+      '<td>' + (t[8] ? '<span class="tag success">是</span>' : '<span class="muted">—</span>') + '</td>' +
+      '<td><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'编辑状态机\',icon:\'workflow\'},{label:\'配置专属属性\',icon:\'sliders\'},{label:\'调整允许的子类型\',icon:\'layers\'},{label:\'停用\',icon:\'x\',danger:true}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+
+(function () {
 document.getElementById('transTable').innerHTML =
   '<thead><tr><th>流转</th><th>准入条件</th><th>自动动作</th></tr></thead><tbody>' +
   [['待评审 → 评审中', '需求描述与验收标准非空', '通知评审人，创建评审任务'],
