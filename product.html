@@ -19,6 +19,7 @@
         <div class="page-head-actions">
           <button class="btn"><span data-icon="calendar"></span>2026 年度</button>
           <button class="btn" data-toast="路线图已导出为 PDF"><span data-icon="download"></span>导出路线图</button>
+          <button class="btn" data-modal="mNewProd"><span data-icon="box"></span>维护产品</button>
           <button class="btn btn-primary" data-modal="mNewVer"><span data-icon="plus"></span>规划版本</button>
         </div>
       </div>
@@ -33,6 +34,11 @@
       <!-- 产品全景 -->
       <div class="tab-pane active" data-pane="p1">
         <div class="grid g5 mb16" id="prodStats"></div>
+        <div class="flex items-center gap8 mb12">
+          <b class="fz13">产品清单</b><span class="tag brand">5 条产品线</span>
+          <span class="muted fz12">点击卡片进入产品详情（含模块、需求、版本、客户、指标与配置）</span>
+          <button class="btn btn-sm btn-primary ml-auto" data-modal="mNewProd"><span data-icon="plus" data-size="13"></span>新建产品</button>
+        </div>
         <div class="grid g3" id="prodCards"></div>
         <div class="card mt16">
           <div class="card-head"><div class="card-title"><span data-icon="layers"></span>产品能力矩阵</div>
@@ -144,6 +150,44 @@
   </div>
 </div>
 
+<div class="modal" id="mNewProd" style="width:680px">
+  <div class="modal-head"><span data-icon="box"></span><span class="modal-title">新建 / 维护产品</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>产品名称<span class="req">*</span></label><input class="input" placeholder="例如：统一支付网关"></div>
+      <div class="field"><label>简称 / 代号</label><input class="input" placeholder="PAY"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>生命周期阶段</label><select class="select"><option>探索期</option><option>建设期</option><option>成长期</option><option>成熟期</option><option>衰退/下线</option></select></div>
+      <div class="field"><label>主题色</label><input class="input mono" value="#2b5cff"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>产品负责人<span class="req">*</span></label><select class="select"><option>周雅（产品总监）</option><option>孙悦</option></select></div>
+      <div class="field"><label>研发负责人<span class="req">*</span></label><select class="select"><option>李思远</option><option>郑宇</option><option>王倩</option><option>陈立</option></select></div>
+    </div>
+    <div class="field"><label>产品定位（一句话）</label><textarea class="textarea" style="min-height:56px" placeholder="面向谁、解决什么问题、提供什么能力"></textarea></div>
+    <div class="field"><label>产品模块（用于需求归属、缺陷归类与漏测分析）</label>
+      <div class="flex flex-wrap gap6" id="npModTags"></div>
+      <div class="hint">模块是需求、缺陷、用例、代码仓库归类的公共维度，建议一开始就规划清楚</div></div>
+    <div class="field"><label>关联代码仓库</label>
+      <div class="flex flex-wrap gap6" id="npRepoTags"></div></div>
+    <div class="field"><label>北极星指标与质量红线</label>
+      <div class="form-row">
+        <input class="input" placeholder="北极星指标（如：月交易额）">
+        <input class="input" placeholder="质量红线（如：可用性 ≥ 99.99%）">
+      </div></div>
+    <div class="field"><label>可见范围</label>
+      <div class="flex flex-wrap gap8">
+        <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">研发中心全员</span></span>
+        <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">业务方门户</span></span>
+        <span class="flex items-center gap6"><span class="checkbox"></span><span class="fz12">客户门户</span></span>
+      </div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button>
+    <button class="btn" data-close data-toast="已保存为草稿">存草稿</button>
+    <button class="btn btn-primary" data-close data-toast="产品已创建，已生成默认模块与看板">创建产品</button></div>
+</div>
+
 <div class="modal" id="mNewVer">
   <div class="modal-head"><span data-icon="rocket"></span><span class="modal-title">规划新版本</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
   <div class="modal-body">
@@ -252,7 +296,7 @@ var PRODUCTS = [
     kpis: [['接入开发者', '2,148'], ['API 调用量', '4.2 亿/月'], ['文档满意度', '4.6']], health: 71, sla: '99.92%' }
 ];
 document.getElementById('prodCards').innerHTML = PRODUCTS.map(function (p) {
-  return '<div class="card hover-card pointer" onclick="UI.toast(\'进入产品：' + p.n + '\')">' +
+  return '<div class="card hover-card pointer" onclick="location.href=\'product-detail.html\'">' +
     '<div style="height:4px;border-radius:12px 12px 0 0;background:' + p.c + '"></div>' +
     '<div class="card-body">' +
     '<div class="flex items-center gap10">' +
@@ -493,6 +537,13 @@ function renderCustFb(n) {
   }).join('') + '<div class="tl-box mt8">共 <b>' + n + '</b> 家客户提出同类诉求，客户权重已计入需求优先级评分。上线后系统会自动回访这些客户。</div>'
     : '<div class="empty" style="padding:26px">' + icon('building', 32) + '<div class="t">该举措由内部规划驱动，暂无直接客户诉求</div></div>';
 }
+
+document.getElementById('npModTags').innerHTML = ['交易受理', '路由与渠道', '清结算', '前端体验']
+  .map(function (m) { return '<span class="tag brand">' + m + ' <span style="opacity:.6">×</span></span>'; }).join('') +
+  '<span class="tag line" style="cursor:pointer">+ 添加模块</span>';
+document.getElementById('npRepoTags').innerHTML = ['payment-gateway']
+  .map(function (m) { return '<span class="tag brand mono">' + m + ' <span style="opacity:.6">×</span></span>'; }).join('') +
+  '<span class="tag line" style="cursor:pointer">+ 从 GitHub 选择</span>';
 
 document.getElementById('syncTable').innerHTML =
   '<thead><tr><th style="width:34px"></th><th>路线图条目</th><th>产品线</th><th>状态</th><th>客户诉求</th><th>展示粒度</th></tr></thead><tbody>' +

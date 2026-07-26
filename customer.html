@@ -91,8 +91,10 @@
         <div class="card mb16">
           <div class="card-head"><div class="card-title"><span data-icon="grid"></span>需求 × 客户呼声矩阵</div>
             <div class="card-sub">同一需求被多少客户提出，直接决定「客户影响面」得分，用于价值评估</div>
-            <div class="card-head-actions"><div class="btn-group"><button class="active">按呼声排序</button><button>按客户等级加权</button></div></div></div>
+            <div class="card-head-actions">
+              <div class="btn-group" id="voiceMode"><button class="active" data-m="cnt">按呼声排序</button><button data-m="w">按客户等级加权</button></div></div></div>
           <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="voiceTable"></table></div></div>
+          <div class="card-foot"><div id="voiceNote"></div></div>
         </div>
         <div class="grid g2">
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="trendUp"></span>客户呼声 TOP 需求</div></div>
@@ -270,30 +272,68 @@ document.getElementById('custLog').innerHTML = [
 
 /* 呼声矩阵 */
 var VOICE = [
-  ['REQ-2036', '商户后台大额账单异步导出', 8, ['战略', 'KA', 'KA', '普通'], 92, '评审中', 'warning'],
-  ['REQ-2019', '门店维度分账能力', 6, ['KA', 'KA', '普通'], 74, '待排期', 'purple'],
-  ['REQ-2037', '开放平台 API 限流策略可视化配置', 5, ['战略', 'KA'], 68, '待排期', 'purple'],
-  ['REQ-2035', '交易对账文件自动核销', 5, ['战略', 'KA', '普通'], 71, '开发中', 'brand'],
-  ['REQ-2042', '批量退款进度提示', 4, ['KA', '普通'], 52, '待评审', ''],
-  ['REQ-2043', '账单导出支持 PDF 格式', 3, ['普通', '普通'], 38, '待评审', ''],
-  ['REQ-2044', '交易数据开放查询接口', 3, ['普通', 'KA'], 56, '待评审', '']
+  ['REQ-2036', '商户后台大额账单异步导出', 8, ['战略', '战略', 'KA', 'KA', '普通', '普通', '普通', '普通'], 92, '评审中', 'warning'],
+  ['REQ-2019', '门店维度分账能力', 6, ['KA', 'KA', 'KA', '普通', '普通', '普通'], 74, '待排期', 'purple'],
+  ['REQ-2037', '开放平台 API 限流策略可视化配置', 5, ['战略', 'KA', 'KA', '普通', '普通'], 68, '待排期', 'purple'],
+  ['REQ-2035', '交易对账文件自动核销', 5, ['战略', '战略', 'KA', '普通', '普通'], 71, '开发中', 'brand'],
+  ['REQ-2042', '批量退款进度提示', 4, ['KA', '普通', '普通', '普通'], 52, '待评审', ''],
+  ['REQ-2043', '账单导出支持 PDF 格式', 3, ['普通', '普通', '普通'], 38, '待评审', ''],
+  ['REQ-2044', '交易数据开放查询接口', 3, ['KA', '普通', '普通'], 56, '待评审', '']
 ];
-document.getElementById('voiceTable').innerHTML =
-  '<thead><tr><th style="width:26%">需求</th><th class="num">客户呼声</th><th>客户构成</th><th>代表客户</th><th class="num">加权影响面</th>' +
-  '<th class="num">涉及交易额</th><th>状态</th><th style="width:120px">价值得分</th></tr></thead><tbody>' +
-  VOICE.map(function (v) {
-    var names = ['华南连锁商超集团', '云上餐饮连锁', '星辰出行科技', '悦享连锁酒店', '优鲜生活超市', '万联便利'];
-    return '<tr onclick="location.href=\'requirement-detail.html\'">' +
-      '<td><div><div class="t-main">' + v[1] + '</div><div class="id-link">' + v[0] + '</div></div></td>' +
-      '<td class="num"><b style="font-size:15px;color:var(--brand-600)">' + v[2] + '</b> <span class="muted fz11">家</span></td>' +
-      '<td>' + v[3].map(function (l) { return '<span class="tag ' + LVTAG[l] + '" style="height:17px">' + l + '</span> '; }).join('') + '</td>' +
-      '<td class="dim fz12">' + names.slice(0, Math.min(2, v[2])).join('、') + (v[2] > 2 ? ' 等' : '') + '</td>' +
-      '<td class="num">' + (v[2] * 12 + 8) + '</td>' +
-      '<td class="num dim">¥ ' + (v[2] * 8.4).toFixed(1) + ' 亿</td>' +
-      '<td><span class="tag ' + v[6] + '">' + v[5] + '</span></td>' +
-      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(v[4], v[4] >= 70 ? 'green' : '', 'thin') + '</div><b class="fz11">' + v[4] + '</b></div></td></tr>';
-  }).join('') + '</tbody>';
-Charts.hbar('#voiceBar', { unit: ' 家客户', data: VOICE.slice(0, 6).map(function (v) { return { name: v[0] + ' ' + v[1].slice(0, 10), value: v[2] }; }) });
+var LVW = { '战略': 3, 'KA': 2, '普通': 1 };
+var voiceMode = 'cnt';
+function weightedVoice(v) {
+  return v[3].reduce(function (a, l) { return a + (LVW[l] || 1); }, 0);
+}
+function renderVoice() {
+  var rows = VOICE.slice().sort(function (a, b) {
+    return voiceMode === 'cnt' ? b[2] - a[2] : weightedVoice(b) - weightedVoice(a);
+  });
+  var baseOrder = VOICE.slice().sort(function (a, b) { return b[2] - a[2]; }).map(function (v) { return v[0]; });
+  var names = ['华南连锁商超集团', '云上餐饮连锁', '星辰出行科技', '悦享连锁酒店', '优鲜生活超市', '万联便利'];
+  document.getElementById('voiceTable').innerHTML =
+    '<thead><tr><th style="width:24%">需求</th><th class="num">客户呼声</th><th>客户构成</th>' +
+    (voiceMode === 'w' ? '<th class="num">加权呼声<div class="muted fz11">战略×3 KA×2 普通×1</div></th><th>排名变化</th>' : '<th>代表客户</th>') +
+    '<th class="num">加权影响面</th><th class="num">涉及交易额</th><th>状态</th><th style="width:110px">价值得分</th></tr></thead><tbody>' +
+    rows.map(function (v, i) {
+      var wv = weightedVoice(v);
+      var move = baseOrder.indexOf(v[0]) - i;
+      return '<tr onclick="location.href=\'requirement-detail.html\'">' +
+        '<td><div><div class="t-main">' + v[1] + '</div><div class="id-link">' + v[0] + '</div></div></td>' +
+        '<td class="num"><b style="font-size:15px;color:' + (voiceMode === 'cnt' ? 'var(--brand-600)' : 'var(--ink-500)') + '">' + v[2] + '</b> <span class="muted fz11">家</span></td>' +
+        '<td>' + v[3].slice(0, 5).map(function (l) { return '<span class="tag ' + LVTAG[l] + '" style="height:17px">' + l + '</span> '; }).join('') +
+        (v[3].length > 5 ? '<span class="muted fz11">+' + (v[3].length - 5) + '</span>' : '') + '</td>' +
+        (voiceMode === 'w'
+          ? '<td class="num"><b style="font-size:16px;color:var(--brand-600)">' + wv + '</b>' +
+            '<div class="muted fz11">' + ['战略', 'KA', '普通'].map(function (l) {
+              var c = v[3].filter(function (x) { return x === l; }).length;
+              return c ? c + '×' + LVW[l] : '';
+            }).filter(Boolean).join(' + ') + '</div></td>' +
+            '<td>' + (move === 0 ? '<span class="muted fz11">—</span>' :
+              '<span class="trend ' + (move > 0 ? 'up' : 'down') + '">' + icon(move > 0 ? 'arrowUp' : 'arrowDown', 11) + Math.abs(move) + '</span>') + '</td>'
+          : '<td class="dim fz12">' + names.slice(0, Math.min(2, v[2])).join('、') + (v[2] > 2 ? ' 等' : '') + '</td>') +
+        '<td class="num">' + (voiceMode === 'w' ? wv * 8 + 8 : v[2] * 12 + 8) + '</td>' +
+        '<td class="num dim">¥ ' + (v[2] * 8.4).toFixed(1) + ' 亿</td>' +
+        '<td><span class="tag ' + v[6] + '">' + v[5] + '</span></td>' +
+        '<td><div class="row-flex"><div style="flex:1">' + UI.bar(v[4], v[4] >= 70 ? 'green' : '', 'thin') + '</div><b class="fz11">' + v[4] + '</b></div></td></tr>';
+    }).join('') + '</tbody>';
+  Charts.hbar('#voiceBar', {
+    unit: voiceMode === 'cnt' ? ' 家客户' : ' 加权分',
+    data: rows.slice(0, 6).map(function (v) {
+      return { name: v[0] + ' ' + v[1].slice(0, 10), value: voiceMode === 'cnt' ? v[2] : weightedVoice(v) };
+    })
+  });
+  document.getElementById('voiceNote').innerHTML = voiceMode === 'w'
+    ? '<div class="tl-box">加权口径：战略客户 ×3、KA ×2、普通 ×1。加权后 <b>REQ-2035 对账自动核销</b> 排名上升（2 家战略客户），<b>REQ-2019 门店分账</b> 排名下降（无战略客户）——这更接近真实的商业影响，建议评审会以加权口径为准。</div>'
+    : '<div class="tl-box">当前按提出客户数量排序，未考虑客户量级差异。切换到「按客户等级加权」可看到战略客户诉求被放大后的真实优先顺序。</div>';
+}
+renderVoice();
+document.getElementById('voiceMode').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  voiceMode = b.dataset.m; renderVoice();
+  UI.toast(b.dataset.m === 'w' ? '已按客户等级加权（战略×3 / KA×2 / 普通×1）重新排序' : '已按客户数量排序');
+};
+
 Charts.donut('#srcDonut', { size: 150, thickness: 19, center: { value: '128', label: '需求总量' }, data: [
   { name: '工单转化', value: 32, color: '#2b5cff' }, { name: '客户反馈', value: 35, color: '#0fb5ba' },
   { name: '产品规划', value: 38, color: '#7c5cff' }, { name: '监管合规', value: 15, color: '#e5484d' },

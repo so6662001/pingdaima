@@ -116,7 +116,8 @@
       <!-- 看板 -->
       <div class="tab-pane" data-pane="k2">
         <div class="toolbar">
-          <div class="btn-group"><button class="active">按状态</button><button>按渠道</button><button>按客户等级</button></div>
+          <div class="btn-group" id="tkGroup"><button class="active" data-g="st">按状态</button>
+            <button data-g="ch">按渠道</button><button data-g="lv">按客户等级</button></div>
           <div class="filter"><span data-icon="flag"></span>优先级<span data-icon="down"></span></div>
           <span class="ml-auto fz12 muted">红色左边条表示 SLA 即将超时或已超时</span>
         </div>
@@ -429,25 +430,59 @@ document.getElementById('tkTable').innerHTML =
       '<td onclick="event.stopPropagation()"><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'转为需求\',icon:\'bulb\'},{label:\'转派\',icon:\'user\'},{label:\'升级优先级\',icon:\'arrowUp\'},{label:\'关联缺陷\',icon:\'bug\'},{label:\'关闭工单\',icon:\'x\'}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
   }).join('') + '</tbody>';
 
-/* 看板 */
+/* 处理看板（按状态 / 渠道 / 客户等级分组） */
 var TCOLS = [{ n: '新建待受理', c: '#b3bfd0' }, { n: '处理中', c: '#2b5cff' }, { n: '待客户确认', c: '#f59e0b' },
   { n: '待转需求', c: '#7c5cff' }, { n: '待验证', c: '#0fb5ba' }, { n: '已解决', c: '#15a86b' }];
-document.getElementById('tkBoard').innerHTML = TCOLS.map(function (col) {
-  var items = TICKETS.filter(function (k) { return k.st === col.n || (col.n === '新建待受理' && k.st === '新建'); });
-  if (col.n === '已解决') items = TICKETS.filter(function (k) { return k.st === '已解决' || k.st === '已转需求'; });
-  return '<div class="board-col"><div class="board-col-head"><span class="dot-status" style="background:' + col.c + '"></span>' +
-    '<span class="name">' + col.n + '</span><span class="cnt">' + items.length + '</span><span class="add">' + icon('plus', 14) + '</span></div>' +
-    '<div class="board-col-body">' + (items.length ? items.map(function (k) {
-      return '<div class="kcard" onclick="openTk(\'' + k.id + '\')" style="border-left:3px solid ' + (k.risk === 2 ? 'var(--danger)' : k.risk === 1 ? 'var(--warning)' : 'transparent') + '">' +
-        '<div class="kcard-top"><span class="id-link">' + k.id + '</span>' + UI.priority(k.pri) +
-        '<span class="ml-auto tag ' + LVTAG[k.lv] + '" style="height:17px">' + k.lv + '</span></div>' +
-        '<div class="kcard-title">' + k.t + '</div>' +
-        '<div class="kcard-meta"><span class="tag line">' + k.c.slice(0, 6) + '</span>' +
-        '<span class="tag ' + (k.risk ? 'danger' : '') + '" style="height:17px">' + k.sla + '</span>' +
-        '<span class="spacer"></span>' + UI.avatar(k.own, 'sm') + '</div></div>';
-    }).join('') : '<div class="empty" style="padding:22px">' + icon('inbox', 28) + '<div class="t fz12">暂无工单</div></div>') + '</div></div>';
-}).join('');
-UI.initKanban();
+var CHC = { '客服热线': '#2b5cff', '企业微信': '#15a86b', '客户经理': '#7c5cff', '开放平台': '#f59e0b', '邮件': '#0fb5ba', '官网客服': '#b3bfd0' };
+var LVC2 = { '战略': '#e5484d', 'KA': '#7c5cff', '普通': '#b3bfd0' };
+var tkGroup = 'st';
+function tkCard(k, g) {
+  return '<div class="kcard" onclick="openTk(\'' + k.id + '\')" style="border-left:3px solid ' +
+    (k.risk === 2 ? 'var(--danger)' : k.risk === 1 ? 'var(--warning)' : 'transparent') + '">' +
+    '<div class="kcard-top"><span class="id-link">' + k.id + '</span>' + UI.priority(k.pri) +
+    '<span class="ml-auto tag ' + LVTAG[k.lv] + '" style="height:17px">' + k.lv + '</span></div>' +
+    '<div class="kcard-title">' + k.t + '</div>' +
+    '<div class="kcard-meta">' +
+    (g === 'st' ? '<span class="tag line" style="height:17px">' + k.c.slice(0, 6) + '</span>'
+      : g === 'ch' ? '<span class="tag ' + TSTAG[k.st] + '" style="height:17px">' + k.st + '</span>'
+        : '<span class="tag line" style="height:17px">' + icon(CH_ICON[k.ch] || 'share', 10) + k.ch + '</span>') +
+    (g === 'lv' ? '<span class="tag ' + TSTAG[k.st] + '" style="height:17px">' + k.st + '</span>' : '') +
+    '<span class="tag ' + (k.risk ? 'danger' : '') + '" style="height:17px">' + k.sla + '</span>' +
+    '<span class="spacer"></span>' + UI.avatar(k.own, 'sm') + '</div></div>';
+}
+function renderTkBoard() {
+  var g = tkGroup, cols;
+  if (g === 'st') cols = TCOLS.map(function (c) { return { k: c.n, n: c.n, c: c.c }; });
+  else if (g === 'ch') cols = ['客服热线', '企业微信', '客户经理', '开放平台', '邮件', '官网客服']
+    .map(function (c) { return { k: c, n: c, c: CHC[c] }; });
+  else cols = ['战略', 'KA', '普通'].map(function (c) { return { k: c, n: c + '客户', c: LVC2[c] }; });
+  document.getElementById('tkBoard').innerHTML = cols.map(function (col) {
+    var items;
+    if (g === 'st') {
+      items = TICKETS.filter(function (k) { return k.st === col.k || (col.k === '新建待受理' && k.st === '新建'); });
+      if (col.k === '已解决') items = TICKETS.filter(function (k) { return k.st === '已解决' || k.st === '已转需求'; });
+    } else if (g === 'ch') items = TICKETS.filter(function (k) { return k.ch === col.k; });
+    else items = TICKETS.filter(function (k) { return k.lv === col.k; });
+    var risky = items.filter(function (k) { return k.risk; }).length;
+    return '<div class="board-col"><div class="board-col-head"><span class="dot-status" style="background:' + col.c + '"></span>' +
+      '<span class="name">' + col.n + '</span><span class="cnt">' + items.length + '</span>' +
+      (risky ? '<span class="tag danger" style="height:16px;font-size:10px">' + risky + ' 风险</span>' : '') +
+      '<span class="add">' + icon('plus', 14) + '</span></div>' +
+      (g === 'lv' ? '<div style="padding:0 12px 6px" class="muted fz11">SLA 系数 ' + ({ '战略': '×0.5（折半）', 'KA': '×0.75', '普通': '×1.0' }[col.k]) + '</div>' : '') +
+      (g === 'ch' ? '<div style="padding:0 12px 6px" class="muted fz11">本月 ' + ({ '客服热线': 108, '企业微信': 96, '客户经理': 74, '开放平台': 52, '邮件': 34, '官网客服': 22 }[col.k]) + ' 条</div>' : '') +
+      '<div class="board-col-body">' + (items.length ? items.map(function (k) { return tkCard(k, g); }).join('')
+        : '<div style="border:1.5px dashed var(--ink-200);border-radius:9px;padding:14px;text-align:center;color:var(--ink-300);font-size:11.5px">暂无工单</div>') +
+      '</div></div>';
+  }).join('');
+  UI.initKanban(document.getElementById('tkBoard'));
+  UI.hydrateIcons(document.getElementById('tkBoard'));
+}
+renderTkBoard();
+document.getElementById('tkGroup').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  tkGroup = b.dataset.g; renderTkBoard();
+  UI.toast('已按「' + b.textContent + '」重新分组');
+};
 
 /* SLA */
 Charts.bar('#slaTrend', {

@@ -77,7 +77,8 @@
       <!-- 需求看板 -->
       <div class="tab-pane" data-pane="board">
         <div class="toolbar">
-          <div class="btn-group"><button class="active">按状态</button><button>按产品</button><button>按负责人</button><button>按优先级</button></div>
+          <div class="btn-group" id="bdGroup"><button class="active" data-g="st">按状态</button><button data-g="p">按产品</button>
+            <button data-g="own">按负责人</button><button data-g="pri">按优先级</button></div>
           <div class="filter"><span data-icon="rocket"></span>版本：<b>V3.0</b><span data-icon="down"></span></div>
           <div class="filter"><span data-icon="users"></span>团队<span data-icon="down"></span></div>
           <span class="fz12 muted ml-auto">拖拽卡片可变更需求状态（支持流转规则校验）</span>
@@ -115,7 +116,8 @@
       <!-- 阶段排期 -->
       <div class="tab-pane" data-pane="sched">
         <div class="toolbar">
-          <div class="btn-group"><button class="active">按需求</button><button>按负责人</button><button>按版本</button></div>
+          <div class="btn-group" id="schGroup"><button class="active" data-g="req">按需求</button>
+            <button data-g="own">按负责人</button><button data-g="ver">按版本</button></div>
           <div class="filter on"><span data-icon="calendar"></span>2026-07 ~ 2026-10<span data-icon="down"></span></div>
           <div class="filter"><span data-icon="warn"></span>仅看延期风险 <b>3</b></div>
           <div class="ml-auto legend">
@@ -235,13 +237,12 @@
                     <option>自定义表达式</option>
                   </select></div>
                 <div class="field"><label>公式</label>
-                  <div class="terminal" style="max-height:none;font-size:11px">
-                    <div class="cmd"># 优先级得分（越高越先做）</div>
-                    <div><span class="ok">加权价值</span> = Σ( 因素分 × 权重 )</div>
-                    <div><span class="ok">工作量系数</span> = 1 + 预估人日 ÷ 20</div>
-                    <div><span class="warn">优先级得分</span> = 加权价值 × 2 ÷ 工作量系数</div>
-                    <div class="dim"># 合规类需求命中强制规则，直接置顶</div>
-                  </div></div>
+                  <div class="terminal" id="algoFormula" style="max-height:none;font-size:11px"></div></div>
+                <div class="field" id="exprBox" style="display:none"><label>自定义表达式（可编辑）</label>
+                  <textarea class="textarea mono" style="min-height:70px;font-size:11.5px">score = (value*0.35 + cust*0.25 + urg*0.2 + risk*0.2) * (1 + custCount/20) / (1 + effort/25)</textarea>
+                  <div class="flex gap6 mt8"><button class="btn btn-sm" data-toast="表达式校验通过，已在 14 条需求上试算">校验表达式</button>
+                    <button class="btn btn-sm" data-toast="已查看变量说明">变量说明</button></div>
+                  <div class="hint">可用变量：value / cust / goal / urg / comp / risk / effort / custCount；支持 + - * / ( ) 与 min max ln</div></div>
                 <div class="field"><label>强制规则（优先于算法）</label>
                   <div id="forceRules"></div></div>
               </div></div>
@@ -408,6 +409,22 @@
   <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn" data-close data-toast="已保存">仅保存</button><button class="btn btn-primary" data-close data-toast="已富化完成并标记为就绪，可进入评审">采纳并标记就绪</button></div>
 </div>
 
+<div class="modal" id="mFlowCfg" style="width:760px">
+  <div class="modal-head"><span data-icon="workflow"></span><span class="modal-title">评审流程配置</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>适用范围</label>
+      <div class="pills"><span class="pill active">P0 / P1 需求（完整评审）</span><span class="pill">P2 及以下（产品线自决）</span><span class="pill">合规类（加急通道）</span></div></div>
+    <div class="field"><label>评审节点</label>
+      <div class="table-wrap"><table class="tbl" id="cfgFlowTable"></table></div>
+      <button class="btn btn-sm mt8"><span data-icon="plus" data-size="13"></span>添加节点</button></div>
+    <div class="field"><label>通过规则</label>
+      <div id="passRules"></div></div>
+    <div class="field"><label>自动跳过条件</label>
+      <div id="skipRules"></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="评审流程配置已保存并对新需求生效">保存流程</button></div>
+</div>
+
 <script src="assets/js/icons.js"></script>
 <script src="assets/js/ui.js"></script>
 <script src="assets/js/charts.js"></script>
@@ -490,28 +507,69 @@ document.querySelector('#reqTable').addEventListener('click', function (e) {
   }
 });
 
-/* ---------- 看板 ---------- */
+/* ---------- 需求看板（支持按状态/产品/负责人/优先级分组） ---------- */
 var COLS = ['待评审', '评审中', '待排期', '开发中', '测试中', '待发布', '已发布'];
 var COLC = { '待评审': '#b3bfd0', '评审中': '#f59e0b', '待排期': '#7c5cff', '开发中': '#2b5cff', '测试中': '#0fb5ba', '待发布': '#0ea5e9', '已发布': '#15a86b' };
-document.getElementById('reqBoard').innerHTML = COLS.map(function (c) {
-  var items = REQS.filter(function (r) { return r.st === c; });
-  return '<div class="board-col"><div class="board-col-head"><span class="dot-status ' + STC[c] + '"></span>' +
-    '<span class="name">' + c + '</span><span class="cnt">' + items.length + '</span>' +
-    '<span class="add">' + icon('plus', 14) + '</span></div>' +
-    '<div class="board-col-body">' + items.map(function (r) {
-      return '<div class="kcard" onclick="openReq(\'' + r.id + '\')">' +
-        '<div class="kcard-strip" style="background:' + COLC[c] + '"></div>' +
-        '<div class="kcard-top"><span class="id-link">' + r.id + '</span>' + UI.priority(r.pri) +
-        '<span class="ml-auto tag" style="height:17px">' + r.ver + '</span></div>' +
-        '<div class="kcard-title">' + r.t + '</div>' +
-        (r.pg ? '<div class="kcard-bar"><i style="width:' + r.pg + '%"></i></div>' : '') +
-        '<div class="kcard-meta"><span class="tag ' + CHTAG[r.ch] + '" style="height:17px">' + icon(CHICON[r.ch], 10) + r.ch + '</span>' +
-        (r.cust ? '<span class="tag" style="height:17px">' + icon('building', 10) + r.cust + ' 家</span>' : '') +
-        '<span class="muted fz11 spacer">' + r.eff + ' 人日</span>' +
-        (r.own === '—' ? '<span class="avatar sm" style="background:var(--ink-200);color:var(--ink-500)">?</span>' : UI.avatar(r.own, 'sm')) + '</div></div>';
-    }).join('') + '</div></div>';
-}).join('');
-UI.initKanban();
+var PRODC = { '统一支付网关': '#2b5cff', '智能风控平台': '#e5484d', '商户运营中心': '#15a86b', '数据资产中台': '#7c5cff', '开放能力平台': '#f59e0b' };
+var PRIC = { P0: '#e5484d', P1: '#f59e0b', P2: '#2b5cff', P3: '#b3bfd0' };
+var bdGroup = 'st';
+function reqCard(r, groupBy) {
+  return '<div class="kcard" onclick="openReq(\'' + r.id + '\')">' +
+    '<div class="kcard-strip" style="background:' +
+    (groupBy === 'st' ? COLC[r.st] : groupBy === 'p' ? (PRODC[r.p] || '#b3bfd0') : groupBy === 'pri' ? PRIC[r.pri] : COLC[r.st]) + '"></div>' +
+    '<div class="kcard-top"><span class="id-link">' + r.id + '</span>' + UI.priority(r.pri) +
+    '<span class="ml-auto tag" style="height:17px">' + r.ver + '</span></div>' +
+    '<div class="kcard-title">' + r.t + '</div>' +
+    (r.pg ? '<div class="kcard-bar"><i style="width:' + r.pg + '%"></i></div>' : '') +
+    '<div class="kcard-meta">' +
+    (groupBy === 'st' ? '<span class="tag ' + CHTAG[r.ch] + '" style="height:17px">' + icon(CHICON[r.ch], 10) + r.ch + '</span>'
+      : '<span class="tag ' + STAG[r.st] + '" style="height:17px"><span class="dot-status ' + STC[r.st] + '"></span>' + r.st + '</span>') +
+    (groupBy === 'p' || groupBy === 'pri' || groupBy === 'own' ? '' : (r.cust ? '<span class="tag" style="height:17px">' + icon('building', 10) + r.cust + ' 家</span>' : '')) +
+    (groupBy === 'own' ? '<span class="tag line" style="height:17px">' + r.p + '</span>' : '') +
+    (groupBy === 'pri' ? '<span class="tag line" style="height:17px">价值 ' + r.val + '</span>' : '') +
+    '<span class="muted fz11 spacer">' + r.eff + ' 人日</span>' +
+    (groupBy === 'own' ? '' : (r.own === '—' ? '<span class="avatar sm" style="background:var(--ink-200);color:var(--ink-500)">?</span>' : UI.avatar(r.own, 'sm'))) +
+    '</div></div>';
+}
+function renderReqBoard() {
+  var g = bdGroup, cols;
+  if (g === 'st') cols = COLS.map(function (c) { return { k: c, n: c, c: COLC[c], sub: '' }; });
+  else if (g === 'p') cols = ['统一支付网关', '智能风控平台', '商户运营中心', '数据资产中台', '开放能力平台']
+    .map(function (c) { return { k: c, n: c, c: PRODC[c], sub: '产品线' }; });
+  else if (g === 'pri') cols = ['P0', 'P1', 'P2', 'P3']
+    .map(function (c) { return { k: c, n: c + ' ' + ({ P0: '最高', P1: '高', P2: '中', P3: '低' }[c]), c: PRIC[c], sub: '优先级' }; });
+  else {
+    var owners = [];
+    REQS.forEach(function (r) { var o = r.own === '—' ? '未分配' : r.own; if (owners.indexOf(o) < 0) owners.push(o); });
+    owners.sort(function (a, b) { return a === '未分配' ? 1 : b === '未分配' ? -1 : 0; });
+    cols = owners.map(function (c) { return { k: c, n: c, c: c === '未分配' ? '#b3bfd0' : '#2b5cff', sub: '负责人' }; });
+  }
+  var field = { st: 'st', p: 'p', pri: 'pri', own: 'own' }[g];
+  document.getElementById('reqBoard').innerHTML = cols.map(function (col) {
+    var items = REQS.filter(function (r) {
+      var v = field === 'own' ? (r.own === '—' ? '未分配' : r.own) : r[field];
+      return v === col.k;
+    });
+    var pts = items.reduce(function (a, b) { return a + b.eff; }, 0);
+    return '<div class="board-col"><div class="board-col-head">' +
+      (g === 'own' && col.k !== '未分配' ? UI.avatar(col.k, 'sm') : '<span class="dot-status" style="background:' + col.c + '"></span>') +
+      '<span class="name">' + col.n + '</span><span class="cnt">' + items.length + '</span>' +
+      '<span class="add">' + icon('plus', 14) + '</span></div>' +
+      '<div style="padding:0 12px 6px" class="muted fz11">' + pts + ' 人日' + (col.sub ? ' · ' + col.sub : '') + '</div>' +
+      '<div class="board-col-body">' + (items.length ? items.map(function (r) { return reqCard(r, g); }).join('')
+        : '<div class="kb-empty" style="border:1.5px dashed var(--ink-200);border-radius:9px;padding:14px;text-align:center;color:var(--ink-300);font-size:11.5px">拖入需求</div>') +
+      '</div></div>';
+  }).join('');
+  UI.initKanban(document.getElementById('reqBoard'));
+  UI.hydrateIcons(document.getElementById('reqBoard'));
+}
+renderReqBoard();
+document.getElementById('bdGroup').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  bdGroup = b.dataset.g;
+  renderReqBoard();
+  UI.toast('已按「' + b.textContent + '」重新分组');
+};
 
 /* ---------- 需求分解树 ---------- */
 var TREE = [
@@ -666,6 +724,83 @@ document.getElementById('enrichList').innerHTML = [
 }).join('');
 
 /* ================= 优先级模型 ================= */
+var ALGOS = {
+  weighted: {
+    n: '加权价值 ÷ 工作量系数（默认）',
+    formula: ['<div class="cmd"># 优先级得分（越高越先做）</div>',
+      '<div><span class="ok">加权价值</span> = Σ( 因素分 × 权重 )</div>',
+      '<div><span class="ok">工作量系数</span> = 1 + 预估人日 ÷ 20</div>',
+      '<div><span class="warn">优先级得分</span> = 加权价值 × 2 ÷ 工作量系数</div>',
+      '<div class="dim"># 合规类需求命中强制规则，直接置顶</div>'],
+    factors: [
+      { k: 'value', n: '业务价值', w: 30, src: '人工打分 + 收益量化（自动校验）', desc: '解决问题的重要程度与预期收益', dir: '正向' },
+      { k: 'cust', n: '客户权重', w: 20, src: '自动：客户呼声数 × 客户等级系数', desc: '多少客户提出、客户量级如何', dir: '正向' },
+      { k: 'goal', n: '团队目标支持度', w: 15, src: '人工：与季度 OKR 对齐度', desc: '是否支撑当季战略目标', dir: '正向' },
+      { k: 'urg', n: '紧迫性', w: 15, src: '自动：承诺日期/合规窗口 + 人工修正', desc: '不做的代价随时间增长的速度', dir: '正向' },
+      { k: 'comp', n: '竞品对标', w: 10, src: '人工：竞品覆盖度与差距', desc: '竞品已有而我们缺失的能力', dir: '正向' },
+      { k: 'risk', n: '风险与合规', w: 10, src: '规则：合规类自动置 100', desc: '合规、安全、资损风险', dir: '正向' },
+      { k: 'effort', n: '工作量（成本）', w: 0, src: '自动：预估人日（研发评估）', desc: '作为除数，越大得分越低', dir: '反向' }
+    ]
+  },
+  rice: {
+    n: 'RICE（Reach × Impact × Confidence ÷ Effort）',
+    formula: ['<div class="cmd"># RICE 经典模型（Intercom）</div>',
+      '<div><span class="ok">Reach</span> 触达用户/商户数（季度）</div>',
+      '<div><span class="ok">Impact</span> 单用户影响（3=巨大 / 2=高 / 1=中 / 0.5=低 / 0.25=极小）</div>',
+      '<div><span class="ok">Confidence</span> 信心度（100% / 80% / 50%）</div>',
+      '<div><span class="ok">Effort</span> 人月（人日 ÷ 20）</div>',
+      '<div><span class="warn">RICE 得分</span> = Reach × Impact × Confidence ÷ Effort</div>',
+      '<div class="dim"># 适合 C 端/高频场景；B 端客户量级差异大时建议改用加权价值</div>'],
+    factors: [
+      { k: 'value', n: 'Impact 影响程度', w: 40, src: '人工：3/2/1/0.5/0.25 五档', desc: '单个用户或商户获得的价值', dir: '正向' },
+      { k: 'cust', n: 'Reach 触达范围', w: 40, src: '自动：涉及商户数 / 交易占比', desc: '本季度会被影响的用户规模', dir: '正向' },
+      { k: 'conf', n: 'Confidence 信心度', w: 20, src: '人工：有数据支撑 100% / 有判断 80% / 拍脑袋 50%', desc: '对 Reach 与 Impact 估计的信心', dir: '正向' },
+      { k: 'effort', n: 'Effort 投入', w: 0, src: '自动：预估人日 ÷ 20 = 人月', desc: '作为除数', dir: '反向' }
+    ]
+  },
+  wsjf: {
+    n: 'WSJF（延迟成本 ÷ 工作量，SAFe）',
+    formula: ['<div class="cmd"># WSJF = Cost of Delay ÷ Job Size</div>',
+      '<div><span class="ok">延迟成本 CoD</span> = 用户/业务价值 + 时间紧迫性 + 风险降低与机会赋能</div>',
+      '<div><span class="warn">WSJF</span> = 延迟成本 ÷ 工作量</div>',
+      '<div class="dim"># 三项均用斐波那契相对打分（1/2/3/5/8/13/20）</div>',
+      '<div class="dim"># 适合多团队大规模敏捷，强调"先做延迟成本最高的"</div>'],
+    factors: [
+      { k: 'value', n: '用户/业务价值', w: 34, src: '人工：相对打分（1~20）', desc: '做了能带来多少业务收益', dir: '正向' },
+      { k: 'urg', n: '时间紧迫性', w: 33, src: '自动+人工：窗口期、承诺、合规时限', desc: '晚做会损失多少（时间敏感度）', dir: '正向' },
+      { k: 'risk', n: '风险降低/机会赋能', w: 33, src: '人工：相对打分', desc: '降低了什么风险、解锁了什么机会', dir: '正向' },
+      { k: 'effort', n: '工作量 Job Size', w: 0, src: '自动：研发预估人日', desc: '作为除数', dir: '反向' }
+    ]
+  },
+  sum: {
+    n: '纯加权求和（不除工作量）',
+    formula: ['<div class="cmd"># 只看价值，不考虑成本</div>',
+      '<div><span class="warn">优先级得分</span> = Σ( 因素分 × 权重 )</div>',
+      '<div class="dim"># 适合战略必达型需求排序（如合规专项），不适合日常排期</div>'],
+    factors: [
+      { k: 'value', n: '业务价值', w: 35, src: '人工打分 + 收益量化', desc: '预期收益', dir: '正向' },
+      { k: 'cust', n: '客户权重', w: 25, src: '自动：客户呼声 × 等级', desc: '客户影响面', dir: '正向' },
+      { k: 'goal', n: '团队目标支持度', w: 20, src: '人工：OKR 对齐度', desc: '战略契合', dir: '正向' },
+      { k: 'urg', n: '紧迫性', w: 10, src: '自动 + 人工', desc: '时间敏感度', dir: '正向' },
+      { k: 'risk', n: '风险与合规', w: 10, src: '规则', desc: '合规与资损风险', dir: '正向' }
+    ]
+  },
+  custom: {
+    n: '自定义表达式',
+    formula: ['<div class="cmd"># 可用变量：value / cust / goal / urg / comp / risk / effort / custCount</div>',
+      '<div><span class="warn">score</span> = (value*0.35 + cust*0.25 + urg*0.2 + risk*0.2) * (1 + custCount/20) / (1 + effort/25)</div>',
+      '<div class="ok"># 校验通过 · 已在 14 条需求上试算，无异常值</div>',
+      '<div class="dim"># 支持 + - * / ( ) 与 min/max/ln，保存前会自动做区间校验</div>'],
+    factors: [
+      { k: 'value', n: '业务价值 value', w: 35, src: '人工打分', desc: '表达式变量 value', dir: '正向' },
+      { k: 'cust', n: '客户权重 cust', w: 25, src: '自动计算', desc: '表达式变量 cust', dir: '正向' },
+      { k: 'urg', n: '紧迫性 urg', w: 20, src: '自动 + 人工', desc: '表达式变量 urg', dir: '正向' },
+      { k: 'risk', n: '风险合规 risk', w: 20, src: '规则', desc: '表达式变量 risk', dir: '正向' },
+      { k: 'effort', n: '工作量 effort', w: 0, src: '自动', desc: '表达式变量 effort（除数）', dir: '反向' }
+    ]
+  }
+};
+var curAlgo = 'weighted';
 var FACTORS = [
   { k: 'value', n: '业务价值', w: 30, src: '人工打分 + 收益量化（自动校验）', desc: '解决问题的重要程度与预期收益', dir: '正向' },
   { k: 'cust', n: '客户权重', w: 20, src: '自动：客户呼声数 × 客户等级系数', desc: '多少客户提出、客户量级如何', dir: '正向' },
@@ -682,15 +817,33 @@ function factorsOf(r) {
   var cust = Math.min(100, r.cust ? r.cust * 11 + (r.ch === '工单' ? 12 : 0) : (r.ch === '监管合规' ? 90 : 30));
   return { value: r.val, cust: cust, goal: goal, urg: r.urg, comp: comp, risk: risk, effort: r.eff };
 }
+function factorsOfExt(r) {
+  var f = factorsOf(r);
+  f.conf = r.type === '合规需求' ? 100 : r.cust >= 5 ? 90 : r.cust ? 80 : 60;
+  return f;
+}
 function computeScore(r) {
-  var f = factorsOf(r), sum = 0, wsum = 0;
+  var f = factorsOfExt(r), sum = 0, wsum = 0;
   FACTORS.forEach(function (x) {
     if (x.k === 'effort') return;
-    sum += f[x.k] * x.w; wsum += x.w;
+    sum += (f[x.k] || 0) * x.w; wsum += x.w;
   });
   var weighted = wsum ? sum / wsum : 0;
   var effortFactor = 1 + f.effort / 20;
-  return { f: f, weighted: +weighted.toFixed(1), score: +(weighted * 2 / effortFactor).toFixed(1), ef: +effortFactor.toFixed(2) };
+  var score;
+  if (curAlgo === 'sum') { score = weighted; effortFactor = 1; }
+  else if (curAlgo === 'rice') {
+    var reach = f.cust, impact = f.value / 100 * 3, conf = f.conf / 100, months = f.effort / 20;
+    score = reach * impact * conf / Math.max(months, 0.2) / 10;
+  } else if (curAlgo === 'wsjf') {
+    var cod = (f.value + f.urg + f.risk) / 3;
+    score = cod / Math.max(f.effort / 8, 0.5);
+  } else if (curAlgo === 'custom') {
+    score = (f.value * 0.35 + f.cust * 0.25 + f.urg * 0.2 + f.risk * 0.2) * (1 + (r.cust || 0) / 20) / (1 + f.effort / 25);
+  } else {
+    score = weighted * 2 / effortFactor;
+  }
+  return { f: f, weighted: +weighted.toFixed(1), score: +score.toFixed(1), ef: +effortFactor.toFixed(2) };
 }
 var baseOrder = REQS.slice().sort(function (a, b) { return computeScore(b).score - computeScore(a).score; }).map(function (r) { return r.id; });
 
@@ -742,11 +895,25 @@ function renderScores() {
           '<span class="trend ' + (move > 0 ? 'up' : 'down') + '">' + icon(move > 0 ? 'arrowUp' : 'arrowDown', 11) + Math.abs(move) + '</span>') + '</td></tr>';
     }).join('') + '</tbody>';
 }
+function applyAlgo(key) {
+  curAlgo = key;
+  FACTORS = JSON.parse(JSON.stringify(ALGOS[key].factors));
+  document.getElementById('algoFormula').innerHTML = ALGOS[key].formula.join('');
+  document.getElementById('rankChanged').textContent = '已切换算法：' + ALGOS[key].n + '（排序为预览，未发布）';
+  document.getElementById('rankChanged').className = 'tag warning';
+  renderFactors(); renderScores();
+}
 renderFactors();
 renderScores();
+document.getElementById('algoFormula').innerHTML = ALGOS.weighted.formula.join('');
+document.getElementById('algoSel').onchange = function () {
+  var map = ['weighted', 'rice', 'wsjf', 'sum', 'custom'];
+  applyAlgo(map[this.selectedIndex]);
+  document.getElementById('exprBox').style.display = this.selectedIndex === 4 ? '' : 'none';
+};
 document.getElementById('btnResetW').onclick = function () {
-  [30, 20, 15, 15, 10, 10, 0].forEach(function (w, i) { FACTORS[i].w = w; });
-  document.getElementById('rankChanged').textContent = '已恢复默认权重（v3.2）';
+  FACTORS = JSON.parse(JSON.stringify(ALGOS[curAlgo].factors));
+  document.getElementById('rankChanged').textContent = '已恢复该算法的默认权重';
   document.getElementById('rankChanged').className = 'tag warning';
   renderFactors(); renderScores();
 };
@@ -833,15 +1000,18 @@ function dayIdx(md) { // 以 06-01 为 0，覆盖 6~11 月
   return base[m] + d - 1;
 }
 var TOTAL_DAYS = 183; // 6/1 ~ 11/30
-(function () {
+var schGroup = 'req';
+function renderSchedGantt() {
   var months = [['6月', 0], ['7月', 30], ['8月', 61], ['9月', 92], ['10月', 122], ['11月', 153]];
-  var html = '<div class="gantt-grid" style="min-width:1000px"><div class="gantt-head"><div class="gantt-name" style="width:260px">需求 / 阶段排期</div>' +
+  var html = '<div class="gantt-grid" style="min-width:1000px"><div class="gantt-head"><div class="gantt-name" style="width:260px">' +
+    (schGroup === 'req' ? '需求 / 阶段排期' : schGroup === 'own' ? '负责人 / 需求' : '版本 / 需求') + '</div>' +
     '<div class="gantt-ticks">' + months.map(function (m) { return '<div>2026 ' + m[0] + '</div>'; }).join('') + '</div></div>';
-  SCHED.forEach(function (r) {
-    html += '<div class="gantt-row" style="height:40px"><div class="gantt-name" style="width:260px">' +
+
+  function rowFor(r, indent) {
+    return '<div class="gantt-row" style="height:40px"><div class="gantt-name" style="width:260px;padding-left:' + indent + 'px">' +
       '<span class="dot-status ' + (r.delay ? 'red' : r.cur ? 'blue' : 'gray') + '"></span>' +
       '<div style="overflow:hidden"><div class="fz12 ellipsis">' + r.t + '</div>' +
-      '<div class="id-link">' + r.id + ' · ' + r.own + ' · ' + r.ver + '</div></div></div>' +
+      '<div class="id-link">' + r.id + ' · ' + (schGroup === 'own' ? r.ver : r.own) + '</div></div></div>' +
       '<div class="gantt-track">' +
       r.st.map(function (seg, i) {
         var l = dayIdx(seg[0]) / TOTAL_DAYS * 100, w = (dayIdx(seg[1]) - dayIdx(seg[0]) + 1) / TOTAL_DAYS * 100;
@@ -854,10 +1024,50 @@ var TOTAL_DAYS = 183; // 6/1 ~ 11/30
       (r.delay ? '<span style="position:absolute;left:' + (dayIdx(r.st[r.cur][1]) / TOTAL_DAYS * 100 + 1).toFixed(2) +
         '%;top:50%;transform:translateY(-50%);font-size:10px;color:var(--danger);white-space:nowrap">延期 ' + r.delay + ' 天</span>' : '') +
       '</div></div>';
-  });
+  }
+  function groupHeader(name, list, extra) {
+    var delayed = list.filter(function (x) { return x.delay; }).length;
+    var minS = Math.min.apply(null, list.map(function (x) { return dayIdx(x.st[0][0]); }));
+    var maxE = Math.max.apply(null, list.map(function (x) { return dayIdx(x.st[4][1]); }));
+    var l = minS / TOTAL_DAYS * 100, w = (maxE - minS + 1) / TOTAL_DAYS * 100;
+    return '<div class="gantt-row" style="background:var(--ink-50);height:36px"><div class="gantt-name" style="width:260px">' +
+      (schGroup === 'own' && name !== '待分配' ? UI.avatar(name, 'sm') : '<span class="tico req">' + icon(schGroup === 'own' ? 'user' : 'rocket', 11) + '</span>') +
+      '<div style="overflow:hidden"><b class="fz12">' + name + '</b>' +
+      '<div class="muted fz11">' + list.length + ' 条需求 · ' + list.reduce(function (a, b) { return a + 0; }, 0) +
+      (delayed ? '<span style="color:var(--danger)"> · ' + delayed + ' 条延期</span>' : ' · 全部按计划') + (extra ? ' · ' + extra : '') + '</div></div></div>' +
+      '<div class="gantt-track"><div class="gantt-bar" style="left:' + l.toFixed(2) + '%;width:' + w.toFixed(2) +
+      '%;background:' + (delayed ? '#f7b0b2' : '#c9dbff') + ';height:10px;border-radius:3px"><span></span></div></div></div>';
+  }
+
+  if (schGroup === 'req') {
+    SCHED.forEach(function (r) { html += rowFor(r, 12); });
+  } else {
+    var keys = [];
+    SCHED.forEach(function (r) {
+      var k = schGroup === 'own' ? (r.own === '待分配' ? '待分配' : r.own) : r.ver;
+      if (keys.indexOf(k) < 0) keys.push(k);
+    });
+    keys.sort();
+    keys.forEach(function (k) {
+      var list = SCHED.filter(function (r) {
+        return (schGroup === 'own' ? (r.own === '待分配' ? '待分配' : r.own) : r.ver) === k;
+      });
+      var extra = schGroup === 'ver' ? ('计划发布 ' + ({ 'V3.0': '09-30', 'V2.6': '08-20', 'V2.9': '08-22', 'V1.4': '08-08' }[k] || '待定')) : '';
+      html += groupHeader(k, list, extra);
+      list.forEach(function (r) { html += rowFor(r, 34); });
+    });
+  }
   html += '<div class="gantt-today" style="left:calc(260px + (100% - 260px) * ' + (dayIdx('07-25') / TOTAL_DAYS).toFixed(3) + ')"></div></div>';
   document.getElementById('schedGantt').innerHTML = html;
-})();
+  UI.hydrateIcons(document.getElementById('schedGantt'));
+}
+renderSchedGantt();
+document.getElementById('schGroup').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  schGroup = b.dataset.g;
+  renderSchedGantt();
+  UI.toast('已切换为「' + b.textContent + '」视图');
+};
 
 document.getElementById('schedTable').innerHTML =
   '<thead><tr><th>需求</th><th>负责人</th><th>开始设计</th><th>开始编码</th><th>计划提测</th><th>计划上线</th>' +
@@ -918,11 +1128,117 @@ var FLOW = [
   { n: '资源排期', s: 'wait', d: '版本与人力匹配', who: '徐磊' },
   { n: '立项开发', s: 'wait', d: '进入迭代', who: '李思远' }
 ];
-document.getElementById('reviewFlow').innerHTML = FLOW.map(function (f, i) {
-  var ic = { ok: 'check', run: 'refresh', wait: 'clock' }[f.s];
-  return (i ? '<div class="pconn"></div>' : '') +
-    '<div class="pstage ' + f.s + '"><span class="ico">' + icon(ic, 11) + '</span>' +
-    '<div><div class="fw5">' + f.n + '</div><div class="muted" style="font-size:10.5px">' + f.d + ' · ' + f.who + '</div></div></div>';
+var FLOW_DETAIL = {
+  '需求提出': { sla: '—', who: '全员（业务方/客户经理/产品/研发）', cnt: 0, inn: ['标题清晰、有业务背景'], out: ['进入需求池并分配产品负责人'], items: [] },
+  '产品初审': { sla: '2 个工作日', who: '周雅（产品总监）/ 孙悦', cnt: 3, inn: ['需求描述完整', '已关联来源工单或客户'], out: ['判定为真需求（非咨询/重复）', '完成价值初评并补齐验收标准'],
+    items: [['REQ-2036', '商户后台大额账单异步导出', '孙悦', '2.4 天', 'P1'], ['REQ-2030', '开放平台开发者沙箱环境', '孙悦', '4.1 天', 'P2'], ['REQ-2042', 'SDK 支持鸿蒙 NEXT', '王倩', '3.2 天', 'P2']] },
+  '架构评审': { sla: '3 个工作日', who: '陈立（首席架构师）+ 相关技术负责人', cnt: 3, inn: ['产品初审通过', '已有初步方案或技术问题清单'], out: ['技术可行性结论明确', '依赖与风险已识别', '工作量评估偏差 ≤ ±30%'],
+    items: [['REQ-2041', '支付网关多渠道智能路由能力', '周雅', '1.2 天', 'P0'], ['REQ-2043', '商户风险分级视图', '郑宇', '1.8 天', 'P1'], ['REQ-2045', '资金池头寸预测模型', '何俊', '0.8 天', 'P1']] },
+  '价值评审会': { sla: '每周二/周四批量', who: '沈知远（决策）+ 产品/研发/测试负责人', cnt: 1, inn: ['架构评审通过', '价值与紧迫性评分已完成'], out: ['形成通过/驳回/暂缓结论', '通过项进入排期池并确定目标版本'],
+    items: [['REQ-2044', '监管报送口径调整', '合规部', '0.5 天', 'P0']] },
+  '资源排期': { sla: '2 个工作日', who: '徐磊（项目经理）+ 各团队负责人', cnt: 0, inn: ['价值评审通过'], out: ['确定目标版本与迭代', '确认人力与阶段计划'], items: [] },
+  '开发交付': { sla: '按迭代', who: '研发负责人 / 认领人', cnt: 0, inn: ['已进入迭代且完成拆解'], out: ['提测并通过测试'], items: [] },
+  '上线验收': { sla: '发布窗口', who: 'SRE + 产品负责人', cnt: 0, inn: ['测试通过且门禁达标'], out: ['上线并完成客户回访'], items: [] }
+};
+var FLOW7 = FLOW.concat([{ n: '开发交付', s: 'wait', d: '进入迭代', who: '研发' }, { n: '上线验收', s: 'wait', d: '发布与回访', who: 'SRE' }]);
+var curNode = '架构评审';
+function renderFlow() {
+  document.getElementById('reviewFlow').innerHTML = FLOW7.map(function (f, i) {
+    var ic = { ok: 'check', run: 'refresh', wait: 'clock' }[f.s];
+    var d = FLOW_DETAIL[f.n] || {};
+    return (i ? '<div class="pconn"></div>' : '') +
+      '<div class="pstage ' + f.s + '" style="cursor:pointer' + (curNode === f.n ? ';border-color:var(--brand-500);box-shadow:0 0 0 3px var(--brand-50)' : '') +
+      '" onclick="pickNode(\'' + f.n + '\')"><span class="ico">' + icon(ic, 11) + '</span>' +
+      '<div><div class="fw5">' + f.n + (d.cnt ? ' <span class="tag danger" style="height:15px;font-size:10px">' + d.cnt + '</span>' : '') + '</div>' +
+      '<div class="muted" style="font-size:10.5px">' + f.d + ' · ' + f.who + '</div></div></div>';
+  }).join('');
+  var d = FLOW_DETAIL[curNode] || {};
+  document.getElementById('flowNodeDetail').innerHTML =
+    '<div style="background:var(--ink-50);border-radius:10px;padding:12px 14px">' +
+    '<div class="flex items-center gap8 mb8"><b class="fz13">' + curNode + '</b>' +
+    '<span class="tag brand">SLA ' + d.sla + '</span>' +
+    '<span class="tag">评审人：' + d.who + '</span>' +
+    (d.cnt ? '<span class="tag danger">当前 ' + d.cnt + ' 条待处理</span>' : '<span class="tag success">无积压</span>') +
+    '<button class="btn btn-sm ml-auto" data-modal="mFlowCfg">配置此节点</button></div>' +
+    '<div class="grid g2" style="gap:14px">' +
+    '<div><div class="fz12 fw6" style="color:var(--success)">准入条件</div>' +
+    (d.inn || []).map(function (x) { return '<div class="flex items-center gap6 mt4"><span class="checkbox checked"></span><span class="fz12">' + x + '</span></div>'; }).join('') + '</div>' +
+    '<div><div class="fz12 fw6" style="color:var(--brand-600)">准出条件</div>' +
+    (d.out || []).map(function (x) { return '<div class="flex items-center gap6 mt4"><span class="checkbox checked"></span><span class="fz12">' + x + '</span></div>'; }).join('') + '</div>' +
+    '</div>' +
+    (d.items && d.items.length ? '<div class="mt12"><div class="fz12 fw6 mb8">该节点待处理需求（' + d.items.length + '）</div>' +
+      d.items.map(function (it) {
+        return '<div class="link-item" onclick="openReq(\'' + it[0] + '\')"><span class="tico req">' + icon('bulb', 11) + '</span>' +
+          '<div style="flex:1"><div class="fz12">' + it[1] + '</div><div class="muted fz11 mt4">' + it[0] + ' · 提出人 ' + it[2] + ' · 已等待 ' + it[3] + '</div></div>' +
+          UI.priority(it[4]) + '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();UI.toast(\'已通过' + curNode + '\')">通过</button>' +
+          '<button class="btn btn-sm" onclick="event.stopPropagation();UI.toast(\'已驳回并通知提出人\')">驳回</button></div>';
+      }).join('') + '</div>' : '<div class="muted fz12 mt12">该节点当前没有待处理需求。</div>') +
+    '</div>';
+  UI.hydrateIcons(document.getElementById('reviewFlow').parentElement);
+}
+function pickNode(n) { curNode = n; renderFlow(); }
+renderFlow();
+
+document.getElementById('mtAvatars').innerHTML = UI.avatarGroup(['沈知远', '周雅', '陈立', '李思远', '赵鹏', '徐磊'], 6);
+document.getElementById('meetingTable').innerHTML =
+  '<thead><tr><th style="width:30px">#</th><th style="width:24%">议程（需求）</th><th class="num">价值</th><th class="num">紧迫</th><th class="num">优先级得分</th>' +
+  '<th>沈知远</th><th>陈立</th><th>李思远</th><th>赵鹏</th><th>结论</th><th style="width:120px">操作</th></tr></thead><tbody>' +
+  [[1, 'REQ-2044 监管报送口径调整', 88, 96, 118.6, '同意', '同意', '同意', '同意', '通过 · 插入当前迭代', 'success'],
+   [2, 'REQ-2041 支付网关多渠道智能路由', 92, 88, 110.1, '同意', '同意', '同意', '同意', '通过 · 排入 V3.0', 'success'],
+   [3, 'REQ-2036 商户后台大额账单异步导出', 76, 82, 96.4, '同意', '同意', '同意', '弃权', '通过 · 排入 V2.6', 'success'],
+   [4, 'REQ-2037 开放平台 API 限流可视化', 71, 74, 72.8, '同意', '待定', '同意', '同意', '待定 · 需补充竞品对标', 'warning'],
+   [5, 'REQ-2030 开放平台开发者沙箱', 55, 38, 41.2, '待定', '同意', '待定', '待定', '暂缓 · Q4 重新评估', 'warning'],
+   [6, 'REQ-2042 SDK 支持鸿蒙 NEXT', 52, 44, 38.6, '—', '—', '—', '—', '未评审', ''],
+   [7, 'REQ-2043 商户风险分级视图', 68, 62, 64.2, '—', '—', '—', '—', '未评审', '']
+  ].map(function (r) {
+    function vote(v) {
+      var c = { '同意': 'success', '待定': 'warning', '反对': 'danger', '弃权': '', '—': '' }[v];
+      return '<td>' + (v === '—' ? '<span class="muted">—</span>' : '<span class="tag ' + c + '">' + v + '</span>') + '</td>';
+    }
+    return '<tr onclick="openReq(\'' + r[1].split(' ')[0] + '\')"><td class="tc muted fz11">' + r[0] + '</td>' +
+      '<td class="t-main">' + r[1] + '</td>' +
+      '<td class="num">' + r[2] + '</td><td class="num">' + r[3] + '</td>' +
+      '<td class="num"><b style="color:var(--brand-600)">' + r[4] + '</b></td>' +
+      vote(r[5]) + vote(r[6]) + vote(r[7]) + vote(r[8]) +
+      '<td><span class="tag ' + r[10] + '">' + r[9] + '</span></td>' +
+      '<td onclick="event.stopPropagation()">' + (r[9] === '未评审'
+        ? '<button class="btn btn-sm btn-primary" data-toast="已开始评审该议程">开始评审</button>'
+        : '<button class="btn btn-sm" data-toast="已重新发起投票">重投</button>') + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('cfgFlowTable').innerHTML =
+  '<thead><tr><th style="width:30px"></th><th>节点</th><th>评审人 / 角色</th><th>SLA</th><th>通过方式</th><th>必需</th><th style="width:34px"></th></tr></thead><tbody>' +
+  [['需求提出', '提出人（全员）', '—', '自动', 1], ['产品初审', '产品总监 / 产品经理', '2 天', '单人审批', 1],
+   ['架构评审', '首席架构师 + 技术负责人', '3 天', '单人审批', 1], ['价值评审会', '决策人 + 委员会', '每周二/四', '多人投票（≥3 同意）', 1],
+   ['资源排期', '项目经理 + 团队负责人', '2 天', '单人审批', 1], ['开发交付', '研发负责人', '按迭代', '状态驱动', 1],
+   ['上线验收', 'SRE + 产品负责人', '发布窗口', '双人确认', 1], ['安全评审（可选）', '安全负责人', '3 天', '单人审批', 0]
+  ].map(function (r) {
+    return '<tr><td><span style="color:var(--ink-300)">' + icon('moreV', 13) + '</span></td>' +
+      '<td class="t-main fz12">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td>' +
+      '<td><input class="input" value="' + r[2] + '" style="width:78px;height:26px"></td>' +
+      '<td class="fz12">' + r[3] + '</td>' +
+      '<td><span class="switch ' + (r[4] ? 'on' : '') + '"></span></td>' +
+      '<td><button class="icon-btn" style="width:22px;height:22px">' + icon('more', 13) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('passRules').innerHTML = [
+  ['价值评审会通过标准', '≥ 3 人同意且决策人未否决', 1],
+  ['分歧处理', '评分分歧超过 2 档需现场澄清后重投', 1],
+  ['超时视为默认通过', '产品初审超过 2 天未处理自动通过并通知', 0],
+  ['驳回需说明理由', '驳回必须填写原因并同步提出人与客户经理', 1]
+].map(function (r) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + r[0] + '</div><div class="muted fz11 mt4">' + r[1] + '</div></div>' +
+    '<span class="switch ' + (r[2] ? 'on' : '') + '"></span></div>';
+}).join('');
+document.getElementById('skipRules').innerHTML = [
+  ['监管合规类需求', '跳过价值评审会，直接进入排期（事后备案）', 1],
+  ['P0 生产故障相关需求', '跳过产品初审与价值评审，直接插入当前迭代', 1],
+  ['工作量 ≤ 2 人日的体验优化', '跳过架构评审', 1],
+  ['技术债专项', '由架构组内部评审，跳过价值评审会', 1]
+].map(function (r) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + r[0] + '</div><div class="muted fz11 mt4">' + r[1] + '</div></div>' +
+    '<span class="switch ' + (r[2] ? 'on' : '') + '"></span></div>';
 }).join('');
 
 document.getElementById('reviewTable').innerHTML =

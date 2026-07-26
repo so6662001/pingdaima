@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sprint 26-15 迭代回顾 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="retro" data-crumb="组织协同/复盘中心/Sprint 26-15 迭代回顾">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <!-- 复盘头 -->
+      <div class="card mb16">
+        <div class="card-body" style="padding:14px 18px">
+          <div class="flex items-center gap10">
+            <span class="tico task" style="width:34px;height:34px"><span data-icon="history" data-size="16"></span></span>
+            <div>
+              <div class="flex items-center gap8">
+                <span class="page-title" style="font-size:18px">Sprint 26-15 迭代回顾</span>
+                <span class="tag brand">迭代回顾</span>
+                <span class="tag warning" id="stTag">收集反馈中</span>
+                <span class="tag">交易平台组</span>
+              </div>
+              <div class="muted fz12 mt4">复盘对象：Sprint 26-15（07-28 ~ 08-10）· 主持 徐磊 · 决策人 沈知远 · 计划 2026-08-11 10:00 · 匿名反馈已开启</div>
+            </div>
+            <div class="ml-auto flex items-center gap8">
+              <span id="members"></span>
+              <span class="vdivider"></span>
+              <button class="btn btn-sm" data-toast="已提醒 3 名未提交成员"><span data-icon="bell" data-size="13"></span>催办未提交</button>
+              <button class="btn btn-sm"><span data-icon="settings" data-size="13"></span>复盘设置</button>
+              <button class="btn btn-sm btn-primary" id="btnStart"><span data-icon="play" data-size="13"></span>开始现场复盘</button>
+            </div>
+          </div>
+          <div class="grid g5 mt16" style="gap:10px" id="headKpi"></div>
+        </div>
+      </div>
+
+      <!-- 流程条 -->
+      <div class="card mb16">
+        <div class="card-body" style="padding:12px 16px"><div class="pipeline" id="flow"></div></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="t1"><span data-icon="grid" data-size="14"></span>回顾看板</div>
+        <div class="tab" data-tab="t2"><span data-icon="chart" data-size="14"></span>迭代数据</div>
+        <div class="tab" data-tab="t3"><span data-icon="target" data-size="14"></span>行动项 <span class="cnt">5</span></div>
+        <div class="tab" data-tab="t4"><span data-icon="file" data-size="14"></span>结论与纪要</div>
+      </div>
+
+      <!-- 回顾看板 -->
+      <div class="tab-pane active" data-pane="t1">
+        <div class="toolbar" style="margin-bottom:10px">
+          <span class="fz12 muted">模板</span>
+          <div class="btn-group" id="tplGroup">
+            <button class="active" data-t="4q">四象限（做得好/待改进/困惑/行动）</button>
+            <button data-t="ssc">Start / Stop / Continue</button>
+            <button data-t="sailboat">帆船（风/锚/礁石）</button>
+          </div>
+          <div class="vdivider"></div>
+          <div class="filter on" id="fAnon"><span data-icon="eyeOff"></span>匿名显示</div>
+          <div class="filter"><span data-icon="sort"></span>按票数排序</div>
+          <div class="ml-auto flex items-center gap8">
+            <span class="fz12 muted">反馈收集 <b id="fbCnt">18</b> 条 · 已投票 <b>42</b> 票 · 剩余投票权 <b style="color:var(--brand-600)">3</b></span>
+            <button class="btn btn-sm btn-primary" data-modal="mAddCard"><span data-icon="plus" data-size="13"></span>添加卡片</button>
+          </div>
+        </div>
+        <div class="grid g4" id="retroBoard"></div>
+        <div class="card mt16">
+          <div class="card-head"><div class="card-title"><span data-icon="users"></span>反馈提交情况</div>
+            <div class="card-sub">9 / 12 人已提交 · 匿名内容不显示提交人</div></div>
+          <div class="card-body" id="submitBox"></div>
+        </div>
+      </div>
+
+      <!-- 迭代数据 -->
+      <div class="tab-pane" data-pane="t2">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chartLine"></span>燃尽与承诺达成</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#b3bfd0"></i>理想剩余</span><span><i style="background:#2b5cff"></i>实际剩余</span><span><i style="background:#f59e0b"></i>范围变更</span></div>
+              <div id="burndown"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="list"></span>客观数据回顾</div>
+            <div class="card-sub">系统自动采集，作为讨论依据</div></div>
+            <div class="card-body" id="facts"></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>各列停留时长</div></div>
+            <div class="card-body"><div id="stayBar"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="thumb"></span>团队情绪指数</div></div>
+            <div class="card-body"><div id="mood"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>上次改进项完成情况</div>
+            <div class="card-sub">对上次回顾的闭环检查</div></div>
+            <div class="card-body" id="lastActions"></div></div>
+        </div>
+      </div>
+
+      <!-- 行动项 -->
+      <div class="tab-pane" data-pane="t3">
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="target"></span>本次回顾产出的行动项</div>
+            <div class="card-sub">每项都要有责任人与截止时间，自动生成任务并纳入下个迭代</div>
+            <div class="card-head-actions"><button class="btn btn-sm" data-toast="已生成 5 个任务并纳入 Sprint 26-16">生成任务</button>
+              <button class="btn btn-sm btn-primary" data-modal="mAddAction"><span data-icon="plus" data-size="13"></span>添加行动项</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="actionTable"></table></div></div>
+          <div class="card-foot flex items-center">
+            <span class="fz12">行动项 SMART 检查：<b style="color:var(--success)">4 项达标</b> · <b style="color:var(--warning)">1 项缺少可衡量标准</b></span>
+            <span class="ml-auto fz12 muted">上次回顾 5 项 · 已闭环 3 项（60%）</span>
+          </div>
+        </div>
+        <div class="grid g2 mt16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="alert"></span>重复出现的问题</div>
+            <div class="card-sub">连续两次以上回顾提出，需管理层介入</div></div>
+            <div class="card-body" id="repeatBox"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="bulb"></span>系统建议</div>
+            <div class="card-sub">基于流动数据自动生成，供讨论参考</div></div>
+            <div class="card-body" id="sysAdvice"></div></div>
+        </div>
+      </div>
+
+      <!-- 结论与纪要 -->
+      <div class="tab-pane" data-pane="t4">
+        <div style="display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start">
+          <div class="card"><div class="card-body" style="padding:24px 30px">
+            <div class="prose">
+              <div class="flex items-center gap8 mb12"><span class="tag brand">复盘纪要</span>
+                <span class="tag">Sprint 26-15</span>
+                <span class="muted fz11 ml-auto">自动汇总卡片与投票结果，主持人可编辑</span></div>
+              <h1>Sprint 26-15 迭代回顾纪要</h1>
+              <blockquote><b>一句话结论：</b>本迭代承诺 44 点完成 39 点（达成率 89%，较上迭代 +22pt），范围变更控制在 5%；
+              主要问题从"插入需求过多"转移到"跨团队依赖等待"，需要在流程上补齐依赖 SLA。</blockquote>
+              <h2>一、做得好（Keep）</h2>
+              <ul>
+                <li>插入需求准入规则落地，本迭代仅 1 次插入（上迭代 2 次），承诺达成率显著回升</li>
+                <li>13 点以上故事强制拆分执行到位，最大故事 8 点，估算偏差从 ±38% 收窄到 ±16%</li>
+                <li>任务池自助认领率 82%，平均认领时长 1.8 小时</li>
+              </ul>
+              <h2>二、待改进（Problem）</h2>
+              <ol>
+                <li><b>跨团队依赖等待 3.5 天</b>：压测环境扩容与风控接口分别等待 2 天与 1.5 天，依赖方无 SLA 约束</li>
+                <li><b>代码评审在迭代末堆积</b>：D8~D10 集中 11 个 PR，评审等待 P85 达 2.6 天</li>
+                <li><b>测试环境数据准备耗时</b>：每次回归前需人工造数 0.5 天</li>
+              </ol>
+              <h2>三、行动项（Action）</h2>
+              <table>
+                <thead><tr><th>行动项</th><th>责任人</th><th>可衡量标准</th><th>截止</th></tr></thead>
+                <tbody>
+                  <tr><td>跨团队依赖登记 SLA 并接入自动升级</td><td>徐磊</td><td>依赖平均等待 ≤ 1 天</td><td>08-22</td></tr>
+                  <tr><td>PR 评审改为每日两次固定时段 + 4h 首响提醒</td><td>李思远</td><td>评审等待 P85 ≤ 1 天</td><td>08-18</td></tr>
+                  <tr><td>测试数据工厂：一键生成回归数据集</td><td>吴敏</td><td>造数耗时 ≤ 1 小时</td><td>08-31</td></tr>
+                  <tr><td>压测环境资源池化，支持自助申请</td><td>林小满</td><td>申请到可用 ≤ 2 小时</td><td>09-05</td></tr>
+                  <tr><td>迭代末两天不再拉入新故事</td><td>徐磊</td><td>迭代末新增 = 0</td><td>持续</td></tr>
+                </tbody>
+              </table>
+              <h2>四、决议与共识</h2>
+              <p>沈知远：依赖 SLA 由 PMO 统一推动，跨团队依赖超期直接升级至部门负责人；测试数据工厂列入 Q3 效能专项预算。</p>
+              <hr>
+              <p class="muted fz12">参与人：徐磊（主持）、李思远、何俊、王倩、林小满、吴敏、陈立、周雅、沈知远（决策）</p>
+            </div>
+          </div></div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head" style="padding:10px 14px"><div class="card-title fz12"><span data-icon="check" data-size="14"></span>发布纪要</div></div>
+              <div class="card-body">
+                <div class="field"><label>发布范围</label>
+                  <div class="flex flex-wrap gap8">
+                    <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">参与人</span></span>
+                    <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">团队群</span></span>
+                    <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">知识库归档</span></span>
+                    <span class="flex items-center gap6"><span class="checkbox"></span><span class="fz12">研发中心全员</span></span>
+                  </div></div>
+                <button class="btn btn-primary btn-block" data-toast="纪要已发布，行动项已生成任务并推送企业微信"><span data-icon="send" data-size="13"></span>发布并生成任务</button>
+                <button class="btn btn-block mt8" data-toast="已导出 PDF"><span data-icon="download" data-size="13"></span>导出 PDF</button>
+              </div></div>
+            <div class="card"><div class="card-head" style="padding:10px 14px"><div class="card-title fz12"><span data-icon="book" data-size="14"></span>沉淀为经验</div></div>
+              <div class="card-body" id="lessonBox"></div></div>
+            <div class="card"><div class="card-head" style="padding:10px 14px"><div class="card-title fz12"><span data-icon="history" data-size="14"></span>历史回顾</div></div>
+              <div class="card-body" id="histBox"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mAddCard">
+  <div class="modal-head"><span data-icon="plus"></span><span class="modal-title">添加回顾卡片</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>分类</label>
+      <div class="pills"><span class="pill active">做得好 Keep</span><span class="pill">待改进 Problem</span><span class="pill">困惑 Puzzle</span><span class="pill">行动项 Action</span></div></div>
+    <div class="field"><label>内容<span class="req">*</span></label>
+      <textarea class="textarea" placeholder="具体、可讨论。建议写"发生了什么 + 影响是什么"，而不是评价某个人"></textarea></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">匿名提交（不显示提交人）</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="卡片已添加到回顾看板">添加</button></div>
+</div>
+
+<div class="modal" id="mAddAction">
+  <div class="modal-head"><span data-icon="target"></span><span class="modal-title">添加行动项</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>行动项<span class="req">*</span></label><input class="input" placeholder="要做什么（动词开头）"></div>
+    <div class="field"><label>可衡量标准<span class="req">*</span></label><input class="input" placeholder="例如：依赖平均等待 ≤ 1 天">
+      <div class="hint">没有可衡量标准的行动项无法验证是否闭环，系统会标记为不达标</div></div>
+    <div class="form-row">
+      <div class="field"><label>责任人</label><select class="select"><option>徐磊</option><option>李思远</option><option>吴敏</option><option>林小满</option></select></div>
+      <div class="field"><label>截止时间</label><input class="input" value="2026-08-22"></div>
+    </div>
+    <div class="field"><label>类型</label>
+      <div class="pills"><span class="pill active">流程</span><span class="pill">工程</span><span class="pill">协作</span><span class="pill">基础设施</span><span class="pill">测试</span></div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">自动生成任务并纳入下个迭代（Sprint 26-16）</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="行动项已添加并生成任务 TASK-5601">添加</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('members').innerHTML = UI.avatarGroup(['徐磊', '李思远', '何俊', '王倩', '林小满', '吴敏', '陈立', '周雅', '沈知远'], 6);
+document.getElementById('headKpi').innerHTML = [
+  ['承诺 / 完成', '44 / 39 点', '达成率 89%', 'green'], ['范围变更', '+2 点（5%）', '上迭代 14%', 'green'],
+  ['反馈收集', '9 / 12 人', '18 条卡片', ''], ['投票进度', '42 / 60 票', '每人 5 票', ''],
+  ['产出行动项', '5 项', '4 项达标 SMART', 'orange']
+].map(function (k) {
+  return '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">' + k[0] + '</div>' +
+    '<div class="fw6 mt4" style="font-size:15px;color:' + (k[3] === 'green' ? 'var(--success)' : k[3] === 'orange' ? 'var(--warning)' : 'var(--ink-900)') + '">' + k[1] + '</div>' +
+    '<div class="muted fz11 mt4">' + k[2] + '</div></div>';
+}).join('');
+
+var FLOW = [
+  ['① 创建复盘', 'ok', '徐磊 · 08-04'], ['② 收集反馈', 'run', '9/12 人已提交'],
+  ['③ 投票排序', 'wait', '每人 5 票'], ['④ 现场讨论', 'wait', '08-11 10:00'],
+  ['⑤ 形成行动项', 'wait', '需明确责任人与标准'], ['⑥ 发布纪要', 'wait', '归档知识库'],
+  ['⑦ 闭环跟踪', 'wait', '纳入下迭代任务']
+];
+function renderFlow(cur) {
+  document.getElementById('flow').innerHTML = FLOW.map(function (f, i) {
+    var st = f[1];
+    var ic = { ok: 'check', run: 'refresh', wait: 'clock' }[st];
+    return (i ? '<div class="pconn"></div>' : '') +
+      '<div class="pstage ' + st + '"><span class="ico">' + icon(ic, 11) + '</span>' +
+      '<div><div class="fw5">' + f[0] + '</div><div class="muted" style="font-size:10.5px">' + f[2] + '</div></div></div>';
+  }).join('');
+}
+renderFlow();
+document.getElementById('btnStart').onclick = function () {
+  FLOW[1][1] = 'ok'; FLOW[1][2] = '12/12 人已提交';
+  FLOW[2][1] = 'ok'; FLOW[2][2] = '投票完成';
+  FLOW[3][1] = 'run'; FLOW[3][2] = '进行中 · 主持 徐磊';
+  renderFlow();
+  document.getElementById('stTag').textContent = '现场复盘中';
+  document.getElementById('stTag').className = 'tag brand';
+  UI.hydrateIcons(document.getElementById('flow'));
+  UI.toast('现场复盘已开始，看板已切换为讨论模式（按票数排序）');
+};
+
+/* 回顾看板 */
+var TPLS = {
+  '4q': [
+    { n: '做得好 Keep', c: '#15a86b', i: 'thumb', items: [
+      ['插入需求准入规则落地，本迭代仅 1 次插入，承诺达成率回升到 89%', 9, '何俊'],
+      ['13 点以上故事强制拆分执行到位，估算偏差收窄到 ±16%', 7, '匿名'],
+      ['任务池自助认领率 82%，认领平均 1.8 小时', 6, '林小满'],
+      ['每日站会异步化后会议时长稳定在 12 分钟', 4, '徐磊']
+    ] },
+    { n: '待改进 Problem', c: '#e5484d', i: 'warn', items: [
+      ['跨团队依赖等待累计 3.5 天（压测环境 2 天 + 风控接口 1.5 天）', 11, '匿名'],
+      ['代码评审在迭代末堆积，D8~D10 集中 11 个 PR，等待 P85 2.6 天', 8, '王倩'],
+      ['测试环境每次回归前人工造数 0.5 天', 7, '吴敏'],
+      ['需求验收标准仍有 2 条在开发中期才补充', 5, '匿名']
+    ] },
+    { n: '困惑 Puzzle', c: '#f59e0b', i: 'help', items: [
+      ['依赖方没有 SLA，我们的排期凭什么保证？', 8, '匿名'],
+      ['技术债 15% 保底容量是否应随债务规模调整？', 5, '陈立'],
+      ['迭代末两天是否应该完全冻结新故事？', 4, '匿名']
+    ] },
+    { n: '行动项 Action', c: '#2b5cff', i: 'target', items: [
+      ['跨团队依赖登记 SLA 并接入自动升级', 11, '徐磊'],
+      ['PR 评审改为每日两次固定时段 + 4h 首响提醒', 8, '李思远'],
+      ['建设测试数据工厂，一键生成回归数据集', 7, '吴敏'],
+      ['压测环境资源池化，支持自助申请', 6, '林小满'],
+      ['迭代末两天不再拉入新故事', 5, '徐磊']
+    ] }
+  ],
+  ssc: [
+    { n: 'Start 开始做', c: '#2b5cff', i: 'play', items: [
+      ['依赖登记 SLA 并自动升级', 11, '徐磊'], ['测试数据工厂建设', 7, '吴敏'], ['评审固定时段制', 8, '李思远']] },
+    { n: 'Stop 停止做', c: '#e5484d', i: 'pause', items: [
+      ['迭代末两天拉入新故事', 9, '匿名'], ['无 SLA 的口头依赖承诺', 8, '匿名'], ['13 点以上故事直接进迭代', 5, '陈立']] },
+    { n: 'Continue 继续做', c: '#15a86b', i: 'check', items: [
+      ['插入需求准入审批', 9, '何俊'], ['任务池自助认领', 6, '林小满'], ['异步站会', 4, '徐磊']] },
+    { n: '待讨论', c: '#f59e0b', i: 'help', items: [
+      ['技术债保底容量比例', 5, '陈立'], ['依赖方 SLA 如何约束', 8, '匿名']] }
+  ],
+  sailboat: [
+    { n: '风（推动力）', c: '#15a86b', i: 'zap', items: [
+      ['准入规则让承诺更可信', 9, '何俊'], ['自助认领提升响应速度', 6, '林小满'], ['拆分规则降低估算偏差', 7, '匿名']] },
+    { n: '锚（拖累）', c: '#e5484d', i: 'alert', items: [
+      ['跨团队依赖等待 3.5 天', 11, '匿名'], ['评审末期堆积', 8, '王倩'], ['人工造数 0.5 天/次', 7, '吴敏']] },
+    { n: '礁石（风险）', c: '#f59e0b', i: 'warn', items: [
+      ['压测未达标威胁 09-30 切流', 10, '林小满'], ['核心模块单点依赖', 6, '陈立']] },
+    { n: '岛（目标）', c: '#2b5cff', i: 'target', items: [
+      ['09-30 V3.0 全量切流零事故', 9, '徐磊'], ['依赖等待 ≤ 1 天', 8, '徐磊']] }
+  ]
+};
+var curTpl = '4q';
+function renderBoard() {
+  var cols = TPLS[curTpl];
+  document.getElementById('retroBoard').innerHTML = cols.map(function (c) {
+    return '<div class="card"><div class="card-head" style="padding:10px 14px">' +
+      '<div class="card-title fz13" style="color:' + c.c + '">' + icon(c.i, 14) + c.n + '</div>' +
+      '<span class="ml-auto tag">' + c.items.length + '</span></div>' +
+      '<div class="card-body" style="padding:10px 12px">' + c.items.map(function (it) {
+        return '<div style="background:var(--ink-50);border-left:3px solid ' + c.c + ';border-radius:0 8px 8px 0;padding:9px 11px;margin-bottom:8px">' +
+          '<div class="fz12" style="color:var(--ink-700);line-height:1.65">' + it[0] + '</div>' +
+          '<div class="flex items-center gap6 mt8">' +
+          (it[2] === '匿名' ? '<span class="tag" style="height:17px">' + icon('eyeOff', 10) + '匿名</span>'
+            : UI.avatar(it[2], 'sm') + '<span class="muted fz11">' + it[2] + '</span>') +
+          '<span class="ml-auto pointer" style="color:var(--brand-600);font-size:11px" onclick="UI.toast(\'已投票\')">' +
+          icon('thumb', 12) + ' ' + it[1] + '</span></div></div>';
+      }).join('') +
+      '<div class="pointer fz12 muted tc" style="padding:6px;border:1.5px dashed var(--ink-200);border-radius:8px" data-modal="mAddCard">+ 添加卡片</div>' +
+      '</div></div>';
+  }).join('');
+  document.getElementById('fbCnt').textContent = cols.reduce(function (a, c) { return a + c.items.length; }, 0);
+  UI.hydrateIcons(document.getElementById('retroBoard'));
+}
+renderBoard();
+document.getElementById('tplGroup').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  curTpl = b.dataset.t; renderBoard();
+  UI.toast('已切换回顾模板：' + b.textContent.split('（')[0]);
+};
+document.getElementById('submitBox').innerHTML =
+  '<div class="flex flex-wrap gap12">' + [
+    ['徐磊', 1, 4], ['李思远', 1, 3], ['何俊', 1, 5], ['王倩', 1, 2], ['林小满', 1, 3],
+    ['吴敏', 1, 4], ['陈立', 1, 2], ['周雅', 1, 1], ['沈知远', 1, 0], ['赵鹏', 0, 0], ['孙悦', 0, 0], ['郑宇', 0, 0]
+  ].map(function (m) {
+    return '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:20px;background:' +
+      (m[1] ? 'var(--success-bg)' : 'var(--ink-100)') + '">' + UI.avatar(m[0], 'sm') +
+      '<span class="fz12">' + m[0] + '</span>' +
+      (m[1] ? '<span class="tag success" style="height:17px">' + m[2] + ' 条</span>'
+        : '<span class="tag" style="height:17px">未提交</span>') + '</div>';
+  }).join('') + '</div>' +
+  '<div class="tl-box mt12">匿名反馈占 <b>39%</b>（7/18 条）。匿名比例偏高通常说明团队对直接表达仍有顾虑，主持人可在现场强调"聚焦事而非人"。</div>';
+
+/* 迭代数据 */
+Charts.burndown('#burndown', {
+  height: 240, total: 44,
+  days: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'],
+  actual: [44, 44, 41, 38, 34, 30, 26, 20, 12, 5],
+  scope: [44, 44, 44, 46, 46, 46, 46, 46, 46, 46]
+});
+document.getElementById('facts').innerHTML = [
+  ['承诺 / 完成', '44 / 39 点（89%）', 'green'], ['范围变更', '+2 点（5%）', 'green'],
+  ['插入需求', '1 条（P0）', 'green'], ['缺陷注入', '1.4 个 / 10 点', 'green'],
+  ['跨团队依赖等待', '3.5 天', 'red'], ['评审等待 P85', '2.6 天', 'red'],
+  ['阻塞总时长', '2.1 天', 'orange'], ['加班工时', '人均 5.2 小时', 'green'],
+  ['自助认领率', '82%', 'green'], ['未完成携带', '5 点（1 个故事）', 'orange']
+].map(function (f) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="fz12 dim" style="flex:1">' + f[0] + '</span>' +
+    '<b class="fz12" style="color:var(--' + (f[2] === 'red' ? 'danger' : f[2] === 'orange' ? 'warning' : 'success') + ')">' + f[1] + '</b></div>';
+}).join('');
+Charts.hbar('#stayBar', { unit: ' 天', data: [
+  { name: '待办', value: 2.8, color: '#b3bfd0' }, { name: '设计中', value: 1.6, color: '#7c5cff' },
+  { name: '开发中', value: 3.1, color: '#2b5cff' }, { name: '代码评审', value: 2.6, color: '#e5484d' },
+  { name: '测试中', value: 2.0, color: '#f59e0b' }, { name: '待验收', value: 0.8, color: '#0fb5ba' }] });
+Charts.line('#mood', {
+  height: 190, yMax: 5, ySteps: 5, padLeft: 24, labels: ['26-11', '26-12', '26-13', '26-14', '26-15'],
+  series: [{ name: '团队情绪', data: [3.6, 4.2, 4.1, 3.4, 4.0], color: '#7c5cff', area: true }]
+});
+document.getElementById('lastActions').innerHTML = [
+  ['建立插入需求准入规则', 1, '已闭环 · 效果显著'], ['跨团队依赖登记 SLA', 0, '进行中 · 本次重复提出'],
+  ['CI 熔断器测试注入 Clock', 1, '已闭环'], ['13 点以上故事强制拆分', 1, '已闭环'],
+  ['压测环境资源池化', 0, '未开始 · 本次重复提出']
+].map(function (a) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="checkbox' + (a[1] ? ' checked' : '') + '"></span>' +
+    '<span class="fz12" style="flex:1">' + a[0] + '</span>' +
+    '<span class="tag ' + (a[1] ? 'success' : 'danger') + '">' + a[2] + '</span></div>';
+}).join('') + '<div class="tl-box mt8">上次 5 项闭环 3 项（60%），其中 <b>2 项因未闭环而本次重复提出</b>——这是回顾流于形式的典型信号，建议本次为每项行动项明确可衡量标准。</div>';
+
+/* 行动项 */
+document.getElementById('actionTable').innerHTML =
+  '<thead><tr><th style="width:26%">行动项</th><th>类型</th><th style="width:20%">可衡量标准</th><th>责任人</th><th>截止</th><th>生成任务</th><th>纳入迭代</th><th>SMART</th><th>状态</th></tr></thead><tbody>' +
+  [['跨团队依赖登记 SLA 并接入自动升级', '协作', '依赖平均等待 ≤ 1 天', '徐磊', '08-22', 'TASK-5601', 'Sprint 26-16', 1, '待开始', ''],
+   ['PR 评审改为每日两次固定时段 + 4h 首响提醒', '流程', '评审等待 P85 ≤ 1 天', '李思远', '08-18', 'TASK-5602', 'Sprint 26-16', 1, '待开始', ''],
+   ['建设测试数据工厂，一键生成回归数据集', '测试', '造数耗时 ≤ 1 小时', '吴敏', '08-31', 'TASK-5603', 'Sprint 26-17', 1, '待开始', ''],
+   ['压测环境资源池化，支持自助申请', '基础设施', '申请到可用 ≤ 2 小时', '林小满', '09-05', 'TASK-5604', 'Sprint 26-17', 1, '待开始', ''],
+   ['迭代末两天不再拉入新故事', '流程', '（缺少可衡量标准）', '徐磊', '持续', '—', '—', 0, '待完善', 'warning']
+  ].map(function (a) {
+    return '<tr><td class="t-main">' + a[0] + '</td><td><span class="tag">' + a[1] + '</span></td>' +
+      '<td class="fz12 ' + (a[7] ? 'muted' : '') + '" style="' + (a[7] ? '' : 'color:var(--danger)') + '">' + a[2] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(a[3], 'sm') + '<span class="fz12">' + a[3] + '</span></div></td>' +
+      '<td class="fz12">' + a[4] + '</td>' +
+      '<td>' + (a[5] === '—' ? '<span class="muted">—</span>' : '<span class="id-link">' + a[5] + '</span>') + '</td>' +
+      '<td class="dim fz12">' + a[6] + '</td>' +
+      '<td>' + (a[7] ? '<span class="tag success">达标</span>' : '<span class="tag danger">不达标</span>') + '</td>' +
+      '<td><span class="tag ' + a[9] + '">' + a[8] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('repeatBox').innerHTML = [
+  ['跨团队依赖无 SLA 约束', 3, '26-13 / 26-14 / 26-15', '已升级至 PMO，由沈知远推动跨部门机制'],
+  ['压测环境资源不足', 2, '26-14 / 26-15', '资源池化方案已立项，Q3 效能专项预算'],
+  ['测试数据准备耗时', 2, '26-14 / 26-15', '测试数据工厂纳入本次行动项']
+].map(function (r) {
+  return '<div style="padding:10px 12px;border-radius:9px;background:var(--danger-bg);margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><span class="tag danger">重复 ' + r[1] + ' 次</span>' +
+    '<b class="fz12">' + r[0] + '</b></div>' +
+    '<div class="muted fz11 mt4">出现在：' + r[2] + '</div>' +
+    '<div class="fz11 mt4" style="color:var(--brand-600)">处置：' + r[3] + '</div></div>';
+}).join('');
+document.getElementById('sysAdvice').innerHTML = [
+  ['danger', '代码评审是本迭代最大等待项（P85 2.6 天）', '评审集中在 D8~D10，建议限制单人同时在评审中的 PR 数，并把评审纳入每日固定时段'],
+  ['warning', '跨团队依赖等待 3.5 天，占周期 21%', '建议给依赖登记 SLA 并在企业微信自动升级；这是连续第 3 次提出'],
+  ['success', '承诺达成率从 67% 回升到 89%', '插入需求准入规则有效，建议固化到流程规范 V4.3'],
+  ['brand', '未完成携带 5 点（1 个故事）', '建议在下迭代规划时优先安排，避免二次携带']
+].map(function (a) {
+  return '<div style="padding:10px 12px;border-radius:9px;background:var(--' + (a[0] === 'brand' ? 'brand-50' : a[0] + '-bg') + ');margin-bottom:8px">' +
+    '<div class="fz12 fw6" style="color:var(--ink-800)">' + a[1] + '</div>' +
+    '<div class="muted fz11 mt4" style="line-height:1.7">' + a[2] + '</div></div>';
+}).join('');
+
+/* 结论侧栏 */
+document.getElementById('lessonBox').innerHTML = [
+  ['可复制', '插入需求准入规则（P0 才可插入 + 产品总监审批）'],
+  ['可复制', '13 点以上故事强制拆分，估算偏差收窄 22pt'],
+  ['需推广', '跨团队依赖 SLA 机制（本团队试点后推广全中心）']
+].map(function (l) {
+  return '<div class="flex items-start gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag ' + (l[0] === '可复制' ? 'success' : 'brand') + '">' + l[0] + '</span>' +
+    '<span class="fz12" style="flex:1;color:var(--ink-600);line-height:1.65">' + l[1] + '</span></div>';
+}).join('') + '<button class="btn btn-sm btn-block mt8" data-toast="已沉淀为知识库经验卡片">沉淀到知识库</button>';
+document.getElementById('histBox').innerHTML = [
+  ['Sprint 26-14 回顾', '5 项 · 闭环 60%', '07-28'], ['Sprint 26-13 回顾', '4 项 · 闭环 100%', '07-13'],
+  ['Sprint 26-12 回顾', '2 项 · 闭环 100%', '06-29']
+].map(function (h) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100);cursor:pointer">' +
+    '<span class="tico task">' + icon('history', 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + h[0] + '</div><div class="muted fz11">' + h[1] + '</div></div>' +
+    '<span class="muted fz11">' + h[2] + '</span></div>';
+}).join('');
+</script>
+</body>
+</html>

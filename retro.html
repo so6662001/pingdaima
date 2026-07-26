@@ -181,7 +181,7 @@
     <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">开启匿名反馈与投票</span></div>
     <div class="flex items-center gap8 mt8"><span class="switch on"></span><span class="fz12 dim">改进项自动生成任务并纳入下个迭代</span></div>
   </div>
-  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="复盘已创建，已通知参与人提交反馈">创建复盘</button></div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close onclick="setTimeout(function(){location.href='retro-detail.html'},400)" data-toast="复盘已创建，正在打开复盘详情…">创建复盘</button></div>
 </div>
 
 <script src="assets/js/icons.js"></script>
@@ -215,7 +215,7 @@ document.getElementById('retroTable').innerHTML =
    ['INC-0712 风控模型内存溢出复盘', '故障复盘', '风控模型服务', '郑宇', 5, 3, 100, '压测未覆盖长时运行场景', '07-14', 'success'],
    ['Sprint 26-12 迭代回顾', '迭代回顾', '前端体验组', '王倩', 4, 2, 100, '结对评审提升了一次通过率', '06-29', 'success']
   ].map(function (r) {
-    return '<tr onclick="document.querySelector(\'[data-tab=' + (r[1] === '故障复盘' ? 'r4' : r[1] === '需求复盘' ? 'r3' : 'r2') + ']\').click()">' +
+    return '<tr onclick="location.href=\'' + (r[1] === '故障复盘' ? 'retro.html#tab=r4' : r[1] === '需求复盘' ? 'retro.html#tab=r3' : 'retro-detail.html') + '\'">' +
       '<td><div class="row-flex"><span class="tico ' + (r[1] === '故障复盘' ? 'bug' : r[1] === '需求复盘' ? 'req' : 'task') + '">' + icon('history', 11) + '</span>' +
       '<span class="t-main">' + r[0] + '</span></div></td>' +
       '<td><span class="tag ' + TYTAG[r[1]] + '">' + r[1] + '</span></td><td class="dim fz12">' + r[2] + '</td>' +

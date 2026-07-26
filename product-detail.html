@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>统一支付网关 · 产品详情 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="product" data-crumb="交付管理/产品管理/统一支付网关">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <!-- 产品头 -->
+      <div class="card mb16">
+        <div style="height:4px;border-radius:12px 12px 0 0;background:#2b5cff"></div>
+        <div class="card-body" style="padding:14px 18px">
+          <div class="flex items-center gap12">
+            <div style="width:46px;height:46px;border-radius:12px;background:#2b5cff18;color:#2b5cff;display:grid;place-items:center;font-weight:700;font-size:13px">PAY</div>
+            <div>
+              <div class="flex items-center gap8">
+                <span class="page-title" style="font-size:19px">统一支付网关</span>
+                <span class="tag brand">成长期</span>
+                <span class="tag success">健康度 92</span>
+                <span class="tag line">当前 V2.9.3</span>
+                <span class="tag warning">下一版本 V3.0（09-30）</span>
+              </div>
+              <div class="muted fz12 mt4">产品编号 PROD-01 · 产品负责人 周雅 · 研发负责人 李思远 · 服务客户 36 家 · 上线 4.2 年</div>
+            </div>
+            <div class="ml-auto flex items-center gap8">
+              <button class="btn btn-sm"><span data-icon="star" data-size="13"></span>关注</button>
+              <button class="btn btn-sm" data-toast="产品月报已生成并推送"><span data-icon="file" data-size="13"></span>产品月报</button>
+              <button class="btn btn-sm" data-modal="mEditProd"><span data-icon="settings" data-size="13"></span>维护产品信息</button>
+              <button class="btn btn-sm btn-primary" data-modal="mNewVer2"><span data-icon="plus" data-size="13"></span>规划版本</button>
+            </div>
+          </div>
+          <div class="grid g5 mt16" style="gap:10px" id="prodKpi"></div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="d1"><span data-icon="dashboard" data-size="14"></span>产品概览</div>
+        <div class="tab" data-tab="d2"><span data-icon="layers" data-size="14"></span>能力与模块 <span class="cnt">7</span></div>
+        <div class="tab" data-tab="d3"><span data-icon="bulb" data-size="14"></span>需求与路线图 <span class="cnt">41</span></div>
+        <div class="tab" data-tab="d4"><span data-icon="rocket" data-size="14"></span>版本与发布 <span class="cnt">6</span></div>
+        <div class="tab" data-tab="d5"><span data-icon="building" data-size="14"></span>客户与反馈 <span class="cnt">36</span></div>
+        <div class="tab" data-tab="d6"><span data-icon="chart" data-size="14"></span>产品指标</div>
+        <div class="tab" data-tab="d7"><span data-icon="settings" data-size="14"></span>产品配置</div>
+      </div>
+
+      <!-- 概览 -->
+      <div class="tab-pane active" data-pane="d1">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>核心业务指标趋势</div>
+            <div class="card-sub">月交易额（亿元）与支付成功率</div></div>
+            <div class="card-body"><div id="bizTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>产品健康度</div></div>
+            <div class="card-body"><div id="healthRadar"></div></div></div>
+        </div>
+        <div class="grid g3 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="warn"></span>当前风险</div></div>
+            <div class="card-body" id="riskBox"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="calendar"></span>关键里程碑</div></div>
+            <div class="card-body" id="msBox"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>近期动态</div></div>
+            <div class="card-body" style="max-height:300px;overflow:auto"><div class="timeline" id="feedBox"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="users"></span>产品团队</div>
+            <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="plus" data-size="13"></span>添加成员</button></div></div>
+          <div class="card-body flush"><table class="tbl" id="teamTable"></table></div>
+        </div>
+      </div>
+
+      <!-- 能力与模块 -->
+      <div class="tab-pane" data-pane="d2">
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="layers"></span>产品能力地图</div>
+            <div class="card-sub">模块划分同时用于需求归属、缺陷归类、漏测分析与代码仓库映射</div>
+            <div class="card-head-actions"><button class="btn btn-sm btn-primary" data-modal="mEditProd"><span data-icon="plus" data-size="13"></span>新增模块</button></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="moduleTable"></table></div></div>
+        </div>
+        <div class="grid g2">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>能力成熟度</div></div>
+            <div class="card-body"><div id="matureBar"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="branch"></span>关联代码仓库</div></div>
+            <div class="card-body" id="repoBox"></div></div>
+        </div>
+      </div>
+
+      <!-- 需求与路线图 -->
+      <div class="tab-pane" data-pane="d3">
+        <div class="grid g4 mb16" id="reqStats"></div>
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="compass"></span>产品路线图（Now / Next / Later）</div>
+            <div class="card-head-actions"><a class="btn btn-sm" href="product.html#tab=p2">在总路线图中查看</a></div></div>
+          <div class="card-body"><div class="grid g3" id="rmCols"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="bulb"></span>该产品需求列表</div>
+            <div class="card-sub">41 条在研 · 按优先级得分排序</div>
+            <div class="card-head-actions"><a class="btn btn-sm" href="requirement.html">在需求池中查看</a></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="reqTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 版本与发布 -->
+      <div class="tab-pane" data-pane="d4">
+        <div class="grid g-2-1">
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="rocket"></span>版本列表</div></div>
+              <div class="card-body flush"><table class="tbl" id="verTable"></table></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>发布记录</div>
+              <div class="card-sub">近 30 天 12 次发布 · 成功率 91.7%</div></div>
+              <div class="card-body flush"><table class="tbl" id="relTable"></table></div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shieldCheck"></span>V3.0 发布就绪度</div></div>
+              <div class="card-body" id="readyBox"></div>
+              <div class="card-foot"><button class="btn btn-primary btn-block" data-toast="发布评审已发起">发起发布评审</button></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>发布频率与稳定性</div></div>
+              <div class="card-body"><div id="relTrend"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 客户与反馈 -->
+      <div class="tab-pane" data-pane="d5">
+        <div class="grid g4 mb16" id="custStats"></div>
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="building"></span>使用该产品的客户</div>
+            <div class="card-head-actions"><a class="btn btn-sm" href="customer.html">客户跟踪</a></div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="custTable"></table></div></div></div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="trendUp"></span>热点诉求 TOP</div></div>
+              <div class="card-body"><div id="hotBar"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="comment"></span>客户原声</div></div>
+              <div class="card-body" id="quoteBox"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 产品指标 -->
+      <div class="tab-pane" data-pane="d6">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>北极星指标与质量</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#2b5cff"></i>月交易笔数（万）</span><span><i style="background:#15a86b"></i>支付成功率（%）</span></div>
+              <div id="northStar"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="zap"></span>功能采纳率</div></div>
+            <div class="card-body"><div id="adoptBar"></div></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shield"></span>稳定性</div></div>
+            <div class="card-body" id="stableBox"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>交易结构</div></div>
+            <div class="card-body"><div id="mixDonut"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>指标口径与目标</div></div>
+            <div class="card-body flush"><table class="tbl" id="kpiTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 产品配置（维护产品） -->
+      <div class="tab-pane" data-pane="d7">
+        <div class="grid g-2-1">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="settings"></span>产品基本信息</div>
+              <div class="card-head-actions"><button class="btn btn-sm btn-primary" data-toast="产品信息已保存">保存修改</button></div></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="field"><label>产品名称<span class="req">*</span></label><input class="input" value="统一支付网关"></div>
+                <div class="field"><label>产品编号</label><input class="input" value="PROD-01" readonly></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label>产品简称 / 代号</label><input class="input" value="PAY"></div>
+                <div class="field"><label>生命周期阶段</label><select class="select"><option>成长期</option><option>探索期</option><option>建设期</option><option>成熟期</option><option>衰退/下线</option></select></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label>产品负责人</label><select class="select"><option>周雅（产品总监）</option><option>孙悦</option></select></div>
+                <div class="field"><label>研发负责人</label><select class="select"><option>李思远（后端负责人）</option><option>陈立</option></select></div>
+              </div>
+              <div class="field"><label>产品定位 / 一句话描述</label>
+                <textarea class="textarea" style="min-height:60px">面向商户与渠道的统一收单与清结算能力平台，支撑全渠道支付受理、智能路由与资金清分。</textarea></div>
+              <div class="field"><label>主题色 / 图标</label>
+                <div class="flex items-center gap8">
+                  <div style="width:34px;height:34px;border-radius:9px;background:#2b5cff"></div>
+                  <input class="input mono" value="#2b5cff" style="width:110px">
+                  <span class="fz12 muted">用于看板色条、路线图与图表配色</span></div></div>
+              <div class="field"><label>可见范围</label>
+                <div class="flex flex-wrap gap8">
+                  <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">研发中心全员</span></span>
+                  <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">业务方门户</span></span>
+                  <span class="flex items-center gap6"><span class="checkbox"></span><span class="fz12">客户门户（需逐条选择路线图）</span></span>
+                </div></div>
+            </div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>KPI 口径配置</div>
+              <div class="card-sub">决定产品度量页与效能报告取数</div></div>
+              <div class="card-body" id="kpiCfg"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="link"></span>关联配置</div></div>
+              <div class="card-body" id="linkCfg"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title" style="color:var(--danger)"><span data-icon="alert"></span>危险操作</div></div>
+              <div class="card-body">
+                <div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">
+                  <div style="flex:1"><div class="fz12 fw5">归档产品</div><div class="muted fz11 mt4">归档后只读，历史数据保留</div></div>
+                  <button class="btn btn-sm">归档</button></div>
+                <div class="flex items-center gap8" style="padding:8px 0">
+                  <div style="flex:1"><div class="fz12 fw5">删除产品</div><div class="muted fz11 mt4">存在 41 条在研需求，禁止删除</div></div>
+                  <button class="btn btn-sm btn-danger" disabled>删除</button></div>
+              </div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mEditProd" style="width:680px">
+  <div class="modal-head"><span data-icon="box"></span><span class="modal-title">维护产品信息</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>产品名称<span class="req">*</span></label><input class="input" value="统一支付网关"></div>
+      <div class="field"><label>简称 / 代号</label><input class="input" value="PAY"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>生命周期阶段</label><select class="select"><option>成长期</option><option>探索期</option><option>建设期</option><option>成熟期</option></select></div>
+      <div class="field"><label>主题色</label><input class="input mono" value="#2b5cff"></div>
+    </div>
+    <div class="field"><label>产品负责人 / 研发负责人</label>
+      <div class="flex gap8"><select class="select"><option>周雅</option></select><select class="select"><option>李思远</option></select></div></div>
+    <div class="field"><label>产品模块（用于需求归属与缺陷归类）</label>
+      <div class="flex flex-wrap gap6" id="modTags"></div></div>
+    <div class="field"><label>关联代码仓库</label>
+      <div class="flex flex-wrap gap6" id="repoTags"></div></div>
+    <div class="field"><label>产品定位</label><textarea class="textarea" style="min-height:56px">面向商户与渠道的统一收单与清结算能力平台。</textarea></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="产品信息已更新">保存</button></div>
+</div>
+
+<div class="modal" id="mNewVer2">
+  <div class="modal-head"><span data-icon="rocket"></span><span class="modal-title">规划新版本</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>版本号<span class="req">*</span></label><input class="input" value="V3.1"></div>
+      <div class="field"><label>计划发布</label><input class="input" value="2026-11-15"></div>
+    </div>
+    <div class="field"><label>版本主题</label><input class="input" placeholder="例如：跨境与多币种能力"></div>
+    <div class="field"><label>版本目标</label><textarea class="textarea" placeholder="本版本要达成的业务与技术目标"></textarea></div>
+    <div class="field"><label>由哪些迭代交付</label>
+      <div class="flex flex-wrap gap6"><span class="tag brand">Sprint 26-19</span><span class="tag brand">Sprint 26-20</span><span class="tag line">+ 添加</span></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="版本 V3.1 已创建">创建版本</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('prodKpi').innerHTML = [
+  ['月交易额', '¥ 386 亿', '同比 +12.4%', ''], ['支付成功率', '97.4%', '目标 98.9%', 'orange'],
+  ['在研需求', '41 条', '本月交付 9 条', ''], ['未关闭缺陷', '17 个', 'P0 1 · P1 5', 'red'],
+  ['可用性 SLA', '99.982%', '承诺 99.99%', 'orange']
+].map(function (k) {
+  return '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">' + k[0] + '</div>' +
+    '<div class="fw6 mt4" style="font-size:15px;color:' + (k[3] === 'red' ? 'var(--danger)' : k[3] === 'orange' ? 'var(--warning)' : 'var(--ink-900)') + '">' + k[1] + '</div>' +
+    '<div class="muted fz11 mt4">' + k[2] + '</div></div>';
+}).join('');
+
+Charts.bar('#bizTrend', {
+  height: 250, labels: ['2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '月交易额（亿）', data: [302, 318, 336, 348, 364, 386], color: '#2b5cff' }],
+  lineSeries: { name: '成功率(%)', data: [96.4, 96.5, 96.9, 97.0, 97.2, 97.4], color: '#15a86b' }, lineMax: 100
+});
+Charts.radar('#healthRadar', {
+  size: 250, axes: ['功能完备', '性能', '稳定性', '易用性', '安全合规', '可扩展'],
+  series: [{ name: '统一支付网关', data: [92, 78, 95, 82, 90, 76], color: '#2b5cff' },
+    { name: '目标', data: [95, 90, 99, 88, 95, 88], color: '#b3bfd0' }]
+});
+document.getElementById('riskBox').innerHTML = [
+  ['danger', '压测 TPS 8.2k / 目标 12k', '影响 V3.0 09-30 全量切流，已成立性能攻坚小组'],
+  ['danger', '路由与清结算模块单点依赖', '何俊模块贡献率 52%，正在结对与文档化'],
+  ['warning', '可用性 99.982% 低于承诺', '主因对账批处理超时，改进项在跟踪中']
+].map(function (r) {
+  return '<div style="padding:9px 11px;border-radius:9px;background:var(--' + r[0] + '-bg);margin-bottom:8px">' +
+    '<div class="fz12 fw6" style="color:var(--ink-800)">' + r[1] + '</div>' +
+    '<div class="muted fz11 mt4">' + r[2] + '</div></div>';
+}).join('');
+document.getElementById('msBox').innerHTML = [
+  ['07-28', 'V3.0 灰度发布（10% 流量）', 'blue'], ['08-20', '压测达标门禁', 'orange'],
+  ['09-30', 'V3.0 全量切流 + 老网关下线', 'red'], ['11-15', 'V3.1 跨境能力 GA', 'gray']
+].map(function (m) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div class="tc" style="width:44px;flex:none"><div class="strong fz13">' + m[0].split('-')[1] + '</div>' +
+    '<div class="muted fz11">' + m[0].split('-')[0] + '月</div></div>' +
+    '<span class="dot-status ' + m[2] + '"></span>' +
+    '<span class="fz12" style="flex:1">' + m[1] + '</span></div>';
+}).join('');
+document.getElementById('feedBox').innerHTML = [
+  { c: 'brand', i: 'bulb', t: '<b>REQ-2041</b> 智能路由进入架构评审', time: '2 小时前' },
+  { c: 'red', i: 'bug', t: '<b>BUG-771</b> 生产对账超时升级为 P0', time: '今天 08:05' },
+  { c: 'green', i: 'rocket', t: '<b>V2.9.3</b> 稳定性补丁已发布生产', time: '今天 02:10' },
+  { c: '', i: 'commit', t: '<b>何俊</b> 推送 4 次提交到 feature/smart-router', time: '昨天' },
+  { c: 'orange', i: 'zap', t: '流水线 release-3.0 构建失败（单测 3 例）', time: '昨天' },
+  { c: 'green', i: 'thumb', t: '客户回访：REQ-2031 大盘获 5 星评价', time: '07-25' }
+].map(function (f) {
+  return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+    '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div></div>';
+}).join('');
+document.getElementById('teamTable').innerHTML =
+  '<thead><tr><th>成员</th><th>角色</th><th>团队</th><th>负责模块</th><th class="num">在研需求</th><th class="num">产品贡献率</th><th>负载</th></tr></thead><tbody>' +
+  [['周雅', '产品负责人', '产品部', '全产品', 14, '10%', 88],
+   ['李思远', '研发负责人', '交易平台组', '交易受理 / 路由', 9, '14%', 105],
+   ['何俊', '核心研发', '交易平台组', '路由与清结算', 6, '18%', 110],
+   ['王倩', '前端负责人', '前端体验组', '收银台前端', 7, '8%', 90],
+   ['林小满', 'SRE', '基础架构组', '稳定性与发布', 5, '8%', 80],
+   ['吴敏', '测试负责人', '质量保障部', '全模块测试', 12, '7%', 100],
+   ['陈立', '架构支持', '技术架构组', '架构与治理', 11, '5%', 70]
+  ].map(function (m) {
+    return '<tr><td><div class="row-flex">' + UI.avatar(m[0], 'sm') + '<span class="t-main">' + m[0] + '</span></div></td>' +
+      '<td class="dim fz12">' + m[1] + '</td><td class="dim fz12">' + m[2] + '</td><td class="fz12">' + m[3] + '</td>' +
+      '<td class="num">' + m[4] + '</td><td class="num">' + m[5] + '</td>' +
+      '<td><div class="row-flex" style="width:110px"><div style="flex:1">' + UI.bar(Math.min(m[6], 100), m[6] > 100 ? 'red' : m[6] >= 95 ? 'orange' : '', 'thin') + '</div>' +
+      '<span class="fz11">' + m[6] + '%</span></div></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 能力与模块 */
+document.getElementById('moduleTable').innerHTML =
+  '<thead><tr><th>模块</th><th>说明</th><th>负责人</th><th>成熟度</th><th class="num">在研需求</th><th class="num">未关闭缺陷</th><th class="num">用例数</th><th>关联仓库</th><th style="width:34px"></th></tr></thead><tbody>' +
+  [['交易受理', '收单受理、订单管理、多渠道接入', '何俊', 5, 12, 4, 486, 'payment-gateway'],
+   ['路由与渠道', '通道路由、熔断、渠道适配', '何俊', 4, 14, 6, 486, 'payment-gateway'],
+   ['清结算', '对账、清分、结算、差错处理', '何俊', 5, 8, 5, 312, 'settle-service'],
+   ['收银台前端', 'H5 / 小程序 / SDK 收银台', '王倩', 4, 5, 2, 208, 'payment-cashier-web'],
+   ['费率与限额', '费率配置、限额中心', '李思远', 3, 2, 0, 96, 'payment-gateway'],
+   ['可观测与运维', '监控大盘、告警、灰度发布', '林小满', 4, 0, 0, 64, 'payment-gateway'],
+   ['跨境与多币种', '规划中，V3.1 交付', '李思远', 1, 0, 0, 0, '—']
+  ].map(function (m) {
+    var LVN = ['—', '规划中', '基础', '可用', '成熟', '领先'];
+    var LVC = ['#f6f8fb', '#eef2f7', '#dbe4ff', '#b9c9ff', '#5d82ff', '#1d47e6'];
+    return '<tr><td class="t-main">' + m[0] + '</td><td class="fz12 muted">' + m[1] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(m[2], 'sm') + '<span class="fz12">' + m[2] + '</span></div></td>' +
+      '<td><span style="display:inline-block;min-width:52px;padding:2px 8px;border-radius:6px;font-size:11px;background:' + LVC[m[3]] +
+      ';color:' + (m[3] >= 4 ? '#fff' : m[3] >= 2 ? '#1637b4' : '#8c9ab1') + '">' + LVN[m[3]] + '</span></td>' +
+      '<td class="num">' + m[4] + '</td>' +
+      '<td class="num" style="color:' + (m[5] > 4 ? 'var(--danger)' : '') + '">' + m[5] + '</td>' +
+      '<td class="num dim">' + m[6] + '</td>' +
+      '<td class="mono fz11 muted">' + m[7] + '</td>' +
+      '<td><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'编辑模块\',icon:\'edit\'},{label:\'查看需求\',icon:\'bulb\'},{label:\'查看缺陷\',icon:\'bug\'},{label:\'查看用例\',icon:\'flask\'}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+Charts.hbar('#matureBar', { max: 5, unit: ' / 5', data: [
+  { name: '交易受理', value: 5 }, { name: '清结算', value: 5 }, { name: '路由与渠道', value: 4 },
+  { name: '收银台前端', value: 4 }, { name: '可观测与运维', value: 4 }, { name: '费率与限额', value: 3 },
+  { name: '跨境与多币种', value: 1, color: '#b3bfd0' }] });
+document.getElementById('repoBox').innerHTML = [
+  ['payment-gateway', 'Java', '核心服务：受理/路由/费率', 78, 24],
+  ['settle-service', 'Java', '清结算与对账', 82, 9],
+  ['payment-cashier-web', 'TypeScript', '收银台前端', 64, 12]
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    icon('github', 15) + '<div style="flex:1"><div class="fz12 mono">' + r[0] + '</div>' +
+    '<div class="muted fz11 mt4">' + r[1] + ' · ' + r[2] + '</div></div>' +
+    '<span class="tag">覆盖率 ' + r[3] + '%</span><span class="tag">' + r[4] + ' 分支</span></div>';
+}).join('') + '<a class="btn btn-sm btn-block mt8" href="devops.html">前往代码与 CI</a>';
+
+/* 需求与路线图 */
+document.getElementById('reqStats').innerHTML = [
+  ['在研需求', 41, '条', '#2b5cff'], ['本月交付', 9, '条', '#15a86b'],
+  ['待评审', 3, '条', '#f59e0b'], ['客户提出占比', 46, '%', '#7c5cff']
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-label">' + s[0] + '</span></div>' +
+    '<div class="stat-val" style="color:' + s[3] + '">' + s[1] + '<small>' + s[2] + '</small></div></div>';
+}).join('');
+document.getElementById('rmCols').innerHTML = [
+  ['Now（Q3 进行中）', '#15a86b', [['智能路由与成本优化', 3], ['数字人民币受理', 0], ['对账自动核销', 5]]],
+  ['Next（Q4 规划）', '#2b5cff', [['跨境支付能力建设', 1], ['费率策略中心升级', 2]]],
+  ['Later（评估中）', '#7c5cff', [['多币种资金池', 0], ['海外通道接入', 1]]]
+].map(function (c) {
+  return '<div style="background:var(--ink-50);border-radius:10px;padding:10px 12px">' +
+    '<div class="flex items-center gap6 mb8"><span class="dot-status" style="background:' + c[1] + '"></span><b class="fz13">' + c[0] + '</b>' +
+    '<span class="tag ml-auto">' + c[2].length + '</span></div>' +
+    c[2].map(function (it) {
+      return '<div style="background:#fff;border-radius:8px;padding:9px 10px;margin-bottom:6px">' +
+        '<div class="fz12 fw5">' + it[0] + '</div>' +
+        '<div class="mt4">' + (it[1] ? '<span class="tag brand" style="height:17px">' + icon('building', 10) + it[1] + ' 家客户</span>'
+          : '<span class="tag" style="height:17px">内部驱动</span>') + '</div></div>';
+    }).join('') + '</div>';
+}).join('');
+document.getElementById('reqTable').innerHTML =
+  '<thead><tr><th>需求</th><th>模块</th><th>来源</th><th class="num">价值</th><th class="num">紧迫</th><th class="num">优先级得分</th><th>状态</th><th>目标版本</th><th>负责人</th></tr></thead><tbody>' +
+  [['REQ-2041', '支付网关多渠道智能路由能力', '路由与渠道', '产品规划', 92, 88, 110.1, '评审中', 'V3.0', '李思远', 'warning'],
+   ['REQ-2040', '收银台支持数字人民币支付', '交易受理', '监管合规', 88, 95, 98.2, '开发中', 'V3.0', '何俊', 'brand'],
+   ['REQ-2035', '交易对账文件自动核销与差错处理', '清结算', '工单', 74, 68, 76.4, '开发中', 'V3.0', '何俊', 'brand'],
+   ['REQ-2031', '支付成功率实时大盘与自动告警', '可观测与运维', '客户反馈', 79, 72, 88.6, '已发布', 'V2.9', '林小满', 'success'],
+   ['REQ-2048', '费率策略中心多维配置', '费率与限额', '产品规划', 66, 54, 58.2, '待排期', 'V3.1', '—', 'purple'],
+   ['REQ-2045', '资金池头寸预测模型', '清结算', '数据洞察', 62, 48, 52.4, '评审中', '待定', '何俊', 'warning']
+  ].map(function (r) {
+    return '<tr onclick="location.href=\'requirement-detail.html\'"><td><div><div class="t-main">' + r[1] + '</div>' +
+      '<div class="id-link">' + r[0] + '</div></div></td>' +
+      '<td class="dim fz12">' + r[2] + '</td><td><span class="tag line">' + r[3] + '</span></td>' +
+      '<td class="num">' + r[4] + '</td><td class="num">' + r[5] + '</td>' +
+      '<td class="num"><b style="color:var(--brand-600)">' + r[6] + '</b></td>' +
+      '<td><span class="tag ' + r[10] + '">' + r[7] + '</span></td>' +
+      '<td><span class="tag line">' + r[8] + '</span></td>' +
+      '<td class="dim fz12">' + r[9] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* 版本与发布 */
+document.getElementById('verTable').innerHTML =
+  '<thead><tr><th>版本</th><th>主题</th><th>计划发布</th><th>需求/缺陷</th><th style="width:100px">就绪度</th><th>状态</th></tr></thead><tbody>' +
+  [['V3.0', '架构重构与智能路由', '09-30', '18 / 6', 68, '开发中', 'brand'],
+   ['V3.1', '跨境与多币种', '11-15', '11 / 0', 8, '规划中', ''],
+   ['V2.9.3', '稳定性补丁', '07-24', '3 / 8', 100, '已发布', 'success'],
+   ['V2.9', '成功率大盘与告警', '07-18', '6 / 2', 100, '已发布', 'success'],
+   ['V2.8', '渠道适配优化', '06-20', '8 / 3', 100, '已发布', 'success'],
+   ['V2.7', '收银台组件升级', '05-22', '7 / 4', 100, '已发布', 'success']
+  ].map(function (v) {
+    return '<tr><td><b>' + v[0] + '</b></td><td class="fz12">' + v[1] + '</td><td class="dim fz12">' + v[2] + '</td>' +
+      '<td class="fz12"><span style="color:var(--brand-600)">' + v[3].split(' / ')[0] + '</span> / <span style="color:var(--danger)">' + v[3].split(' / ')[1] + '</span></td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(v[4], v[4] >= 90 ? 'green' : '', 'thin') + '</div><span class="fz11 muted">' + v[4] + '%</span></div></td>' +
+      '<td><span class="tag ' + v[6] + '">' + v[5] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('relTable').innerHTML =
+  '<thead><tr><th>发布单</th><th>环境</th><th>版本</th><th>方式</th><th>结果</th><th>时间</th></tr></thead><tbody>' +
+  [['REL-0724-03', '生产', 'V2.9.3', '滚动', '成功', 'success', '07-24 02:10'],
+   ['REL-0723-08', '预发', 'V3.0-rc2', '蓝绿', '成功', 'success', '07-23 21:30'],
+   ['REL-0718-02', '生产', 'V2.9', '灰度 20%→100%', '成功', 'success', '07-18 01:40'],
+   ['REL-0712-05', '生产', 'V2.8.1', '滚动', '已回滚', 'danger', '07-12 02:05']
+  ].map(function (r) {
+    return '<tr><td class="mono fz11">' + r[0] + '</td>' +
+      '<td><span class="tag ' + (r[1] === '生产' ? 'danger' : 'warning') + '">' + r[1] + '</span></td>' +
+      '<td class="fz12">' + r[2] + '</td><td class="dim fz12">' + r[3] + '</td>' +
+      '<td><span class="tag ' + r[5] + '">' + r[4] + '</span></td><td class="muted fz11">' + r[6] + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('readyBox').innerHTML = [
+  ['需求全部验收通过', 1, '18/18'], ['回归通过率 ≥ 98%', 0, '96.8%'], ['P0/P1 缺陷清零', 0, '剩 2 个 P1'],
+  ['性能压测达标', 0, '8.2k / 12k'], ['安全扫描无高危', 1, '0 高危'], ['灰度与回滚方案', 1, '已评审']
+].map(function (g) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span style="color:' + (g[1] ? 'var(--success)' : 'var(--danger)') + '">' + icon(g[1] ? 'circleCheck' : 'alert', 15) + '</span>' +
+    '<span class="fz12" style="flex:1">' + g[0] + '</span>' +
+    '<b class="fz12" style="color:' + (g[1] ? 'var(--success)' : 'var(--danger)') + '">' + g[2] + '</b></div>';
+}).join('') + '<div class="flex items-center gap8 mt12"><span class="tag danger">3 项未达标</span>' +
+  '<div style="flex:1">' + UI.bar(68, 'orange') + '</div><b class="fz12">68%</b></div>';
+Charts.line('#relTrend', {
+  height: 200, labels: ['3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '发布次数', data: [8, 9, 11, 12, 12], color: '#2b5cff', area: true },
+    { name: '回滚次数', data: [2, 1, 1, 1, 1], color: '#e5484d' }]
+});
+
+/* 客户与反馈 */
+document.getElementById('custStats').innerHTML = [
+  ['使用客户', 36, '家', '#2b5cff'], ['战略/KA', 18, '家', '#7c5cff'],
+  ['本月工单', 216, '条', '#f59e0b'], ['满意度', 4.5, '/5', '#15a86b']
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-label">' + s[0] + '</span></div>' +
+    '<div class="stat-val" style="color:' + s[3] + '">' + s[1] + '<small>' + s[2] + '</small></div></div>';
+}).join('');
+document.getElementById('custTable').innerHTML =
+  '<thead><tr><th>客户</th><th>等级</th><th>年交易额</th><th class="num">在跟需求</th><th class="num">未关闭工单</th><th>满意度</th><th>健康度</th></tr></thead><tbody>' +
+  [['华南连锁商超集团', '战略', '¥42.6 亿', 4, 3, 4.5, '良好', 'success'],
+   ['星辰出行科技', '战略', '¥38.2 亿', 3, 2, 4.7, '优秀', 'success'],
+   ['云上餐饮连锁', 'KA', '¥16.8 亿', 5, 4, 4.2, '关注', 'warning'],
+   ['悦享连锁酒店', 'KA', '¥12.4 亿', 2, 1, 4.6, '良好', 'success'],
+   ['万联便利', 'KA', '¥9.6 亿', 2, 2, 3.8, '风险', 'danger']
+  ].map(function (c) {
+    var LVT = { '战略': 'danger', 'KA': 'purple', '普通': '' };
+    return '<tr onclick="location.href=\'customer.html\'"><td class="t-main">' + c[0] + '</td>' +
+      '<td><span class="tag ' + LVT[c[1]] + '">' + c[1] + '</span></td><td class="fz12">' + c[2] + '</td>' +
+      '<td class="num">' + c[3] + '</td><td class="num">' + c[4] + '</td>' +
+      '<td><span class="tag ' + (c[5] >= 4.5 ? 'success' : c[5] >= 4 ? 'warning' : 'danger') + '">' + c[5] + '</span></td>' +
+      '<td><span class="tag ' + c[7] + '">' + c[6] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+Charts.hbar('#hotBar', { unit: ' 条', data: [
+  { name: '账单/对账导出超时', value: 42, color: '#e5484d' }, { name: '结算到账延迟', value: 34, color: '#e5484d' },
+  { name: '通道成功率波动', value: 26, color: '#f59e0b' }, { name: '费率配置不灵活', value: 18 },
+  { name: '收银台兼容性', value: 14 }] });
+document.getElementById('quoteBox').innerHTML = [
+  ['华南连锁商超集团 · 财务总监', '账单导出这个问题拖了三个月，希望这次能真正解决。', 'warning'],
+  ['星辰出行科技 · 技术负责人', '成功率大盘上线后运维能第一时间看到通道异常，非常实用。', 'success'],
+  ['万联便利 · 运营经理', '结算到账时间希望能更稳定，月底特别明显。', 'danger']
+].map(function (q) {
+  return '<div style="padding:10px 12px;border-left:3px solid var(--' + (q[2] === 'success' ? 'success' : q[2] === 'warning' ? 'warning' : 'danger') + ');' +
+    'background:var(--ink-50);border-radius:0 8px 8px 0;margin-bottom:10px">' +
+    '<div class="fz12" style="color:var(--ink-700);line-height:1.75">「' + q[1] + '」</div>' +
+    '<div class="muted fz11 mt4">— ' + q[0] + '</div></div>';
+}).join('');
+
+/* 产品指标 */
+Charts.bar('#northStar', {
+  height: 250, labels: ['2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '交易笔数（万）', data: [2180, 2260, 2420, 2510, 2680, 3120], color: '#2b5cff' }],
+  lineSeries: { name: '成功率(%)', data: [96.4, 96.5, 96.9, 97.0, 97.2, 97.4], color: '#15a86b' }, lineMax: 100
+});
+Charts.hbar('#adoptBar', { unit: '%', data: [
+  { name: '数字人民币收银台', value: 34, color: '#f59e0b' }, { name: '智能路由（灰度）', value: 12, color: '#b3bfd0' },
+  { name: '成功率实时大盘', value: 88, color: '#15a86b' }, { name: '自助对账下载', value: 71 },
+  { name: '费率自助查询', value: 56 }] });
+document.getElementById('stableBox').innerHTML = [
+  ['可用性 SLA', '99.982%', '承诺 99.99%', 'orange'], ['P99 延迟', '86ms', '目标 ≤ 100ms', 'green'],
+  ['月故障次数', '2 次', 'P0 1 次', 'orange'], ['MTTR', '32 分钟', '目标 ≤ 30 分钟', 'orange'],
+  ['缺陷逃逸率', '2.1%', '目标 ≤ 2%', 'orange']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="fz12 dim" style="flex:1">' + r[0] + '</span>' +
+    '<b class="fz12" style="color:var(--' + (r[3] === 'green' ? 'success' : 'warning') + ')">' + r[1] + '</b>' +
+    '<span class="muted fz11" style="width:110px;text-align:right">' + r[2] + '</span></div>';
+}).join('');
+Charts.donut('#mixDonut', { size: 148, thickness: 18, center: { value: '386', label: '亿元/月' }, data: [
+  { name: '扫码支付', value: 168, color: '#2b5cff' }, { name: '银行卡收单', value: 96, color: '#15a86b' },
+  { name: '账户支付', value: 62, color: '#7c5cff' }, { name: '数字人民币', value: 34, color: '#f59e0b' },
+  { name: '其他', value: 26, color: '#b3bfd0' }] });
+document.getElementById('kpiTable').innerHTML =
+  '<thead><tr><th>指标</th><th>口径</th><th>目标</th></tr></thead><tbody>' +
+  [['支付成功率', '成功订单 / 发起订单（剔除用户主动取消）', '≥ 98.9%'],
+   ['月交易额', '成功交易金额合计（不含退款）', '+12% / 年'],
+   ['P99 延迟', '受理接口 P99（不含渠道耗时）', '≤ 100ms'],
+   ['可用性', '1 − 不可用分钟 / 总分钟', '≥ 99.99%'],
+   ['功能采纳率', '使用该功能的活跃商户 / 全部活跃商户', '按功能设定']
+  ].map(function (k) {
+    return '<tr><td class="t-main fz12">' + k[0] + '</td><td class="fz12 muted">' + k[1] + '</td><td class="fz12"><b>' + k[2] + '</b></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 产品配置 */
+document.getElementById('kpiCfg').innerHTML = [
+  ['北极星指标', '月交易额（亿元）', 1], ['质量红线', '可用性 ≥ 99.99% · 缺陷逃逸率 ≤ 2%', 1],
+  ['采纳率统计口径', '活跃商户中使用该功能的比例', 1], ['成本归集', '按需求归集工时 × 人力单价', 1],
+  ['对外展示指标', '仅展示成功率与可用性（脱敏交易额）', 0]
+].map(function (r) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + r[0] + '</div><div class="muted fz11 mt4">' + r[1] + '</div></div>' +
+    '<span class="switch ' + (r[2] ? 'on' : '') + '"></span></div>';
+}).join('');
+document.getElementById('linkCfg').innerHTML = [
+  ['关联项目', 'PRJ-018 支付网关 3.0 重构 · PRJ-019 稳定性专项', 'kanban'],
+  ['关联代码仓库', 'payment-gateway · settle-service · payment-cashier-web', 'github'],
+  ['关联测试模块', '路由与渠道 486 · 清结算 312 · 收银台 208', 'flask'],
+  ['关联知识库空间', '技术架构 / 产品与业务', 'book'],
+  ['工单服务目录', '交易与支付 · 清算与账单', 'inbox']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    icon(r[2], 14) + '<div style="flex:1"><div class="fz12 fw5">' + r[0] + '</div>' +
+    '<div class="muted fz11 mt4">' + r[1] + '</div></div>' + icon('right', 13) + '</div>';
+}).join('');
+document.getElementById('modTags').innerHTML = ['交易受理', '路由与渠道', '清结算', '收银台前端', '费率与限额', '可观测与运维', '跨境与多币种']
+  .map(function (m) { return '<span class="tag brand">' + m + ' <span style="opacity:.6">×</span></span>'; }).join('') +
+  '<span class="tag line" style="cursor:pointer">+ 添加模块</span>';
+document.getElementById('repoTags').innerHTML = ['payment-gateway', 'settle-service', 'payment-cashier-web']
+  .map(function (m) { return '<span class="tag brand mono">' + m + ' <span style="opacity:.6">×</span></span>'; }).join('') +
+  '<span class="tag line" style="cursor:pointer">+ 关联仓库</span>';
+</script>
+</body>
+</html>
