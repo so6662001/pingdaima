@@ -1000,8 +1000,9 @@ function updateHead() {
         (k === 'mine' ? ' · 仅看我（何俊）' : '');
     } else {
       tag = ps.length + ' 个并行迭代'; tag2 = '本周期剩余 3 天';
-      sub = scopeLabel() + ' · ' + pjs.length + ' 个项目同周期迭代（07-14 ~ 07-27）· 迭代承诺合计 ' +
-        cm + ' 点 / 已完成 ' + dn + ' 点' + (k === 'mine' ? ' · 仅看我（何俊）' : '');
+      sub = scopeLabel() + ' · ' + pjs.length + ' 个项目同周期迭代（07-14 ~ 07-27）· ' +
+        (sc.dim === 'team' ? '所在项目迭代承诺合计 ' : '迭代承诺合计 ') + cm + ' 点 / 已完成 ' + dn + ' 点' +
+        (k === 'mine' ? ' · 仅看我（何俊）' : '');
     }
     if (k === 'mine') {
       var my = list.filter(function (c) { return c.own === ME && c.col !== 'done'; });
