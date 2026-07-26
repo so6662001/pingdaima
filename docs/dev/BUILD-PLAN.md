@@ -29,7 +29,7 @@
 
 | 任务 | 目标 | 输入 | 产出 | 验收 |
 | --- | --- | --- | --- | --- |
-| T-0001 | 建仓库骨架与构建 | `docs/dev/TECH-STACK.md` | `backend/` Maven 多模块（common / domain / infra / app）、`frontend/` Vite + Vue 3 + TS、`docker-compose.yml`（MySQL 8 + Redis 7 + RabbitMQ）、根 `Makefile`（全部命令）、Spotless + Checkstyle + ESLint + Prettier、`.env.example`、GitHub Actions | `make up && make build && make lint && make test` 全绿；`make dev` 前后端可访问 |
+| T-0001 | 建仓库骨架与构建 | `docs/dev/TECH-STACK.md` | `backend/` Maven 多模块（common / domain / infra / app）、`frontend/` Vite + Vue 3 + TS、`docker-compose.yml`（MySQL 8 + Redis 7 + RocketMQ namesrv/broker + XXL-Job Admin，含 xxl_job 库初始化）、根 `Makefile`（全部命令）、Spotless + Checkstyle + ESLint + Prettier、`.env.example`、GitHub Actions | `make up && make build && make lint && make test` 全绿；`make dev` 前后端可访问 |
 | T-0002 | 领域契约与代码生成 | `docs/prd/state-machines.md`、`docs/PRD.md` 5.2~5.6、`docs/prd/metrics.md`、`docs/prd/data-model.md#四枚举字典`；规则 `13-contracts` | `contracts/domain/{enums.yaml,algorithms.yaml,metrics.yaml,state-machines/*.yaml}`；`tools/codegen` 生成 Java 常量/枚举/转换表与 TS 对应物；生成物带 DO NOT EDIT 头 | `make codegen` 后 `git diff --exit-code` 干净；生成器自身有单测；`make check-prd` 通过；YAML 中的参数值与 PRD 逐一核对无差异 |
 | T-0003 | 设计系统迁移（Vue） | `assets/css/app.css`、`assets/js/{icons,charts,ui,layout}.js`；规则 `03-ui-fidelity` | `frontend/src/ui/`：`styles/app.css`（原样复制）、`Icon.vue`、`charts/*`（line/area/bar/stackedBar/stackedArea/donut/gauge/radar/heatmap/sparkline/hbar）+ `Chart.vue`、`Toast/Drawer/Modal/Tabs/Switch/Checkbox/Menu/Kanban`、`layout/{AppLayout,Sidebar,Topbar,CommandPalette,NotifyCenter}` | 建 `/kitchen-sink` 演示页渲染全部组件与图表，与原型同类元素逐像素比对差异 ≤ 1% |
 | T-0004 | 抽取原型数据为 fixtures | 24 个原型页面内联 `<script>` 中的数据数组 | `contracts/fixtures/*.json`：users、teams、customers、tickets、products、requirements、projects、sprints、workItems、testCases、releases、worklogs、retros、notifyRules 等，字段名对齐 `docs/prd/data-model.md` | 记录数与原型一致；有一致性测试断言关键条目（REQ-2041、STORY-3313、TK-3821、PRJ-018）字段值与原型相同 |
@@ -44,7 +44,7 @@
 | 任务 | 目标 | 输入 | 产出 | 验收 |
 | --- | --- | --- | --- | --- |
 | T-0101 | MySQL 表结构与 Flyway 迁移 | `docs/prd/data-model.md` 全文 | `backend/db/migration/V1__init.sql` 等：全部实体、字段、索引、唯一约束；utf8mb4、`DATETIME(3)` 存 UTC、`DECIMAL(18,4)` 金额、原生 JSON 字段、`is_deleted` 软删除、无物理外键 | 有测试遍历库表断言关键表与唯一约束存在；`make migrate` 在干净库上成功；重复执行幂等 |
-| T-0102 | 领域模型与 MyBatis 层 | T-0101 表结构、T-0002 契约枚举 | 领域对象、Mapper 与 XML、TypeHandler（JSON 字段）、分页封装、软删除、数据范围拦截器 | Testcontainers 起真实 MySQL 跑 Mapper 测试；分页与软删除行为正确 |
+| T-0102 | 领域模型与持久层 | T-0101 表结构、T-0002 契约枚举 | 领域模型（纯 POJO）、`infra/entity` JPA 实体 + MapStruct 互转、Repository、`JdbcClient` 查询骨架、软删除 `@SQLRestriction`、`@Version` 乐观锁、JSON 字段 `@JdbcTypeCode`、数据范围过滤（JPA Specification + SQL 片段两侧都接） | `ddl-auto=validate` 能启动；Testcontainers 起真实 MySQL 跑 Repository 测试；分页、软删除、乐观锁行为正确；关键查询有 N+1 断言 |
 | T-0103 | 状态机引擎 | `docs/prd/state-machines.md`；T-0002 生成的转换表 | `StateMachineEngine.transition()`：合法性校验 → 守卫（返回全部未满足项）→ 事务内更新状态与 `state_transition_log`（含停留时长）→ 提交后发领域事件；强制流转需 reason 并写审计 | 8 类对象每条合法转换与非法转换均有单测；守卫失败返回具体未满足项；停留时长写入正确 |
 | T-0104 | 种子数据 | `contracts/fixtures/*.json` | `make seed` 幂等灌库 | 重复执行不产生重复数据；各表记录数与 fixtures 一致 |
 | T-0105 | 认证与鉴权 | `docs/PRD.md#22-角色与权限模型` | Spring Security + JWT 登录、企业微信 OAuth 预留、`@PreAuthorize` 方法级鉴权、查询层数据范围注入、越权 404、敏感字段脱敏 | 权限矩阵 10 项 × 5 角色测试全通过；越权断言 404；脱敏用例通过 |
@@ -121,7 +121,7 @@
 
 | 任务 | 目标 | 输入 | 产出 | 验收 |
 | --- | --- | --- | --- | --- |
-| T-0601 | GitHub 集成与 Webhook 网关 | PRD 8.1；`docs/prd/flows.md#41-github-事件驱动工作项流转与推送` | GitHub App 配置、签名校验、事件去重、队列消费、重试与死信、降级轮询 | 事件回放测试：重复投递不产生重复流转；3 秒内返回 200 |
+| T-0601 | GitHub 集成与 Webhook 网关 | PRD 8.1；`docs/prd/flows.md#41-github-事件驱动工作项流转与推送`；`docs/dev/TECH-STACK.md#消息主题设计rocketmq` | GitHub App 配置、签名校验、事件去重、RocketMQ 投递与顺序消费、outbox 可靠投递 + `outboxRelayJob`、消费重试与 DLQ 告警重投、降级轮询 | 事件回放测试：重复投递不产生重复流转；乱序投递后状态正确；3 秒内返回 200；DLQ 可人工重投 |
 | T-0602 | 关联与自动流转 | `docs/prd/flows.md#三事件驱动的自动流转` 全部 12 条规则 | 提交/分支/PR/流水线与工作项关联；AF-01 ~ AF-12 规则实现与开关 | 每条规则一个集成测试；守卫不满足时不流转并记录原因 |
 | T-0603 | 部署与回滚 | PRD FR-DV-04 | 部署记录、回滚触发版本状态流转与复盘任务 | 回滚后版本状态与复盘任务正确创建 |
 | T-0604 | 页面还原 | `devops.html` | `/devops`：仓库、分支、PR、流水线与日志、环境部署、代码质量 | 视觉回归 ≤ 1% |

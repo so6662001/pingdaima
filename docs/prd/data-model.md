@@ -776,6 +776,19 @@ erDiagram
 | `metric_snapshot` | (`metric_code`, `scope_type`, `scope_id`, `stat_date`) | 度量看板查询 |
 | `notify_log` | (`rule_id`, `sent_at`) | 推送效果统计 |
 
+### 基础设施表
+
+除业务实体外，还有四张支撑表（不在业务 ER 图中，但同样由 Flyway 建表）：
+
+| 表 | 用途 | 关键字段 |
+| --- | --- | --- |
+| `state_transition_log` | 状态流转历史与停留时长（已在 2.3 节 ER 图中） | entity_type / entity_id / from_status / to_status / trigger_type / duration_sec |
+| `audit_log` | 敏感操作留痕（已在 2.5 节 ER 图中） | operator_id / action / before_value / after_value / ip |
+| `metric_snapshot` | 指标预聚合（已在 2.5 节 ER 图中） | metric_code / scope_type / scope_id / stat_date / period / value |
+| `outbox_event` | **本地消息表**：领域事件与业务数据同事务落库，再由定时任务投递到消息队列，避免"事务提交成功但消息发送失败"导致自动化静默失效 | id / event_id(唯一) / topic / tag / shard_key(实体 ID，用于顺序消费选队列) / payload(JSON) / status(待发送/已发送/失败) / retry_count / next_retry_at / created_at / sent_at |
+
+`outbox_event` 的约束：`event_id` 唯一；索引 `(status, next_retry_at)` 支撑定时扫描；已发送记录保留 7 天后归档清理。
+
 ### 完整性与一致性规则
 
 1. `work_item.requirement_id` 非空时，其 `project_id` 必须与需求排期的项目一致（跨项目拆解需显式确认）。

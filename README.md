@@ -422,7 +422,7 @@ python3 -m http.server 8088
 
 ## 六、从原型到产品的落地建议
 
-1. **技术选型**（已定，见 [`docs/dev/TECH-STACK.md`](docs/dev/TECH-STACK.md)）：后端 Java 21 + Spring Boot 3 + MyBatis-Plus + MySQL 8，前端 Vue 3 + TypeScript + Vite，Redis + RabbitMQ + Flyway；
+1. **技术选型**（已定，见 [`docs/dev/TECH-STACK.md`](docs/dev/TECH-STACK.md)）：后端 Java 21 + Spring Boot 3 + Spring Data JPA + MySQL 8，前端 Vue 3 + TypeScript + Vite，Redis + RocketMQ + XXL-Job + Flyway；
    领域拆分为 `需求域 / 项目域 / 测试域 / 集成域 / 度量域`。样式直接复用本原型的 `app.css`，图表与图标从原型移植（**不要换成 ECharts 或组件库**，否则无法 100% 还原）。
 2. **数据模型**：以「工作项（WorkItem）」为统一抽象，通过类型（需求 / 故事 / 任务 / 缺陷 / 用例 / 工单）+ 可配置字段 + 可配置状态机实现多形态，避免为每类对象建独立模型；
    客户（Customer）作为独立主数据，与工单、需求、承诺建立多对多关联，是「客户影响面」计算与对外门户鉴权的基础。

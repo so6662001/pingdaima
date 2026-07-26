@@ -21,7 +21,7 @@
    - `docs/PRD.md` 的目录与第五章功能需求总表
    - `docs/dev/BUILD-PLAN.md` 找到当前批次
    - `docs/dev/TASKS.md` 找到第一个未勾选任务
-2. **环境自检**：JDK 21、Maven 3.9+、Node ≥ 20、pnpm、Docker（MySQL 8 / Redis 7 / RabbitMQ）。缺什么装什么，不要问用户。
+2. **环境自检**：JDK 21、Maven 3.9+、Node ≥ 20、pnpm、Docker（MySQL 8 / Redis 7 / RocketMQ / XXL-Job Admin）。缺什么装什么，不要问用户。
 3. **建立待办清单**：用 todo 工具把本批次任务逐条登记。
 4. **逐任务执行**，每个任务走完整闭环：
    实现 → 自检（`make verify` + 任务指定的校验）→ 更新 `docs/dev/TASKS.md` 打勾并记录 commit → **单独提交一个 commit**（禁止多任务合并提交）
@@ -54,8 +54,8 @@
 
 ## 技术栈（已定，不要更换）
 
-后端 **Java 21 + Spring Boot 3.3 + MyBatis-Plus + MySQL 8**，前端 **Vue 3 + TypeScript + Vite**，
-Redis 7 + RabbitMQ + Flyway + Playwright。完整理由与版本见 `docs/dev/TECH-STACK.md`。
+后端 **Java 21 + Spring Boot 3.3 + Spring Data JPA + MySQL 8**，前端 **Vue 3 + TypeScript + Vite**，
+Redis 7 + RocketMQ 5 + XXL-Job + Flyway + Playwright。完整理由与版本见 `docs/dev/TECH-STACK.md`。
 
 因为后端 Java、前端 TS 不能共享一个领域包，**状态机 / 算法参数 / 枚举 / 指标口径统一写在 `contracts/*.yaml`**，
 由 `make codegen` 生成两边代码——这是保证"逻辑与算法符合 PRD"的核心机制，见 `.cursor/rules/13-contracts.mdc`。
@@ -76,7 +76,7 @@ Makefile               统一命令入口（收口 Maven 与 pnpm 两套工具�
 ## 常用命令（统一走 make）
 
 ```bash
-make up          # 起 MySQL + Redis + RabbitMQ
+make up          # 起 MySQL + Redis + RocketMQ + XXL-Job Admin
 make dev         # 后端 mvn spring-boot:run + 前端 pnpm dev
 make codegen     # contracts → Java/TS 生成，并校验重新生成后无 diff
 make migrate     # Flyway 迁移

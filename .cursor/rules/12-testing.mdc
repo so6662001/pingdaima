@@ -16,7 +16,10 @@ alwaysApply: false
 ## 后端（JUnit 5）
 
 - 领域层（状态机、算法、指标）写**纯单测**，不起 Spring 容器，速度要快
-- Mapper 与集成逻辑用 **Testcontainers** 起真实 MySQL 8 / Redis / RabbitMQ，**不要用 H2**（H2 与 MySQL 在 JSON、排序规则、日期精度上行为不同，会掩盖问题）
+- Repository 与集成逻辑用 **Testcontainers** 起真实 MySQL 8 / Redis / RocketMQ，**不要用 H2**（H2 与 MySQL 在 JSON、排序规则、日期精度上行为不同，会掩盖问题）
+- JPA 相关必测三件事：`ddl-auto=validate` 能启动（实体与 Flyway 表结构一致）、关键列表查询**不产生 N+1**（用 Hibernate statistics 断言 SQL 条数）、软删除与乐观锁生效
+- 消息消费必测幂等：同一事件投递两次，断言只产生一次流转与一次推送；顺序消费场景断言乱序投递后状态仍正确
+- XXL-Job handler 必测幂等与分片：同一分片重复执行结果一致，分片总数变化时不漏不重
 - Controller 层用 `@SpringBootTest` + MockMvc 覆盖鉴权、参数校验、错误码
 - 断言用 AssertJ；测试数据来自 `contracts/fixtures`，需要变体时基于 fixture 局部覆盖
 - 每个测试方法名用中文描述行为：`void 需求未通过DoR时不允许进入评审()`
@@ -47,3 +50,4 @@ alwaysApply: false
 - 断言只写状态码而不校验返回内容
 - 为了让测试通过而放宽业务规则
 - 用 H2 替代 MySQL 做集成测试
+- 把 `ddl-auto` 改成 `update` 让测试跑起来（必须用 Flyway 建表）

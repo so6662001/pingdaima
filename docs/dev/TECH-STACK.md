@@ -8,15 +8,15 @@
 | --- | --- | --- |
 | 后端语言 | **Java 21 (LTS)** | 团队既定 |
 | 后端框架 | **Spring Boot 3.3.x** | Web / Validation / Security / Scheduling |
-| 持久层 | **MyBatis-Plus 3.5** | 需求池筛选、看板范围过滤、度量聚合都是复杂动态 SQL，MyBatis 的可控性优于全 ORM |
+| 持久层 | **Spring Data JPA（Hibernate 6.4）** | 写模型用聚合与实体，团队既定；**复杂列表与度量聚合走原生 SQL 投影**（见下方读写分工），避免用 JPA 硬拼动态查询 |
 | 数据库 | **MySQL 8.0**（utf8mb4 / InnoDB） | 团队既定 |
 | 数据库迁移 | **Flyway** | 版本化 SQL 迁移，禁止手改线上表结构 |
 | 缓存与分布式锁 | **Redis 7**（Redisson） | 幂等键、SLA 扫描锁、热点缓存 |
-| 消息与异步 | **RabbitMQ 3.13** | Webhook 异步消费、重试（延迟队列）、死信队列 |
-| 定时任务 | **Spring Scheduling + ShedLock** | SLA 扫描、任务池超时、阶段延期、工时提醒、漏测周报；多实例只跑一次 |
+| 消息与异步 | **RocketMQ 5.x**（rocketmq-spring-boot-starter） | Webhook 异步消费、顺序消费（同一实体的状态变更）、消费重试与 DLQ |
+| 定时任务 | **XXL-Job 2.4** | 调度与业务分离、控制台可视化改 cron、失败重试与告警、大范围扫描支持分片 |
 | 接口文档 | **springdoc-openapi** | 产出 `contracts/openapi.yaml`，前端据此生成类型与客户端 |
 | 后端构建 | **Maven 多模块** | 分层清晰，企业环境通用 |
-| 后端测试 | **JUnit 5 + AssertJ + Mockito + Testcontainers** | Testcontainers 起真实 MySQL/Redis/RabbitMQ，避免 H2 与 MySQL 行为差异 |
+| 后端测试 | **JUnit 5 + AssertJ + Mockito + Testcontainers** | Testcontainers 起真实 MySQL / Redis / RocketMQ，避免 H2 与 MySQL 行为差异 |
 | 前端框架 | **Vue 3（Composition API + `<script setup>`）+ TypeScript** | 团队既定 |
 | 前端构建 | **Vite 5** | 逐页还原时需要高频热更 |
 | 前端路由/状态 | **Vue Router 4 + Pinia** | Pinia 只放视图偏好与会话，服务端数据交给查询层 |
@@ -24,7 +24,7 @@
 | 前端 UI | **原型 `app.css` 原样使用 + 自研组件** | **不引入 Element Plus / Ant Design Vue**，引入即破坏 100% 还原 |
 | 前端测试 | **Vitest + @vue/test-utils** | 组件与工具函数 |
 | 端到端与视觉回归 | **Playwright** | `toHaveScreenshot` 直接支撑"应用 vs 原型"逐像素比对 |
-| 本地环境 | **Docker Compose** | MySQL + Redis + RabbitMQ 一条命令拉起 |
+| 本地环境 | **Docker Compose** | MySQL + Redis + RocketMQ(namesrv/broker) + XXL-Job Admin 一条命令拉起 |
 
 ## 仓库结构
 
@@ -42,7 +42,7 @@ backend/                      Maven 多模块
   devflow-common/             通用工具、异常、返回结构
   devflow-domain/             领域模型、状态机引擎、算法、指标计算
     src/main/java/.../generated/   ← 由 contracts 生成，禁止手改
-  devflow-infra/              MyBatis Mapper、Redis、RabbitMQ、GitHub/企业微信集成
+  devflow-infra/              JPA 实体与 Repository、原生 SQL 查询、Redis、RocketMQ、XXL-Job、GitHub/企业微信集成
   devflow-app/                Controller、装配、启动类
   db/migration/               Flyway SQL
 
@@ -85,14 +85,15 @@ frontend (Vue 3) ──HTTP/JSON──▶ devflow-app (Controller)
                                 devflow-domain（状态机 · 算法 · 指标）
                                       │
                                 devflow-infra
-                                 ├── MySQL 8（MyBatis-Plus + Flyway）
+                                 ├── MySQL 8（Spring Data JPA + Flyway）
                                  ├── Redis 7（幂等 · 锁 · 缓存）
-                                 ├── RabbitMQ（Webhook 异步 · 重试 · 死信）
+                                 ├── RocketMQ（Webhook 异步 · 顺序消费 · 重试 · DLQ）
+                                 ├── XXL-Job（SLA 扫描 · 预聚合 · outbox 补偿）
                                  ├── GitHub App（Webhook 入 / REST 出）
                                  └── 企业微信（应用消息 / 群机器人）
 ```
 
-依赖方向严格单向：`app → domain → common`，`infra` 实现 `domain` 定义的端口接口。**领域层不依赖 Spring 与 MyBatis**，保证算法与状态机可独立单测。
+依赖方向严格单向：`app → domain → common`，`infra` 实现 `domain` 定义的端口接口。**领域层不依赖 Spring 与 JPA**：JPA 实体放在 `infra/entity`，与领域模型用 MapStruct 互转，保证算法与状态机可脱离容器单测。
 
 ## 关键约定
 
@@ -101,6 +102,41 @@ frontend (Vue 3) ──HTTP/JSON──▶ devflow-app (Controller)
 3. **事件驱动优先**：状态流转优先由 GitHub / CI / 测试事件触发，人工流转是兜底。
 4. **配置化优先**：工作项类型、状态机、字段、自动化规则、推送规则、WIP 上限均为配置数据，新增不发版。
 5. **MySQL 具体约定**：字符集 `utf8mb4_0900_ai_ci`；金额用 `DECIMAL(18,4)`；时间用 `DATETIME(3)` 且统一存 UTC；JSON 字段用原生 `JSON` 类型；软删除 `is_deleted TINYINT(1)`；主键 `BIGINT UNSIGNED AUTO_INCREMENT`；所有外键关系在应用层维护（不建物理外键，便于分库与归档）。
+6. **JPA 读写分工**（重要）：**写**走 JPA 实体与聚合，享受脏检查、乐观锁、级联；**读**分两类——简单查询用 Repository 方法与 `@EntityGraph`，需求池筛选 / 看板范围过滤 / 度量聚合这类复杂动态查询一律用 `JdbcClient` 写原生 SQL 直接投影成 DTO，不经过实体。理由是这些查询的字段组合与聚合方式多变，用 Criteria 拼会既难读又容易 N+1。
+7. **表结构由 Flyway 独占**：`spring.jpa.hibernate.ddl-auto=validate`，**绝不允许 `update` 或 `create`**。实体与表不一致时启动即失败，这是防止"实体偷偷改了表"的关键闸门。
+
+## 消息主题设计（RocketMQ）
+
+| Topic | Tag | 生产者 | 消费方式 | 说明 |
+| --- | --- | --- | --- | --- |
+| `devflow-webhook` | `github` / `wecom` | Webhook 网关 | 并发消费 | 外部事件入口，网关只做签名校验与落库后投递，3 秒内返回 200 |
+| `devflow-domain-event` | `requirement` / `workitem` / `ticket` / `release` … | 领域服务 | **顺序消费**（按实体 ID 选队列） | 状态流转、自动流转触发；同一实体的事件必须有序，否则会出现状态倒挂 |
+| `devflow-notify` | 按推送规则分类 | 通知服务 | 并发消费 | 企业微信推送，失败重试不影响主流程 |
+| `devflow-metrics` | `snapshot` | 指标服务 | 并发消费 | 指标增量计算触发 |
+
+约定：消费组命名 `devflow-<模块>-<用途>-group`；`maxReconsumeTimes = 6`，超出进 `%DLQ%<group>`，DLQ 必须接告警并提供人工重投入口；消费幂等以事件 ID 在 Redis 去重（保留 7 天）。
+
+**可靠投递用本地消息表（outbox）**：领域事件先与业务数据在同一事务写入 `outbox_event` 表，再由 XXL-Job 定时扫描投递并标记已发送。避免"事务提交成功但 MQ 发送失败"导致自动化静默失效——这类问题在生产上极难排查。
+
+## 定时任务清单（XXL-Job）
+
+cron 在 XXL-Job 控制台配置（代码里不写死），任务清单在此登记：
+
+| JobHandler | 频率 | 分片 | 说明 |
+| --- | --- | --- | --- |
+| `outboxRelayJob` | 每 10 秒 | 是 | 扫描 outbox 未发送事件并投递 |
+| `ticketSlaScanJob` | 每分钟 | 是 | 工单 SLA 预警（剩余 30%）与超时升级 |
+| `defectSlaScanJob` | 每分钟 | 是 | 缺陷 SLA 预警（剩余 20%）与升级 |
+| `taskPoolTimeoutJob` | 每 4 小时 | 否 | 任务池超时未认领推送，最多 3 次后升级项目经理 |
+| `stageDelayScanJob` | 每天 09:00 | 是 | 阶段实际晚于计划 ≥ 1 天的延期预警 |
+| `promiseDueJob` | 每天 09:00 | 否 | 对客承诺日期前 7 天提醒 |
+| `worklogConfirmJob` | 每周五 17:00 | 否 | 未确认工时提醒 |
+| `actionItemDueJob` | 每天 10:00 | 否 | 复盘行动项截止前 2 天提醒 |
+| `escapeWeeklyReportJob` | 每周一 09:00 | 否 | 漏测周报推送 |
+| `metricSnapshotJob` | 每小时 | 是 | 指标预聚合写入 `metric_snapshot` |
+| `dailyDigestJob` | 每天 18:30 | 否 | 个人待办日报汇总 |
+
+要求：每个 handler 必须幂等（重复执行不产生重复推送与重复数据）；标记为"分片"的任务用 `XxlJobHelper.getShardIndex/getShardTotal` 按 ID 取模拆分，避免单实例扫全表；每个任务都有配置开关可按团队启停（PRD 10.1 的灰度要求）。
 
 ## 统一命令（根 `Makefile`，T-0001 建立）
 
@@ -108,7 +144,7 @@ frontend (Vue 3) ──HTTP/JSON──▶ devflow-app (Controller)
 
 | 命令 | 作用 |
 | --- | --- |
-| `make up` / `make down` | 起停 MySQL + Redis + RabbitMQ |
+| `make up` / `make down` | 起停 MySQL + Redis + RocketMQ + XXL-Job Admin |
 | `make dev` | 同时起后端（`mvn spring-boot:run`）与前端（`pnpm dev`） |
 | `make build` | 全量构建 |
 | `make test` | 后端 `mvn test` + 前端 `pnpm test` |
@@ -125,7 +161,8 @@ frontend (Vue 3) ──HTTP/JSON──▶ devflow-app (Controller)
 | --- | --- |
 | `MYSQL_URL` / `MYSQL_USER` / `MYSQL_PASSWORD` | MySQL 连接 |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | Redis |
-| `RABBITMQ_HOST` / `RABBITMQ_USER` / `RABBITMQ_PASSWORD` | RabbitMQ |
+| `ROCKETMQ_NAME_SERVER` / `ROCKETMQ_PRODUCER_GROUP` | RocketMQ |
+| `XXL_JOB_ADMIN_ADDRESSES` / `XXL_JOB_ACCESS_TOKEN` / `XXL_JOB_EXECUTOR_APPNAME` / `XXL_JOB_EXECUTOR_PORT` / `XXL_JOB_EXECUTOR_LOGPATH` | XXL-Job 执行器 |
 | `JWT_SECRET` / `JWT_EXPIRES_IN` | 登录令牌 |
 | `GITHUB_APP_ID` / `GITHUB_PRIVATE_KEY` / `GITHUB_WEBHOOK_SECRET` | GitHub App |
 | `WECOM_CORP_ID` / `WECOM_AGENT_ID` / `WECOM_SECRET` / `WECOM_BOT_WEBHOOK` | 企业微信 |

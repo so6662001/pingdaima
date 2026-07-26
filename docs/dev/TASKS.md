@@ -23,7 +23,7 @@
 ## M1 数据库、状态机引擎、认证鉴权
 
 - [ ] T-0101 MySQL 表结构与 Flyway 迁移　`commit:`
-- [ ] T-0102 领域模型与 MyBatis 层　`commit:`
+- [ ] T-0102 领域模型与持久层（JPA 实体 / Repository / 原生查询）　`commit:`
 - [ ] T-0103 状态机引擎与流转日志　`commit:`
 - [ ] T-0104 种子数据（读 fixtures）　`commit:`
 - [ ] T-0105 认证与鉴权（RBAC + 数据范围 + 越权 404）　`commit:`
