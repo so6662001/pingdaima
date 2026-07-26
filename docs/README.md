@@ -18,10 +18,10 @@
 | 文档 | 内容 |
 | --- | --- |
 | [`../AGENTS.md`](../AGENTS.md) | **AI 开发总纲**：触发词、启动协议、事实来源优先级、十条铁律、DoD。Cursor 会自动加载 |
-| [`../.cursor/rules/`](../.cursor/rules) | 7 条项目规则：核心约束、工作流、PRD 一致性、还原规范、前端、后端、测试 |
-| [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md) | 14 个批次、74 个任务的施工图，每个任务含输入（PRD 章节 + 原型页面）、产出与验收 |
+| [`../.cursor/rules/`](../.cursor/rules) | 8 条项目规则：核心约束、工作流、PRD 一致性、还原规范、前端(Vue)、后端(Java)、测试、领域契约与代码生成 |
+| [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md) | 14 个批次、75 个任务的施工图，每个任务含输入（PRD 章节 + 原型页面）、产出与验收 |
 | [`dev/TASKS.md`](dev/TASKS.md) | 任务进度板，AI 边做边勾选并记录 commit |
-| [`dev/TECH-STACK.md`](dev/TECH-STACK.md) | 技术选型与架构决策、环境变量清单 |
+| [`dev/TECH-STACK.md`](dev/TECH-STACK.md) | 技术选型（Java + Vue 3 + MySQL）与架构决策、跨语言契约机制、统一命令与环境变量 |
 | [`dev/UI-PARITY.md`](dev/UI-PARITY.md) | 24 页高保真还原清单与豁免登记 |
 | [`dev/OPEN-QUESTIONS.md`](dev/OPEN-QUESTIONS.md) | 开放问题记录（遇到歧义写这里，不要停下来问人） |
 | [`dev/PROMPTS.md`](dev/PROMPTS.md) | 提示词速查：日常四句 + 精细控制 + 纠偏话术 |

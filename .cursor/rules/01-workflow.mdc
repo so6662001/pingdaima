@@ -12,7 +12,7 @@ alwaysApply: true
   → 读该任务在 docs/dev/BUILD-PLAN.md 中的完整定义（输入 / 产出 / 验收）
   → 读任务引用的 PRD 章节与原型页面
   → 实现
-  → 自检：pnpm lint && pnpm typecheck && pnpm test && 任务指定的校验脚本
+  → 自检：make verify（lint + codegen 校验 + 单测 + check-prd）+ 任务指定的校验
   → 勾选 TASKS.md 并写 commit 短 SHA
   → git add -A && git commit（单任务单 commit）
   → 下一个任务
@@ -39,8 +39,8 @@ alwaysApply: true
 首行：`<type>(<scope>): <任务号> <一句话>`
 
 - type：`feat` / `fix` / `refactor` / `test` / `docs` / `chore`
-- scope：`web` / `api` / `shared` / `ui` / `db` / `e2e`
-- 示例：`feat(api): T-0304 需求状态机服务与守卫校验`
+- scope：`web` / `api` / `contracts` / `ui` / `db` / `e2e`
+- 示例：`feat(api): T-0304 优先级模型五种算法与得分快照`
 
 正文写清楚：对应的 US 编号、关键实现决策、验证结论（哪些命令跑过、结果如何）。
 

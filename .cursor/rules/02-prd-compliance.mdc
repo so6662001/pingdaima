@@ -7,36 +7,42 @@ alwaysApply: true
 
 ## 集中定义，禁止散落
 
-以下四类内容**只能定义一次**，位置固定在 `packages/shared/src/domain/`：
+后端是 Java、前端是 TS，因此以下四类内容**只能在语言中立的 YAML 契约里定义一次**，由 `make codegen`
+生成 Java 与 TS 两份代码（详见 `.cursor/rules/13-contracts.mdc`）：
 
-| 内容 | 文件 | PRD 出处 |
+| 内容 | 契约文件 | PRD 出处 |
 | --- | --- | --- |
-| 状态与状态机（8 类对象） | `state-machines/*.ts` | `docs/prd/state-machines.md` |
-| 算法与参数（优先级、工时、漏测、容量） | `algorithms/*.ts` | `docs/PRD.md` 第 5.2 ~ 5.6 节 |
-| 指标口径（7 组） | `metrics/*.ts` | `docs/prd/metrics.md` |
-| 枚举与常量 | `enums.ts` | `docs/prd/data-model.md` 第四章 |
+| 状态与状态机（8 类对象） | `contracts/domain/state-machines/*.yaml` | `docs/prd/state-machines.md` |
+| 算法与参数（优先级、工时、漏测、容量、WIP） | `contracts/domain/algorithms.yaml` | `docs/PRD.md` 第 5.2 ~ 5.6 节 |
+| 指标口径（7 组） | `contracts/domain/metrics.yaml` | `docs/prd/metrics.md` |
+| 枚举字典 | `contracts/domain/enums.yaml` | `docs/prd/data-model.md` 第四章 |
 
-前端要用同一份定义，从 `@devflow/shared` 导入，不许在 web 里另写一份。
+Java 从 `com.starlink.devflow.domain.generated` 引用，前端从 `@/generated` 引用。
+两边都不许另写一份，也不许硬编码阈值。
 
 ## @prd 注解
 
 每个实现 PRD 规则的函数、常量、状态机定义，都要带注解：
 
-```ts
+```java
 /**
  * 优先级得分（默认算法：加权价值 ÷ 工作量系数）
  * @prd docs/PRD.md#52-关键规则优先级模型
  */
-export const PRIORITY_WEIGHTS = { value: 30, cust: 20, goal: 15, urg: 15, comp: 10, risk: 10 } as const;
+public BigDecimal score(Requirement req) {
+    var w = AlgorithmParams.PRIORITY_WEIGHTS; // 来自 contracts 生成物，不要写死
+    ...
+}
 ```
 
-`pnpm check:prd` 会扫描所有 `@prd` 注解并校验目标文件与锚点真实存在，CI 必须通过。
+`make check-prd` 会扫描 `.java` / `.ts` / `.vue` / `.yaml` / `.sql` 中的 `@prd` 注解，
+校验目标文件与锚点真实存在，CI 必须通过。
 
 ## 状态机
 
 - 每类对象的状态、归类（初始/进行/等待/终态）、转换表（触发 + 守卫 + 动作）必须与 `docs/prd/state-machines.md` 的表格逐行对应
-- 转换表用数据结构表达，不要写成一堆 if-else
-- 所有状态变更走统一的 `StateMachineService.transition()`，守卫失败抛业务异常并返回**具体未满足项**（不许返回"操作失败"）
+- 转换表由 `contracts/domain/state-machines/*.yaml` 生成，不要写成一堆 if-else
+- 所有状态变更走统一的 `StateMachineEngine.transition()`，守卫失败抛业务异常并返回**具体未满足项**（不许返回"操作失败"）
 - 每条合法转换与每条被禁止的非法转换都要有单测
 
 ## 算法
@@ -56,6 +62,7 @@ export const PRIORITY_WEIGHTS = { value: 30, cust: 20, goal: 15, urg: 15, comp: 
 
 - 每个指标一个纯函数，输入明确、可单测
 - 指标查询走 `metric_snapshot` 预聚合表，不许直接扫明细表
+- 指标编码来自 `contracts/domain/metrics.yaml`，前后端用同一套编码
 - 口径变更不回刷历史快照
 - 个人级指标在查询层二次校验权限
 

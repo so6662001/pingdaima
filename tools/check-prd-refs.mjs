@@ -3,16 +3,20 @@
  * PRD 引用校验：扫描源码中的 `@prd <文件>#<锚点>` 注解，
  * 校验目标文档与锚点真实存在，防止代码与 PRD 逐渐失联。
  *
+ * 支持 `@prd <文件>#<锚点>`（代码注释）与 `prd: <文件>#<锚点>`（YAML 契约）两种写法。
  * 用法：node tools/check-prd-refs.mjs [扫描目录...]
- * 默认扫描 apps、packages、prisma、e2e（不存在则跳过）。
+ * 默认扫描 backend、frontend、contracts、e2e（不存在则跳过）。
+ * 跳过 generated 目录（生成物的注解来自契约源文件，在源文件处校验）。
  */
 import fs from 'fs';
 import path from 'path';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const SCAN_DIRS = process.argv.slice(2).length ? process.argv.slice(2) : ['apps', 'packages', 'prisma', 'e2e'];
-const CODE_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.prisma', '.sql']);
-const SKIP_DIR = new Set(['node_modules', 'dist', 'build', '.next', 'coverage', '.git']);
+const SCAN_DIRS = process.argv.slice(2).length
+  ? process.argv.slice(2)
+  : ['backend', 'frontend', 'contracts', 'e2e'];
+const CODE_EXT = new Set(['.java', '.ts', '.tsx', '.vue', '.js', '.mjs', '.yaml', '.yml', '.sql', '.xml']);
+const SKIP_DIR = new Set(['node_modules', 'dist', 'build', 'target', 'coverage', '.git', 'generated']);
 
 /** GitHub 风格锚点生成（与 github-slugger 行为对齐，保留 CJK） */
 function slug(text) {
@@ -57,10 +61,12 @@ for (const d of SCAN_DIRS) {
     const src = fs.readFileSync(file, 'utf8');
     const lines = src.split('\n');
     lines.forEach((line, i) => {
-      const m = line.match(/@prd\s+(\S+)/);
+      // 支持两种写法：代码注释里的 `@prd <ref>`，YAML 契约里的 `prd: <ref>`
+      const m = line.match(/@prd\s+(\S+)/) || line.match(/^\s*prd:\s*(\S+)/);
       if (!m) return;
       total++;
-      const [docRel, hash] = m[1].split('#');
+      const ref = m[1].replace(/^["'`]+/, '').replace(/["'`,;)\]]+$/, '');
+      const [docRel, hash] = ref.split('#');
       const docAbs = path.join(ROOT, docRel);
       const where = `${path.relative(ROOT, file)}:${i + 1}`;
       if (!fs.existsSync(docAbs)) {

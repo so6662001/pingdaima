@@ -12,19 +12,20 @@
 
 ---
 
-## M0 工程基座与设计系统迁移
+## M0 工程基座、领域契约与设计系统迁移
 
-- [ ] T-0001 monorepo 脚手架　`commit:`
-- [ ] T-0002 设计系统迁移（CSS / 图标 / 图表 / 组件 / 布局）　`commit:`
-- [ ] T-0003 抽取原型数据为 fixtures　`commit:`
-- [ ] T-0004 校验脚本与 CI 接线　`commit:`
+- [ ] T-0001 仓库骨架与构建（Maven 多模块 + Vue 3 + Docker Compose + Makefile + CI）　`commit:`
+- [ ] T-0002 领域契约与代码生成（contracts YAML → Java/TS）　`commit:`
+- [ ] T-0003 设计系统迁移（app.css / 图标 / 图表 / 组件 / 布局）　`commit:`
+- [ ] T-0004 抽取原型数据为 fixtures（JSON）　`commit:`
+- [ ] T-0005 校验脚本与 CI 接线　`commit:`
 
-## M1 数据模型、状态机、认证鉴权
+## M1 数据库、状态机引擎、认证鉴权
 
-- [ ] T-0101 Prisma schema 与迁移　`commit:`
-- [ ] T-0102 共享枚举与类型　`commit:`
-- [ ] T-0103 状态机定义与统一服务　`commit:`
-- [ ] T-0104 种子数据脚本　`commit:`
+- [ ] T-0101 MySQL 表结构与 Flyway 迁移　`commit:`
+- [ ] T-0102 领域模型与 MyBatis 层　`commit:`
+- [ ] T-0103 状态机引擎与流转日志　`commit:`
+- [ ] T-0104 种子数据（读 fixtures）　`commit:`
 - [ ] T-0105 认证与鉴权（RBAC + 数据范围 + 越权 404）　`commit:`
 
 ## M2 工单与客户
@@ -132,7 +133,7 @@
 
 ## 页面还原进度（24 页）
 
-还原要点见 [`UI-PARITY.md`](UI-PARITY.md)。每页达标后勾选并记录最后一次视觉回归的差异比例。
+还原要点见 [`UI-PARITY.md`](UI-PARITY.md)。每页达标后勾选并记录最后一次 `make parity` 的差异比例。
 
 - [ ] `index.html` → `/`　差异:
 - [ ] `login.html` → `/login`　差异:

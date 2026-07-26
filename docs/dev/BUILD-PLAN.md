@@ -8,8 +8,8 @@
 
 | 批次 | 主题 | 任务数 | 对应 PRD 发布批次 |
 | --- | --- | --: | --- |
-| M0 | 工程基座与设计系统迁移 | 4 | 前置 |
-| M1 | 数据模型、状态机、认证鉴权 | 5 | 前置 |
+| M0 | 工程基座、领域契约与设计系统迁移 | 5 | 前置 |
+| M1 | 数据库、状态机引擎、认证鉴权 | 5 | 前置 |
 | M2 | 工单与客户 | 6 | R1 |
 | M3 | 需求池与优先级 | 9 | R1 |
 | M4 | 项目与迭代 | 6 | R1 |
@@ -25,30 +25,31 @@
 
 ---
 
-## M0 工程基座与设计系统迁移
+## M0 工程基座、领域契约与设计系统迁移
 
 | 任务 | 目标 | 输入 | 产出 | 验收 |
 | --- | --- | --- | --- | --- |
-| T-0001 | 建 monorepo 脚手架 | `docs/dev/TECH-STACK.md` | pnpm workspaces；`apps/web`(Vite+React+TS)、`apps/api`(NestJS)、`packages/shared`、`packages/ui`；eslint + prettier + vitest + playwright；`docker-compose.yml`(Postgres 16 + Redis 7)；根 `package.json` 脚本齐全 | `pnpm i && pnpm lint && pnpm typecheck && pnpm test` 全绿；`pnpm dev` 前后端可起 |
-| T-0002 | 设计系统迁移 | `assets/css/app.css`、`assets/js/icons.js`、`assets/js/charts.js`、`assets/js/ui.js`、`assets/js/layout.js`；规则 `03-ui-fidelity` | `packages/ui`：`styles/app.css`（原样复制）、`Icon.tsx`、`charts/*`（line/area/bar/stackedBar/donut/gauge/radar/heatmap/sparkline/hbar/stackedArea）、`Toast`/`Drawer`/`Modal`/`Tabs`/`Switch`/`Checkbox`/`Menu`/`Kanban`、`Layout`(Sidebar+Topbar+CommandPalette+NotifyCenter) | 建一个 `/kitchen-sink` 演示页渲染全部组件与图表，与原型 `index.html` 的同类元素逐像素比对差异 ≤ 1% |
-| T-0003 | 抽取原型数据为 fixtures | 24 个原型页面内联 `<script>` 中的数据数组 | `packages/shared/src/fixtures/*.ts`：users、teams、customers、tickets、products、requirements、projects、sprints、workItems、testCases、releases、worklogs、retros、notifyRules 等，字段名对齐 `docs/prd/data-model.md` | fixtures 的记录数与原型一致；`pnpm test` 中有一致性测试断言关键条目（如 REQ-2041、STORY-3313、TK-3821、PRJ-018）存在且字段值与原型相同 |
-| T-0004 | 校验脚本与 CI 接线 | `tools/check-prd-refs.mjs`、`tools/check.sh` | `pnpm check:prd`、`pnpm e2e:parity`、`playwright.parity.config.ts`（原型静态服务 + 应用服务）、GitHub Actions（lint/typecheck/test/check:prd） | `pnpm check:prd` 通过；`pnpm e2e:parity` 能跑起来并产出 diff 图 |
+| T-0001 | 建仓库骨架与构建 | `docs/dev/TECH-STACK.md` | `backend/` Maven 多模块（common / domain / infra / app）、`frontend/` Vite + Vue 3 + TS、`docker-compose.yml`（MySQL 8 + Redis 7 + RabbitMQ）、根 `Makefile`（全部命令）、Spotless + Checkstyle + ESLint + Prettier、`.env.example`、GitHub Actions | `make up && make build && make lint && make test` 全绿；`make dev` 前后端可访问 |
+| T-0002 | 领域契约与代码生成 | `docs/prd/state-machines.md`、`docs/PRD.md` 5.2~5.6、`docs/prd/metrics.md`、`docs/prd/data-model.md#四枚举字典`；规则 `13-contracts` | `contracts/domain/{enums.yaml,algorithms.yaml,metrics.yaml,state-machines/*.yaml}`；`tools/codegen` 生成 Java 常量/枚举/转换表与 TS 对应物；生成物带 DO NOT EDIT 头 | `make codegen` 后 `git diff --exit-code` 干净；生成器自身有单测；`make check-prd` 通过；YAML 中的参数值与 PRD 逐一核对无差异 |
+| T-0003 | 设计系统迁移（Vue） | `assets/css/app.css`、`assets/js/{icons,charts,ui,layout}.js`；规则 `03-ui-fidelity` | `frontend/src/ui/`：`styles/app.css`（原样复制）、`Icon.vue`、`charts/*`（line/area/bar/stackedBar/stackedArea/donut/gauge/radar/heatmap/sparkline/hbar）+ `Chart.vue`、`Toast/Drawer/Modal/Tabs/Switch/Checkbox/Menu/Kanban`、`layout/{AppLayout,Sidebar,Topbar,CommandPalette,NotifyCenter}` | 建 `/kitchen-sink` 演示页渲染全部组件与图表，与原型同类元素逐像素比对差异 ≤ 1% |
+| T-0004 | 抽取原型数据为 fixtures | 24 个原型页面内联 `<script>` 中的数据数组 | `contracts/fixtures/*.json`：users、teams、customers、tickets、products、requirements、projects、sprints、workItems、testCases、releases、worklogs、retros、notifyRules 等，字段名对齐 `docs/prd/data-model.md` | 记录数与原型一致；有一致性测试断言关键条目（REQ-2041、STORY-3313、TK-3821、PRJ-018）字段值与原型相同 |
+| T-0005 | 校验脚本与 CI 接线 | `tools/check-prd-refs.mjs`、`tools/check.sh` | `make check-prd`、`make parity`、`e2e/playwright.parity.config.ts`（静态服务指向仓库根目录）、CI 跑 lint/test/codegen-diff/check-prd | `make verify` 可一次跑通；`make parity` 能产出 diff 图 |
 
-**批次验收**：脚手架可运行；设计系统演示页还原度达标；fixtures 一致性测试通过；CI 全绿。
+**批次验收**：骨架可运行；契约生成物与 PRD 参数一致且无 diff；设计系统演示页还原达标；fixtures 一致性测试通过；CI 全绿。
 
 ---
 
-## M1 数据模型、状态机、认证鉴权
+## M1 数据库、状态机引擎、认证鉴权
 
 | 任务 | 目标 | 输入 | 产出 | 验收 |
 | --- | --- | --- | --- | --- |
-| T-0101 | Prisma schema 与迁移 | `docs/prd/data-model.md` 全文 | `prisma/schema.prisma` 覆盖全部实体、字段、枚举、唯一约束与索引；首个迁移 | 表与字段与 ER 图逐一对应（写一个测试遍历 schema 断言关键表与唯一约束存在）；`prisma migrate dev` 成功 |
-| T-0102 | 共享枚举与类型 | `docs/prd/data-model.md#四枚举字典` | `packages/shared/src/enums.ts`、`types.ts`，前后端共用 | 枚举取值与 PRD 字典完全一致（测试逐组断言） |
-| T-0103 | 状态机定义与服务 | `docs/prd/state-machines.md` 全文 | `packages/shared/src/domain/state-machines/{requirement,story,task,bug,ticket,testCase,release,actionItem}.ts`（状态、归类、转换表、守卫、动作）；`apps/api/src/core/state-machine/` 统一服务；`state_transition_log` 落库 | 每条合法转换与非法转换均有单测；守卫失败返回具体未满足项；停留时长写入日志 |
-| T-0104 | 种子数据脚本 | T-0003 的 fixtures | `pnpm db:seed` 幂等灌库，含用户、客户、产品、需求、工作项、工单、用例、版本 | 重复执行不产生重复数据；灌库后各表记录数与 fixtures 一致 |
-| T-0105 | 认证与鉴权 | `docs/PRD.md#22-角色与权限模型` | JWT 登录、企业微信 OAuth 预留；RBAC 守卫 + 数据范围过滤；越权 404；敏感字段脱敏 | 权限矩阵 10 项 × 5 角色的测试矩阵全通过；越权用例断言 404；脱敏用例通过 |
+| T-0101 | MySQL 表结构与 Flyway 迁移 | `docs/prd/data-model.md` 全文 | `backend/db/migration/V1__init.sql` 等：全部实体、字段、索引、唯一约束；utf8mb4、`DATETIME(3)` 存 UTC、`DECIMAL(18,4)` 金额、原生 JSON 字段、`is_deleted` 软删除、无物理外键 | 有测试遍历库表断言关键表与唯一约束存在；`make migrate` 在干净库上成功；重复执行幂等 |
+| T-0102 | 领域模型与 MyBatis 层 | T-0101 表结构、T-0002 契约枚举 | 领域对象、Mapper 与 XML、TypeHandler（JSON 字段）、分页封装、软删除、数据范围拦截器 | Testcontainers 起真实 MySQL 跑 Mapper 测试；分页与软删除行为正确 |
+| T-0103 | 状态机引擎 | `docs/prd/state-machines.md`；T-0002 生成的转换表 | `StateMachineEngine.transition()`：合法性校验 → 守卫（返回全部未满足项）→ 事务内更新状态与 `state_transition_log`（含停留时长）→ 提交后发领域事件；强制流转需 reason 并写审计 | 8 类对象每条合法转换与非法转换均有单测；守卫失败返回具体未满足项；停留时长写入正确 |
+| T-0104 | 种子数据 | `contracts/fixtures/*.json` | `make seed` 幂等灌库 | 重复执行不产生重复数据；各表记录数与 fixtures 一致 |
+| T-0105 | 认证与鉴权 | `docs/PRD.md#22-角色与权限模型` | Spring Security + JWT 登录、企业微信 OAuth 预留、`@PreAuthorize` 方法级鉴权、查询层数据范围注入、越权 404、敏感字段脱敏 | 权限矩阵 10 项 × 5 角色测试全通过；越权断言 404；脱敏用例通过 |
 
-**批次验收**：`pnpm db:seed` 后数据库内容与原型一致；状态机单测覆盖全部转换；权限矩阵测试全绿。
+**批次验收**：`make migrate && make seed` 后数据库内容与原型一致；状态机单测覆盖全部转换；权限矩阵测试全绿。
 
 ---
 

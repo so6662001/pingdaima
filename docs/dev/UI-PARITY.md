@@ -2,7 +2,7 @@
 
 > 配套规则：[`.cursor/rules/03-ui-fidelity.mdc`](../../.cursor/rules/03-ui-fidelity.mdc)。每页列出**必须还原的结构与交互**，遗漏任何一条都算未完成。
 >
-> 校验方式：`pnpm e2e:parity -- --grep <page>`，阈值 `maxDiffPixelRatio ≤ 0.01`，视口 1600×1200 与 1366×768 两档。
+> 校验方式：`make parity PAGE=<page>`，阈值 `maxDiffPixelRatio ≤ 0.01`，视口 1600×1200 与 1366×768 两档。跑之前先 `make seed`。
 
 ## 全局（每页都要具备）
 

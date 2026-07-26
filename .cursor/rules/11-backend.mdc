@@ -1,62 +1,100 @@
 ---
-description: 后端实现规范（NestJS + Prisma + PostgreSQL），分层、状态机、事件、集成与权限。
-globs: apps/api/**,prisma/**,packages/shared/**
+description: 后端实现规范（Java 21 + Spring Boot 3 + MyBatis-Plus + MySQL 8），分层、状态机、事件、集成与权限。
+globs: backend/**
 alwaysApply: false
 ---
 
-# 后端实现规范
+# 后端实现规范（Java）
 
 ## 技术栈（已定，不要替换）
 
-NestJS + TypeScript + Prisma + PostgreSQL + Redis + BullMQ（事件队列与定时任务）。
+Java 21 + Spring Boot 3.3 + MyBatis-Plus 3.5 + MySQL 8.0 + Flyway + Redis 7(Redisson) + RabbitMQ + ShedLock + springdoc-openapi。Maven 多模块。
 
-## 分层
+## 模块与依赖方向
 
 ```
-apps/api/src/
-  modules/<domain>/
-    <domain>.controller.ts   只做参数校验与响应组装
-    <domain>.service.ts      业务逻辑
-    <domain>.repository.ts   Prisma 访问
-    dto/
-  core/
-    state-machine/           统一状态机服务（消费 shared 的转换表）
-    events/                  事件总线、Webhook 网关、幂等消费
-    metrics/                 指标预聚合任务
-    auth/                    RBAC + 数据范围
+devflow-app     Controller、装配、启动类
+   ↓
+devflow-domain  领域模型、状态机引擎、算法、指标计算   ← 不依赖 Spring / MyBatis
+   ↓
+devflow-common  通用工具、异常、统一返回
+
+devflow-infra   实现 domain 定义的端口接口（Mapper、Redis、MQ、GitHub、企业微信）
 ```
 
-领域划分对齐 PRD 模块：`ticket`、`customer`、`requirement`、`product`、`project`、`sprint`、`work-item`、`board`、`test`、`devops`、`worklog`、`people`、`metrics`、`retro`、`notify`、`portal`、`settings`。
+**领域层保持纯净**：算法与状态机必须能脱离 Spring 容器单测。外部依赖以接口（端口）声明在 domain，实现放 infra。
+
+## 包结构
+
+```
+com.starlink.devflow
+  common/          Result、ErrorCode、BizException、工具
+  domain/
+    model/         领域对象
+    statemachine/  StateMachineEngine、Transition、Guard、Action
+    algorithm/     PriorityScoring、WorklogEstimation、EscapeAnalysis、Capacity
+    metrics/       各指标计算器
+    generated/     由 contracts 生成（枚举、转换表、算法参数）DO NOT EDIT
+    port/          仓储与外部服务接口
+  infra/
+    mapper/        MyBatis-Plus Mapper 与 XML
+    repository/    port 的实现
+    integration/   github、wecom、calendar
+    mq/            生产者、消费者、幂等、死信
+    schedule/      ShedLock 定时任务
+  app/
+    controller/    按领域分包
+    dto/           请求响应对象（不要把实体直接暴露）
+    config/        Security、MyBatis、Jackson、OpenAPI
+```
+
+领域划分对齐 PRD 模块：`ticket`、`customer`、`requirement`、`product`、`project`、`sprint`、`workitem`、`board`、`test`、`devops`、`worklog`、`people`、`metrics`、`retro`、`notify`、`portal`、`settings`。
 
 ## 状态机
 
-所有状态变更必须走 `StateMachineService.transition({ entityType, entityId, to, trigger, operator, reason? })`：
+所有状态变更必须走 `StateMachineEngine.transition(TransitionCommand)`，**禁止在任何 Service/Mapper 里直接 update status 字段**：
 
-1. 查转换表确认 `from → to` 合法，否则抛 `IllegalTransitionError`
-2. 逐条执行守卫，失败时抛出**包含全部未满足项**的错误（前端要展示具体缺什么）
-3. 在同一事务内更新状态、写 `state_transition_log`（含在上一状态的停留时长）
-4. 事务提交后发领域事件（触发通知、自动流转、指标更新）
+1. 从 `domain/generated` 的转换表查 `from → to` 是否合法，否则抛 `IllegalTransitionException`
+2. 逐条执行守卫，失败时抛出**包含全部未满足项**的 `GuardViolationException`（前端要展示具体缺什么）
+3. 同一事务内更新状态、写 `state_transition_log`（含在上一状态的停留时长）
+4. 事务提交后（`@TransactionalEventListener(AFTER_COMMIT)`）发领域事件，触发通知、自动流转、指标更新
 
 管理员强制流转必须传 `reason`，写审计日志并在时间线标记。
 
+## 数据访问（MyBatis-Plus + MySQL）
+
+- 表结构由 Flyway 管理（`backend/db/migration/V<n>__<desc>.sql`），**禁止手改线上表**，禁止用 `hbm2ddl` 之类自动建表
+- 复杂查询（需求池筛选、看板范围过滤、度量聚合）写 XML 或 `QueryWrapper`，避免 N+1
+- 列表查询强制分页（`IPage`），禁止无界查询
+- 软删除用 MyBatis-Plus 的 `@TableLogic`（`is_deleted`）
+- 时间统一存 UTC 的 `DATETIME(3)`，金额 `DECIMAL(18,4)`，JSON 字段用 MySQL 原生 JSON 类型 + 自定义 TypeHandler
+- 不建物理外键，关系在应用层维护；唯一约束与索引严格按 `docs/prd/data-model.md` 建
+- 度量查询只读 `metric_snapshot`，不扫明细表
+
 ## 事件与集成
 
-- GitHub Webhook：校验签名 → 事件 ID 去重 → 入队 → **3 秒内返回 200**，业务处理异步做
-- 消费必须幂等，同一事件重复投递不产生重复流转与重复推送
-- 失败重试指数退避最多 6 次，仍失败入死信队列并告警
+- GitHub Webhook：校验签名 → 事件 ID 去重（Redis SETNX）→ 投递 RabbitMQ → **3 秒内返回 200**，业务异步处理
+- 消费幂等：以事件 ID 为幂等键，重复投递不产生重复流转与重复推送
+- 重试用延迟队列指数退避（4s/8s/16s/32s/64s/128s，最多 6 次），仍失败进死信队列并告警
 - 外部系统（GitHub / 企业微信）不可用时必须降级：核心功能不受影响，自动化暂停并在界面提示
-- 定时任务（SLA 扫描、任务池超时、阶段延期、工时提醒、漏测周报）用 BullMQ repeatable job，全部可通过配置开关按团队启停
-
-## 数据访问
-
-- Schema 严格对应 `docs/prd/data-model.md`，包括唯一约束与索引
-- 软删除（`is_deleted`），被引用的主数据只能停用不能删除
-- 列表查询强制分页；跨表聚合走预聚合表
-- 敏感字段（商户信息、金额）按角色脱敏，脱敏在 service 层做，不要指望前端
+- 定时任务（SLA 扫描、任务池超时、阶段延期、工时提醒、漏测周报）用 `@Scheduled` + ShedLock 保证多实例只跑一次，且都有配置开关可按团队启停
 
 ## API 约定
 
-- RESTful，路径 `/api/v1/<资源>`，返回 `{ data, meta }`
+- RESTful，路径 `/api/v1/<资源>`，统一返回 `Result<T>{ data, meta }`
 - 错误返回 `{ error: { code, message, details } }`，`code` 用领域错误码（如 `REQ_DOR_NOT_MET`），`details` 给出未满足项清单
-- 越权返回 404
-- 所有写接口有幂等键支持（前端重试不产生重复数据）
+- 越权返回 **404**（不返回 403，不泄露资源存在性）
+- 写接口支持幂等键请求头 `Idempotency-Key`
+- 参数校验用 Bean Validation，全局异常处理器统一转换
+- Controller 用 springdoc 注解写全，`contracts/openapi.yaml` 由构建产出并提交，前端据此生成类型
+
+## 权限
+
+按 `docs/PRD.md#22-角色与权限模型` 实现 RBAC + 数据范围双层：方法级 `@PreAuthorize` 控操作，查询层统一注入数据范围条件控可见性。敏感字段（商户信息、金额）在 service 层脱敏，不要指望前端。
+
+## 编码风格
+
+- Spotless + Checkstyle 强制；不允许提交带 warning 的代码
+- 用构造器注入，不用 `@Autowired` 字段注入
+- 不用 `Optional` 作为方法参数；集合返回空集合不返回 null
+- 领域异常继承 `BizException`，携带错误码与 details

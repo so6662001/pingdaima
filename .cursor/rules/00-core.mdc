@@ -23,15 +23,26 @@ alwaysApply: true
 - 重写 `assets/css/app.css`，或改用 Tailwind / CSS-in-JS 重新实现设计系统
 - 用第三方图表库（ECharts / Chart.js）替换原型自研的 SVG 图表引擎
 - 用第三方图标库替换 `assets/js/icons.js` 的内联 SVG 图标
+- 引入 Element Plus / Ant Design Vue 等组件库（会破坏 100% 还原）
+- 手改 `generated/` 目录下的生成代码
 - 修改或删除根目录的 `*.html` 原型文件（它们是验收基线，只读）
-- 在业务代码里直接写 `update({ status: 'xxx' })` 绕过状态机
-- 把算法参数（阈值、系数、窗口）硬编码在业务逻辑里
+- 在业务代码里直接更新 status 字段绕过状态机引擎
+- 把算法参数（阈值、系数、窗口）硬编码在 Java 或 TS 代码里（必须来自 `contracts` 生成物）
 - 留下 `// TODO 实现`、`return []`、假数据直通前端这类占位实现
 - 未实际运行验证就声称任务完成
 
+## 技术栈（已定）
+
+后端 **Java 21 + Spring Boot 3 + MyBatis-Plus + MySQL 8**，前端 **Vue 3 + TypeScript + Vite**，
+缓存 Redis、消息 RabbitMQ、迁移 Flyway、端到端 Playwright。详见 `docs/dev/TECH-STACK.md`，不要自行更换。
+
+跨语言的领域规则（状态机 / 算法参数 / 枚举 / 指标口径）统一定义在 `contracts/*.yaml`，由 `make codegen`
+生成 Java 与 TS 两份代码，见 `.cursor/rules/13-contracts.mdc`。
+
 ## 编码通则
 
-- TypeScript 严格模式，禁止 `any`（第三方类型缺失时用 `unknown` + 类型守卫）
-- 领域概念用 PRD 的中文术语对应的英文标识：需求 `requirement`、工作项 `workItem`、工单 `ticket`、迭代 `sprint`、漏测 `escapeAnalysis`
+- Java：Spotless + Checkstyle 强制，构造器注入，领域层不依赖 Spring 与 MyBatis
+- TypeScript：严格模式，禁止 `any`（第三方类型缺失时用 `unknown` + 类型守卫）
+- 领域概念的英文标识两端保持一致：需求 `requirement`、工作项 `workItem`/`WorkItem`、工单 `ticket`、迭代 `sprint`、漏测 `escapeAnalysis`
 - 面向用户的文案一律用原型里的原文，不要自己改写
-- 任何引用 PRD 规则的代码处，加注解 `@prd docs/prd/<文件>.md#<锚点>`，`pnpm check:prd` 会校验其有效性
+- 任何引用 PRD 规则的代码处，加注解 `@prd docs/prd/<文件>.md#<锚点>`，`make check-prd` 会校验其有效性
