@@ -1,0 +1,57 @@
+---
+description: 前端实现规范（React + TS + Vite），页面结构、状态管理、数据获取、路由与深链。
+globs: apps/web/**,packages/ui/**
+alwaysApply: false
+---
+
+# 前端实现规范
+
+## 技术栈（已定，不要替换）
+
+React 18 + TypeScript + Vite + React Router + TanStack Query + Zustand（仅用于跨页面 UI 状态）。样式用原型的 `app.css`，不引入 UI 组件库。
+
+## 目录结构
+
+```
+apps/web/src/
+  pages/<page>/          与原型页面一一对应，目录名同原型文件名（board、requirement、ticket …）
+    index.tsx            页面容器：布局 + 数据获取
+    components/          该页面专属组件（对应原型里的各个 card / 面板）
+    <page>.module.css    页面内联 <style> 的迁移
+  routes.tsx             路由表，路径与原型文件名一致：/board、/requirement、/requirement/:code
+  api/                   接口客户端，按领域分文件
+  hooks/
+  stores/
+```
+
+## 路由与深链
+
+路由路径与原型文件名保持一致，原型的 hash 深链必须全部支持：
+
+| 原型 | 应用 |
+| --- | --- |
+| `board.html#bd=bug` | `/board?bd=bug`（同时兼容 hash 形式，做一次重定向） |
+| `board.html#scope=prj:PRJ-021` | `/board?scope=prj:PRJ-021` |
+| `requirement.html#tab=model&algo=1` | `/requirement?tab=model&algo=1` |
+| `requirement-detail.html#REQ-2041` | `/requirement/REQ-2041` |
+
+范围选择、泳道、密度、折叠列这类视图偏好持久化到 localStorage，key 沿用原型（`df_board_scope`、`df_collapsed`）。
+
+## 数据获取
+
+- 一律用 TanStack Query，query key 规范 `[域, 操作, 参数对象]`
+- 看板拖拽用乐观更新 + 失败回滚，回滚时用 Toast 提示原因（对应原型的 `UI.toast(..., 'error')`）
+- 列表页支持的筛选组合必须与原型一致，筛选条件同步到 URL query
+- 不允许前端做业务计算：优先级得分、工时推算、指标聚合都由后端算好返回；前端只做展示格式化
+
+## 组件约束
+
+- 组件的 DOM 结构与 class 名必须与原型一致（还原度验证会逐像素比对）
+- 图标只用 `<Icon name="..." size={n} />`（移植自原型 `icon()`）
+- 图表只用 `packages/ui/src/charts`（移植自原型 `Charts`），禁止引入图表库
+- 所有交互反馈（toast 文案、抽屉标题、确认弹窗措辞）沿用原型原文
+
+## 性能
+
+- 看板在 500 张卡片下拖拽响应 ≤ 100ms，必要时用虚拟滚动，但**虚拟滚动不能改变 DOM 结构**导致视觉回归失败（对比时关闭虚拟化）
+- 路由级代码分割；首屏 P95 ≤ 1.5s

@@ -13,6 +13,21 @@
 | [prd/flows.md](prd/flows.md) | 端到端主流程、8 个子流程泳道图、事件驱动自动流转规则、集成时序图、异常流程 | 所有人（理解协作交接点） |
 | [prd/metrics.md](prd/metrics.md) | 指标口径字典：DORA、交付效率、质量、工时成本、人效贡献、客户业务、平台自身健康 | 管理者、数据开发 |
 
+## 开发执行文档（AI 编码用）
+
+| 文档 | 内容 |
+| --- | --- |
+| [`../AGENTS.md`](../AGENTS.md) | **AI 开发总纲**：触发词、启动协议、事实来源优先级、十条铁律、DoD。Cursor 会自动加载 |
+| [`../.cursor/rules/`](../.cursor/rules) | 7 条项目规则：核心约束、工作流、PRD 一致性、还原规范、前端、后端、测试 |
+| [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md) | 14 个批次、74 个任务的施工图，每个任务含输入（PRD 章节 + 原型页面）、产出与验收 |
+| [`dev/TASKS.md`](dev/TASKS.md) | 任务进度板，AI 边做边勾选并记录 commit |
+| [`dev/TECH-STACK.md`](dev/TECH-STACK.md) | 技术选型与架构决策、环境变量清单 |
+| [`dev/UI-PARITY.md`](dev/UI-PARITY.md) | 24 页高保真还原清单与豁免登记 |
+| [`dev/OPEN-QUESTIONS.md`](dev/OPEN-QUESTIONS.md) | 开放问题记录（遇到歧义写这里，不要停下来问人） |
+| [`dev/PROMPTS.md`](dev/PROMPTS.md) | 提示词速查：日常四句 + 精细控制 + 纠偏话术 |
+
+启动开发只需要对 Cursor 说：**开始开发**。
+
 ## 阅读建议
 
 - **第一次接触**：先看 [PRD 第一章背景与问题](PRD.md#一背景与问题) 和 [第四章核心业务流程](PRD.md#四核心业务流程)，再打开原型 `index.html` 对照点一遍。

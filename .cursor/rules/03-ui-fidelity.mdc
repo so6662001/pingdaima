@@ -1,0 +1,57 @@
+---
+description: 高保真还原规范：如何把 HTML 原型 1:1 变成 React 页面，以及还原度如何验证。100% 还原是硬指标，始终适用。
+alwaysApply: true
+---
+
+# 高保真还原（100% 还原是硬指标）
+
+## 原型是验收基线
+
+根目录 24 个 `*.html` 是**只读基线**，禁止修改。实现某个页面前，先做三件事：
+
+1. 在浏览器打开该原型页面，把所有交互点一遍（tab、抽屉、弹窗、下拉、拖拽、深链）
+2. 读该页面的内联 `<script>`，那里有全部数据结构与渲染逻辑
+3. 对照 `docs/dev/UI-PARITY.md` 里该页面的还原要点清单
+
+## 迁移方法
+
+| 原型资产 | 迁移方式 |
+| --- | --- |
+| `assets/css/app.css` | **整体复制**到 `packages/ui/styles/app.css`，一行不改。新样式只能追加到独立文件，不许修改原文件 |
+| 页面内联 `<style>` | 复制为该页面的 `*.module.css` 或同名局部样式，选择器与属性保持原样 |
+| `assets/js/icons.js` | 移植为 `packages/ui/src/Icon.tsx`，图标名与 SVG path 一字不改 |
+| `assets/js/charts.js` | 移植为 `packages/ui/src/charts/*.ts`，保留原有 SVG 生成逻辑与视觉参数 |
+| `assets/js/ui.js` | 拆为 `Toast` / `Drawer` / `Modal` / `Tabs` / `Kanban` 等组件，行为与动画时长保持一致 |
+| `assets/js/layout.js` | 拆为 `Sidebar` / `Topbar` / `CommandPalette` / `NotifyCenter`，导航项与徽标保持一致 |
+| 页面 JS 里的模板字符串 | 逐段转为 JSX，**class 名一字不改，DOM 层级不变**（不许"顺手优化结构"） |
+| 页面 JS 里的 mock 数据 | 抽取到 `packages/shared/src/fixtures/<page>.ts`，作为数据库种子数据的来源 |
+
+## 种子数据必须与原型完全一致
+
+这是还原度可验证的前提：把原型各页面 JS 里的数据（`REQS`、`CARDS`、`TICKETS`、`PRJS`、`PEOPLE` 等）原样抽取为 fixtures，`pnpm db:seed` 灌入数据库。这样应用渲染出来的内容与原型逐字相同，视觉回归才有意义。
+
+允许的差异只有两类：真实时间戳、真实自增 ID。这两类在视觉回归中用 mask 屏蔽。
+
+## 还原度验证
+
+```bash
+pnpm e2e:parity                  # 全部页面
+pnpm e2e:parity -- --grep board  # 单页
+```
+
+- 基线截图：直接对原型页面截图（`playwright.parity.config.ts` 里配置原型静态服务）
+- 对比对象：应用中对应路由的页面
+- 阈值：`maxDiffPixelRatio: 0.01`，超出即失败
+- 视口：1600×1200 与 1366×768 两档
+- 失败时输出 diff 图到 `e2e/__diff__/`，逐处确认；差异如果是"应用更正确"（例如原型的已知渲染瑕疵），在 `docs/dev/UI-PARITY.md` 该页条目下登记豁免并说明理由
+
+## 常见还原失误（自查）
+
+- 少了空状态（"任务池为空"、"拖入卡片"）
+- 少了悬浮提示（`.tip[data-tip]`）与列策略气泡
+- 少了徽标：卡片老化色阶（≤2 绿 / 3-4 黄 / >4 红）、拉取信号虚线绿框、阻塞斑马纹
+- 少了紧凑模式、折叠列、全屏切换
+- 深链没实现（`#tab=`、`#bd=`、`#scope=`、`#lane=`、`#metrics=1`）
+- 图表少了分位线、图例、悬浮 title
+- 侧边栏折叠状态没持久化到 localStorage
+- 数字格式不一致（千分位、百分比小数位、`+2.4pt` 这类环比写法）

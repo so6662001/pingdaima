@@ -395,7 +395,7 @@ flowchart LR
 
 ## 四、外部系统集成时序
 
-### 4.1 GitHub 事件 → 工作项流转 → 企业微信推送
+### 4.1 GitHub 事件驱动工作项流转与推送
 
 ```mermaid
 sequenceDiagram

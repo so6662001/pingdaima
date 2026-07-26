@@ -13,6 +13,8 @@
 
 配套的产品需求文档在 **[`docs/`](docs/)** 目录：[PRD 主文档](docs/PRD.md) · [用户故事与验收标准](docs/prd/user-stories.md) · [状态机设计](docs/prd/state-machines.md) · [数据模型与 ER 图](docs/prd/data-model.md) · [业务流程与流转图](docs/prd/flows.md) · [指标口径字典](docs/prd/metrics.md)。
 
+要用 AI 把原型实现为真实系统：先读 [`AGENTS.md`](AGENTS.md)（开发总纲）与 [`docs/dev/BUILD-PLAN.md`](docs/dev/BUILD-PLAN.md)（施工图），然后对 Cursor 说「**开始开发**」即可。
+
 ---
 
 ## 一、快速预览

@@ -1,0 +1,62 @@
+---
+description: 后端实现规范（NestJS + Prisma + PostgreSQL），分层、状态机、事件、集成与权限。
+globs: apps/api/**,prisma/**,packages/shared/**
+alwaysApply: false
+---
+
+# 后端实现规范
+
+## 技术栈（已定，不要替换）
+
+NestJS + TypeScript + Prisma + PostgreSQL + Redis + BullMQ（事件队列与定时任务）。
+
+## 分层
+
+```
+apps/api/src/
+  modules/<domain>/
+    <domain>.controller.ts   只做参数校验与响应组装
+    <domain>.service.ts      业务逻辑
+    <domain>.repository.ts   Prisma 访问
+    dto/
+  core/
+    state-machine/           统一状态机服务（消费 shared 的转换表）
+    events/                  事件总线、Webhook 网关、幂等消费
+    metrics/                 指标预聚合任务
+    auth/                    RBAC + 数据范围
+```
+
+领域划分对齐 PRD 模块：`ticket`、`customer`、`requirement`、`product`、`project`、`sprint`、`work-item`、`board`、`test`、`devops`、`worklog`、`people`、`metrics`、`retro`、`notify`、`portal`、`settings`。
+
+## 状态机
+
+所有状态变更必须走 `StateMachineService.transition({ entityType, entityId, to, trigger, operator, reason? })`：
+
+1. 查转换表确认 `from → to` 合法，否则抛 `IllegalTransitionError`
+2. 逐条执行守卫，失败时抛出**包含全部未满足项**的错误（前端要展示具体缺什么）
+3. 在同一事务内更新状态、写 `state_transition_log`（含在上一状态的停留时长）
+4. 事务提交后发领域事件（触发通知、自动流转、指标更新）
+
+管理员强制流转必须传 `reason`，写审计日志并在时间线标记。
+
+## 事件与集成
+
+- GitHub Webhook：校验签名 → 事件 ID 去重 → 入队 → **3 秒内返回 200**，业务处理异步做
+- 消费必须幂等，同一事件重复投递不产生重复流转与重复推送
+- 失败重试指数退避最多 6 次，仍失败入死信队列并告警
+- 外部系统（GitHub / 企业微信）不可用时必须降级：核心功能不受影响，自动化暂停并在界面提示
+- 定时任务（SLA 扫描、任务池超时、阶段延期、工时提醒、漏测周报）用 BullMQ repeatable job，全部可通过配置开关按团队启停
+
+## 数据访问
+
+- Schema 严格对应 `docs/prd/data-model.md`，包括唯一约束与索引
+- 软删除（`is_deleted`），被引用的主数据只能停用不能删除
+- 列表查询强制分页；跨表聚合走预聚合表
+- 敏感字段（商户信息、金额）按角色脱敏，脱敏在 service 层做，不要指望前端
+
+## API 约定
+
+- RESTful，路径 `/api/v1/<资源>`，返回 `{ data, meta }`
+- 错误返回 `{ error: { code, message, details } }`，`code` 用领域错误码（如 `REQ_DOR_NOT_MET`），`details` 给出未满足项清单
+- 越权返回 404
+- 所有写接口有幂等键支持（前端重试不产生重复数据）
