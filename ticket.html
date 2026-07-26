@@ -27,6 +27,7 @@
 
       <div class="tabs">
         <div class="tab active" data-tab="k1"><span data-icon="list" data-size="14"></span>工单池 <span class="cnt">23</span></div>
+        <div class="tab" data-tab="k6"><span data-icon="filter" data-size="14"></span>工单清洗 · 分诊 <span class="cnt">9</span></div>
         <div class="tab" data-tab="k2"><span data-icon="kanban" data-size="14"></span>处理看板</div>
         <div class="tab" data-tab="k3"><span data-icon="timer" data-size="14"></span>SLA 与时效</div>
         <div class="tab" data-tab="k4"><span data-icon="pie" data-size="14"></span>反馈分析与转化</div>
@@ -50,6 +51,65 @@
         <div class="card"><div class="card-body flush"><div class="table-wrap" style="max-height:calc(100vh - 330px);overflow:auto">
           <table class="tbl" id="tkTable"></table></div></div>
           <div class="card-foot">显示 1-14 条，共 23 条未关闭工单 · 本月累计受理 386 条</div>
+        </div>
+      </div>
+
+      <!-- 工单清洗 · 分诊 -->
+      <div class="tab-pane" data-pane="k6">
+        <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+          <div class="card-body" style="padding:12px 16px">
+            <div class="flex items-center gap12">
+              <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="filter" data-size="17"></span>
+              <div style="flex:1">
+                <div class="fw6 fz13">工单池清洗：由产品经理轮值分诊，把客户声音转成结构化的需求或缺陷</div>
+                <div class="muted fz11 mt4">系统先做相似度聚类与自动预判（准确率 86%），产品经理只需复核与批量判定；判定结果自动回写工单并通知客户。</div>
+              </div>
+              <div class="flex items-center gap16">
+                <div class="tc"><div class="fw6 fz15">9</div><div class="muted fz11">待清洗</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--success)">4.2h</div><div class="muted fz11">平均清洗时长</div></div>
+                <div class="tc"><div class="fw6 fz15">本周轮值</div><div class="muted fz11">孙悦 / 周雅</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g5 mb16" id="clStats"></div>
+
+        <div class="grid g-3-2 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="inbox"></span>待清洗队列</div>
+              <div class="card-sub">勾选后可批量判定，系统已给出预判建议</div>
+              <div class="card-head-actions">
+                <div class="btn-group"><button class="active">全部 9</button><button>疑似需求 5</button><button>疑似缺陷 2</button><button>疑似重复 2</button></div>
+              </div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="cleanTable"></table></div></div>
+            <div class="card-foot flex items-center gap8">
+              <span class="checkbox"></span><span class="fz12">全选</span>
+              <span class="fz12 muted">已选 <b id="clSel">0</b> 条</span>
+              <div class="ml-auto flex gap6">
+                <button class="btn btn-sm" data-modal="mMerge"><span data-icon="copy" data-size="13"></span>合并重复</button>
+                <button class="btn btn-sm" data-toast="已转为咨询并沉淀到知识库"><span data-icon="book" data-size="13"></span>转知识库</button>
+                <button class="btn btn-sm" data-toast="已标记为不予处理并回复客户"><span data-icon="x" data-size="13"></span>不予处理</button>
+                <button class="btn btn-sm btn-danger" data-modal="mToBug"><span data-icon="bug" data-size="13"></span>判定为缺陷</button>
+                <button class="btn btn-sm btn-primary" data-modal="mToReq"><span data-icon="bulb" data-size="13"></span>判定为需求</button>
+              </div>
+            </div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="copy"></span>相似工单聚类建议</div>
+              <div class="card-sub">同一诉求合并后价值权重叠加</div></div>
+              <div class="card-body" id="clusterBox"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>本月清洗判定分布</div></div>
+              <div class="card-body"><div id="clDonut"></div></div></div>
+          </div>
+        </div>
+
+        <div class="grid g2">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="workflow"></span>清洗判定标准</div>
+            <div class="card-sub">标准公开，避免"看心情"判定</div></div>
+            <div class="card-body flush"><table class="tbl" id="clRule"></table></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>近期清洗记录</div></div>
+            <div class="card-body flush"><table class="tbl" id="clLog"></table></div></div>
         </div>
       </div>
 
@@ -110,6 +170,10 @@
       <div class="tab-pane" data-pane="k5">
         <div class="grid g-2-1">
           <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="tag"></span>自定义工单类型</div>
+              <div class="card-sub">类型决定字段模板、SLA、默认处理组与可转换目标</div>
+              <div class="card-head-actions"><button class="btn btn-sm btn-primary" data-modal="mNewType"><span data-icon="plus" data-size="13"></span>新建类型</button></div></div>
+              <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="typeTable"></table></div></div></div>
             <div class="card"><div class="card-head"><div class="card-title"><span data-icon="folder"></span>服务目录</div>
               <div class="card-head-actions"><button class="btn btn-sm"><span data-icon="plus" data-size="13"></span>新增分类</button></div></div>
               <div class="card-body flush"><table class="tbl" id="catTable"></table></div></div>
@@ -171,6 +235,8 @@
     </div>
   </div>
   <div class="drawer-foot">
+    <button class="btn" data-modal="mToBug"><span data-icon="bug" data-size="13"></span>判定为缺陷</button>
+    <button class="btn" data-modal="mToProject"><span data-icon="kanban" data-size="13"></span>推送到项目管理</button>
     <button class="btn" data-toast="已转派给二线支持">转派</button>
     <button class="btn" data-toast="已挂起，等待客户补充信息">等待客户</button>
     <button class="btn btn-primary" data-toast="工单已解决，满意度邀请已发送">标记已解决</button>
@@ -204,6 +270,88 @@
   <div class="modal-foot"><button class="btn" data-close>取消</button>
     <button class="btn" data-close data-toast="已合并到已有需求 REQ-2036">合并到已有需求</button>
     <button class="btn btn-primary" data-close data-toast="需求已创建（REQ-2046），并与工单建立双向关联">创建需求</button></div>
+</div>
+
+<div class="modal" id="mToBug" style="width:620px">
+  <div class="modal-head"><span data-icon="bug"></span><span class="modal-title">工单判定为缺陷</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16">来源工单 <b>TK-3819</b>（星辰出行科技 · P0 · 开放平台渠道）· 系统预判：<b style="color:var(--danger)">线上缺陷</b>（匹配到生产异常日志与同类工单 3 条）</div>
+    <div class="field"><label>缺陷标题<span class="req">*</span></label><input class="input" value="数字人民币支付回调失败率升高（生产）"></div>
+    <div class="form-row">
+      <div class="field"><label>严重程度</label><select class="select"><option>P0 致命（影响交易）</option><option>P1 严重</option><option>P2 一般</option></select></div>
+      <div class="field"><label>发现环境</label><select class="select"><option>生产环境</option><option>预发环境</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>所属模块</label><select class="select"><option>交易受理</option><option>清结算</option><option>风控决策</option></select></div>
+      <div class="field"><label>处理人</label><select class="select"><option>何俊（交易平台组）</option><option>自动按模块分派</option></select></div>
+    </div>
+    <div class="field"><label>推送到</label>
+      <div class="pills"><span class="pill active">PRJ-018 支付网关 3.0 · 当前迭代</span><span class="pill">缺陷池（暂不排期）</span></div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">缺陷状态变更自动回写工单并通知客户</span></div>
+    <div class="flex items-center gap8 mt8"><span class="switch on"></span><span class="fz12 dim">纳入漏测分析（用于反向评估测试有效性）</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-danger" data-close data-toast="已创建缺陷 BUG-774 并推送至 PRJ-018 当前迭代">创建缺陷并推送</button></div>
+</div>
+
+<div class="modal" id="mToProject" style="width:620px">
+  <div class="modal-head"><span data-icon="kanban"></span><span class="modal-title">推送到项目管理</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16">把工单转化为可执行的工作项，进入项目/迭代后由研发认领；工单与工作项建立<b>双向关联</b>，状态自动同步。</div>
+    <div class="field"><label>来源</label><input class="input" value="TK-3821 大额账单导出超时（华南连锁商超集团 · 战略客户）" readonly></div>
+    <div class="form-row">
+      <div class="field"><label>目标项目<span class="req">*</span></label><select class="select"><option>PRJ-016 商户运营中心体验升级</option><option>PRJ-018 统一支付网关 3.0 重构</option></select></div>
+      <div class="field"><label>目标迭代</label><select class="select"><option>Sprint 26-15（07-28 ~ 08-10）</option><option>下个迭代</option><option>不指定（进入 Backlog）</option></select></div>
+    </div>
+    <div class="field"><label>工作项类型</label>
+      <div class="pills"><span class="pill active">用户故事</span><span class="pill">任务</span><span class="pill">缺陷</span></div></div>
+    <div class="field"><label>处理方式</label>
+      <div class="pills"><span class="pill active">投放任务池（自助认领）</span><span class="pill">指定经办人</span></div>
+      <div class="hint">投放任务池后，系统按技能标签推送给匹配成员，超时无人认领自动指派</div></div>
+    <div class="form-row">
+      <div class="field"><label>预估故事点</label><select class="select"><option>5</option><option>3</option><option>8</option></select></div>
+      <div class="field"><label>期望完成</label><input class="input" value="2026-08-20（客户承诺）"></div>
+    </div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">工作项状态变更自动回写工单进度并通知客户经理</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="已推送到 PRJ-016 Sprint 26-15 任务池，并与工单建立双向关联">推送</button></div>
+</div>
+
+<div class="modal" id="mMerge">
+  <div class="modal-head"><span data-icon="copy"></span><span class="modal-title">合并重复工单</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>主工单（保留）</label><select class="select"><option>TK-3821 大额账单导出超时 · 华南连锁商超集团</option></select></div>
+    <div class="field"><label>合并以下工单（相似度 ≥ 0.78）</label>
+      <div id="mergeList"></div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">合并后客户影响面自动叠加（8 家客户），价值评分同步提升</span></div>
+    <div class="flex items-center gap8 mt8"><span class="switch on"></span><span class="fz12 dim">被合并工单的客户在需求上线时一并回访</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="已合并 4 条重复工单，客户影响面已叠加">确认合并</button></div>
+</div>
+
+<div class="modal" id="mNewType" style="width:640px">
+  <div class="modal-head"><span data-icon="tag"></span><span class="modal-title">新建工单类型</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="field"><label>类型名称<span class="req">*</span></label><input class="input" placeholder="例如：数据订正申请"></div>
+      <div class="field"><label>类型编码</label><input class="input" placeholder="data_fix"></div>
+    </div>
+    <div class="field"><label>专属字段（该类型工单必填）</label>
+      <div class="flex flex-wrap gap6" id="typeFields"></div>
+      <div class="hint">支持文本、下拉、日期、金额、附件等字段类型，可设为必填</div></div>
+    <div class="form-row">
+      <div class="field"><label>默认优先级 / SLA</label><select class="select"><option>P2 · 2 小时响应 / 1 天解决</option><option>P1 · 30 分钟响应 / 4 小时解决</option></select></div>
+      <div class="field"><label>默认处理组</label><select class="select"><option>交易平台组</option><option>质量保障部</option><option>产品部</option></select></div>
+    </div>
+    <div class="field"><label>可转换目标</label>
+      <div class="flex gap12">
+        <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">可判定为需求</span></span>
+        <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">可判定为缺陷</span></span>
+        <span class="flex items-center gap6"><span class="checkbox"></span><span class="fz12">可直接推送项目</span></span>
+      </div></div>
+    <div class="field"><label>适用渠道</label>
+      <div class="flex flex-wrap gap6"><span class="tag brand">客服热线</span><span class="tag brand">企业微信</span><span class="tag brand">客户经理</span><span class="tag line">+ 添加</span></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="工单类型已创建并生效">创建类型</button></div>
 </div>
 
 <div class="modal" id="mNewTicket">
@@ -407,6 +555,137 @@ document.getElementById('channels').innerHTML = [
     '<span class="tico ' + (c[2] ? 'req' : 'task') + '" style="background:' + (c[2] ? '#2b5cff' : '#b3bfd0') + '">' + icon(c[1], 11) + '</span>' +
     '<div style="flex:1"><div class="fz12">' + c[0] + '</div><div class="muted fz11 mt4">' + c[3] + '</div></div>' +
     (c[2] ? '<span class="tag success">已接入</span>' : '<button class="btn btn-sm">接入</button>') + '</div>';
+}).join('');
+
+/* ============ 工单清洗 · 分诊 ============ */
+document.getElementById('clStats').innerHTML = [
+  { l: '待清洗', v: 9, u: '条', i: 'filter', c: '#2b5cff', bg: 'var(--brand-50)', f: '最长等待 1.8 天' },
+  { l: '本月已清洗', v: 386, u: '条', i: 'circleCheck', c: '#15a86b', bg: 'var(--success-bg)', f: '清洗率 97.7%' },
+  { l: '判定为需求', v: 68, u: '条', i: 'bulb', c: '#7c5cff', bg: 'var(--purple-bg)', f: '去重后提交 32 条' },
+  { l: '判定为缺陷', v: 46, u: '条', i: 'bug', c: '#e5484d', bg: 'var(--danger-bg)', f: '其中生产缺陷 12 条' },
+  { l: '重复合并', v: 124, u: '条', i: 'copy', c: '#f59e0b', bg: 'var(--warning-bg)', f: '合并率 32%' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+var CLEAN = [
+  ['TK-3820', '希望支持按门店维度自动分账', '云上餐饮连锁', 'KA', '需求建议', '需求', 92, '与 REQ-2019 同类，建议合并', '商户运营中心', '8h'],
+  ['TK-3819', '数字人民币支付回调失败率升高', '星辰出行科技', 'KA', '故障报障', '缺陷', 96, '匹配生产异常日志，同类工单 3 条', '统一支付网关', '2h'],
+  ['TK-3816', '申请提高开放平台 API 调用限额', '星辰出行科技', 'KA', '需求建议', '需求', 88, '与 REQ-2037 同类，客户呼声 +1', '开放能力平台', '1.2d'],
+  ['TK-3814', '希望账单支持导出 PDF 版本', '优鲜生活超市', '普通', '需求建议', '需求', 76, '与 TK-3810 相似度 0.81，建议合并', '商户运营中心', '1.1d'],
+  ['TK-3811', '需要提供交易数据的开放查询接口', '数智物流科技', '普通', '需求建议', '需求', 84, '新诉求，暂无同类', '开放能力平台', '1.8d'],
+  ['TK-3810', '批量退款操作没有进度提示', '云上餐饮连锁', 'KA', '需求建议', '需求', 72, '与 TK-3814 属同一体验问题域', '商户运营中心', '1.4d'],
+  ['TK-3809', '月结账单金额与自有系统差 0.02 元', '优鲜生活超市', '普通', '数据订正', '缺陷', 81, '疑似精度问题，需研发确认', '统一支付网关', '3.2h'],
+  ['TK-3805', '导出的对账文件字段能否加中文表头', '万联便利', 'KA', '需求建议', '重复', 68, '与 TK-3818 重复（已解答）', '商户运营中心', '2.1d'],
+  ['TK-3802', '如何配置多级审批流程', '鲜丰果业', '普通', '使用咨询', '咨询', 94, '知识库已有答案，建议沉淀 FAQ', '商户运营中心', '6h']
+];
+var JD = { '需求': ['purple', 'bulb'], '缺陷': ['danger', 'bug'], '重复': ['warning', 'copy'], '咨询': ['', 'help'] };
+document.getElementById('cleanTable').innerHTML =
+  '<thead><tr><th style="width:30px"><span class="checkbox"></span></th><th style="width:24%">工单</th><th>客户</th><th>工单类型</th>' +
+  '<th>系统预判</th><th class="num">置信度</th><th style="width:22%">预判依据</th><th>建议归属</th><th>等待</th><th style="width:150px">快捷判定</th></tr></thead><tbody>' +
+  CLEAN.map(function (c) {
+    var j = JD[c[5]];
+    return '<tr><td><span class="checkbox"></span></td>' +
+      '<td><div class="row-flex"><span class="tico req">' + icon('inbox', 11) + '</span>' +
+      '<div style="min-width:0"><div class="t-main ellipsis" style="max-width:250px">' + c[1] + '</div>' +
+      '<div class="id-link">' + c[0] + '</div></div></div></td>' +
+      '<td><div class="row-flex"><span class="tag ' + LVTAG[c[3]] + '" style="height:17px">' + c[3] + '</span><span class="fz12">' + c[2] + '</span></div></td>' +
+      '<td class="dim fz12">' + c[4] + '</td>' +
+      '<td><span class="tag ' + j[0] + '">' + icon(j[1], 11) + c[5] + '</span></td>' +
+      '<td class="num"><b style="color:' + (c[6] >= 85 ? 'var(--success)' : 'var(--warning)') + '">' + c[6] + '%</b></td>' +
+      '<td class="fz12 muted">' + c[7] + '</td>' +
+      '<td class="dim fz12">' + c[8] + '</td>' +
+      '<td class="dim fz12">' + c[9] + '</td>' +
+      '<td><div class="flex gap4">' +
+      '<button class="btn btn-sm" style="height:24px;padding:0 7px" onclick="event.stopPropagation();UI.openModal(\'mToReq\')">需求</button>' +
+      '<button class="btn btn-sm" style="height:24px;padding:0 7px" onclick="event.stopPropagation();UI.openModal(\'mToBug\')">缺陷</button>' +
+      '<button class="btn btn-sm" style="height:24px;padding:0 7px" onclick="event.stopPropagation();UI.openModal(\'mMerge\')">合并</button>' +
+      '</div></td></tr>';
+  }).join('') + '</tbody>';
+document.querySelector('#cleanTable').addEventListener('click', function () {
+  setTimeout(function () {
+    document.getElementById('clSel').textContent = document.querySelectorAll('#cleanTable .checkbox.checked').length;
+  }, 0);
+});
+
+document.getElementById('clusterBox').innerHTML = [
+  ['账单导出与格式类', 5, ['TK-3821', 'TK-3814', 'TK-3810', 'TK-3805', 'TK-3798'], '建议合并为「账单导出体验优化」需求', 0.84],
+  ['开放能力与限额类', 3, ['TK-3816', 'TK-3811', 'TK-3776'], '建议合并为「开放平台能力增强」需求', 0.79],
+  ['分账与结算规则类', 2, ['TK-3820', 'TK-3764'], '建议关联到已有需求 REQ-2019', 0.81]
+].map(function (c) {
+  return '<div style="padding:10px 12px;border:1px solid var(--ink-200);border-radius:9px;margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><b class="fz12">' + c[0] + '</b>' +
+    '<span class="tag brand ml-auto">' + c[1] + ' 条 · 相似度 ' + c[4] + '</span></div>' +
+    '<div class="flex flex-wrap gap4 mt8">' + c[2].map(function (t) { return '<span class="id-link">' + t + '</span>'; }).join('<span class="muted fz11">·</span>') + '</div>' +
+    '<div class="muted fz11 mt4">' + c[3] + '</div>' +
+    '<button class="btn btn-sm btn-block mt8" data-modal="mMerge">合并并提需求</button></div>';
+}).join('');
+Charts.donut('#clDonut', { size: 148, thickness: 18, center: { value: '386', label: '本月清洗' }, data: [
+  { name: '判定为需求', value: 68, color: '#7c5cff' }, { name: '判定为缺陷', value: 46, color: '#e5484d' },
+  { name: '重复合并', value: 124, color: '#f59e0b' }, { name: '转咨询/知识库', value: 118, color: '#15a86b' },
+  { name: '不予处理', value: 30, color: '#b3bfd0' }] });
+
+document.getElementById('clRule').innerHTML =
+  '<thead><tr><th>判定结果</th><th>判定标准</th><th>后续动作</th></tr></thead><tbody>' +
+  [['需求', '产品当前不具备该能力，且对客户有持续价值（非一次性）', '进入需求池，带客户影响面与来源工单，参与价值评审'],
+   ['缺陷', '产品已有该能力但表现与预期/文档不符，或线上异常', '创建缺陷并推送项目管理，纳入漏测分析'],
+   ['重复', '与既有工单/需求相似度 ≥ 0.78 且诉求一致', '合并到主工单，客户影响面叠加，价值权重提升'],
+   ['咨询', '产品能力已具备，属使用方法问题', '回复客户并沉淀 FAQ 到知识库，高频咨询触发体验优化需求'],
+   ['不予处理', '与产品定位不符 / 客户误解 / 单一客户定制且无普适价值', '说明理由并回复客户，记录以备复盘']
+  ].map(function (r) {
+    return '<tr><td><span class="tag ' + (JD[r[0]] ? JD[r[0]][0] : '') + '">' + r[0] + '</span></td>' +
+      '<td class="fz12">' + r[1] + '</td><td class="fz12 muted">' + r[2] + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('clLog').innerHTML =
+  '<thead><tr><th>工单</th><th>判定</th><th>产出</th><th>清洗人</th><th>耗时</th><th>时间</th></tr></thead><tbody>' +
+  [['TK-3808 对账差错自动补单', '需求', 'REQ-2035', '周雅', '3.2h', '4 天前'],
+   ['TK-3813 风控误拦截 14 笔', '缺陷', 'BUG-751', '孙悦', '1.1h', '前天'],
+   ['TK-3798 批量上传失败', '缺陷', 'BUG-768', '孙悦', '0.8h', '07-18'],
+   ['TK-3765 活动效果对比功能', '需求', 'REQ-2044', '孙悦', '5.6h', '07-08'],
+   ['TK-3792 签购单打印异常', '咨询', 'FAQ-114', '周雅', '0.4h', '上周']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td>' +
+      '<td><span class="tag ' + (JD[r[1]] ? JD[r[1]][0] : '') + '">' + r[1] + '</span></td>' +
+      '<td class="id-link" style="color:var(--brand-600)">' + r[2] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[3], 'sm') + '<span class="fz12">' + r[3] + '</span></div></td>' +
+      '<td class="dim fz12">' + r[4] + '</td><td class="muted fz11">' + r[5] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* ============ 自定义工单类型 ============ */
+document.getElementById('typeTable').innerHTML =
+  '<thead><tr><th>工单类型</th><th>编码</th><th>专属字段</th><th>默认 SLA</th><th>默认处理组</th><th>可转换</th><th class="num">本月</th><th>状态</th><th style="width:34px"></th></tr></thead><tbody>' +
+  [['故障报障', 'incident', '影响范围 / 复现步骤 / 发生时间 / 日志附件', 'P1 · 30 分钟 / 4 小时', '按模块自动分派', '缺陷 · 项目', 142, 1],
+   ['需求建议', 'feature_req', '业务场景 / 期望效果 / 涉及门店数 / 影响金额', 'P2 · 2 小时 / 1 天', '产品部', '需求', 98, 1],
+   ['使用咨询', 'consult', '咨询模块 / 已尝试操作', 'P3 · 1 天 / 3 天', '客服一线', '知识库', 86, 1],
+   ['数据订正', 'data_fix', '订正范围 / 数据依据 / 授权人 / 影响金额', 'P2 · 2 小时 / 1 天', '交易平台组', '缺陷 · 项目', 38, 1],
+   ['投诉', 'complaint', '投诉对象 / 诉求 / 期望补偿', 'P1 · 30 分钟 / 4 小时', '服务主管', '需求 · 缺陷', 22, 1],
+   ['合规与安全事件', 'compliance', '监管条款 / 上报时限 / 涉及主体', 'P0 · 15 分钟 / 1 小时', '风控算法组', '需求 · 项目', 6, 1],
+   ['开放平台接入', 'openapi', '应用 ID / 接口列表 / 环境', 'P2 · 2 小时 / 1 天', '技术架构组', '需求', 14, 0]
+  ].map(function (t) {
+    return '<tr><td class="t-main">' + t[0] + '</td><td class="mono fz11 muted">' + t[1] + '</td>' +
+      '<td class="fz12 muted">' + t[2] + '</td><td class="fz12">' + t[3] + '</td><td class="dim fz12">' + t[4] + '</td>' +
+      '<td>' + t[5].split(' · ').map(function (x) { return '<span class="tag brand" style="height:17px">' + x + '</span> '; }).join('') + '</td>' +
+      '<td class="num">' + t[6] + '</td>' +
+      '<td>' + (t[7] ? '<span class="tag success">启用</span>' : '<span class="tag">停用</span>') + '</td>' +
+      '<td><button class="icon-btn" style="width:24px;height:24px" onclick="UI.menu(this,[{label:\'编辑字段模板\',icon:\'edit\'},{label:\'调整 SLA\',icon:\'timer\'},{label:\'配置转换目标\',icon:\'workflow\'},{label:\'停用\',icon:\'x\',danger:true}],\'right\')">' + icon('more', 15) + '</button></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('typeFields').innerHTML = ['订正范围', '数据依据', '授权人', '影响金额', '生效时间']
+  .map(function (f) { return '<span class="tag brand">' + f + ' <span style="opacity:.6">×</span></span>'; }).join('') +
+  '<span class="tag line" style="cursor:pointer">+ 添加字段</span>';
+document.getElementById('mergeList').innerHTML = [
+  ['TK-3814', '希望账单支持导出 PDF 版本', '优鲜生活超市', 0.81],
+  ['TK-3810', '批量退款操作没有进度提示', '云上餐饮连锁', 0.76],
+  ['TK-3805', '导出的对账文件字段能否加中文表头', '万联便利', 0.79],
+  ['TK-3798', '商户后台批量上传门店信息失败', '市场运营部', 0.74]
+].map(function (m) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="checkbox' + (m[3] >= 0.78 ? ' checked' : '') + '"></span>' +
+    '<span class="id-link" style="width:74px">' + m[0] + '</span>' +
+    '<span class="fz12 ellipsis" style="flex:1">' + m[1] + '</span>' +
+    '<span class="tag">' + m[2] + '</span>' +
+    '<span class="tag ' + (m[3] >= 0.78 ? 'brand' : '') + '">' + m[3] + '</span></div>';
 }).join('');
 
 document.getElementById('valBar').innerHTML = UI.bar(76, '', 'thin');

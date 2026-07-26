@@ -30,7 +30,9 @@
         <div class="tab" data-tab="board"><span data-icon="kanban" data-size="14"></span>需求看板</div>
         <div class="tab" data-tab="tree"><span data-icon="layers" data-size="14"></span>需求分解</div>
         <div class="tab" data-tab="sched"><span data-icon="calendar" data-size="14"></span>阶段排期 <span class="cnt">3 延期</span></div>
+        <div class="tab" data-tab="clean"><span data-icon="filter" data-size="14"></span>清洗与归档 <span class="cnt">11</span></div>
         <div class="tab" data-tab="review"><span data-icon="workflow" data-size="14"></span>评审流程 <span class="cnt">7</span></div>
+        <div class="tab" data-tab="model"><span data-icon="sliders" data-size="14"></span>优先级模型</div>
         <div class="tab" data-tab="insight"><span data-icon="pie" data-size="14"></span>需求分析</div>
       </div>
 
@@ -167,6 +169,95 @@
         </div>
       </div>
 
+      <!-- 清洗与归档 -->
+      <div class="tab-pane" data-pane="clean">
+        <div class="grid g5 mb16" id="cwStats"></div>
+        <div class="grid g-3-2 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="filter"></span>待清洗需求队列</div>
+              <div class="card-sub">信息补全（富化）→ 去重合并 → 归档，保证需求池"干净可用"</div>
+              <div class="card-head-actions">
+                <div class="btn-group"><button class="active">全部 11</button><button>信息不全 5</button><button>疑似重复 3</button><button>长期无进展 3</button></div></div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="cwTable"></table></div></div>
+            <div class="card-foot flex items-center gap8">
+              <span class="fz12 muted">已选 <b>0</b> 条</span>
+              <div class="ml-auto flex gap6">
+                <button class="btn btn-sm" data-modal="mEnrich"><span data-icon="edit" data-size="13"></span>批量富化</button>
+                <button class="btn btn-sm" data-toast="已合并 3 条重复需求，客户影响面已叠加"><span data-icon="copy" data-size="13"></span>合并重复</button>
+                <button class="btn btn-sm" data-toast="已归档到需求库，可随时检索复用"><span data-icon="folder" data-size="13"></span>归档</button>
+                <button class="btn btn-sm btn-primary" data-toast="已提交评审"><span data-icon="check" data-size="13"></span>标记就绪并提交评审</button>
+              </div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="circleCheck"></span>需求就绪度检查（DoR）</div>
+              <div class="card-sub">未达标不允许进入评审与排期</div></div>
+              <div class="card-body" id="dorBox"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="folder"></span>归档需求库</div>
+              <div class="card-sub">暂缓/不做的需求不删除，保留检索与复活能力</div></div>
+              <div class="card-body flush"><table class="tbl" id="archTable"></table></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 优先级模型 -->
+      <div class="tab-pane" data-pane="model">
+        <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+          <div class="card-body" style="padding:12px 16px">
+            <div class="flex items-center gap12">
+              <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="sliders" data-size="17"></span>
+              <div style="flex:1">
+                <div class="fw6 fz13">优先级算法可配置、可解释、可追溯 —— 产品决策公开透明</div>
+                <div class="muted fz11 mt4">评审因素、权重、计算公式全部可自定义；每条需求的得分都能拆解到因素级；权重变更留痕并可回滚，避免"谁嗓门大谁优先"。</div>
+              </div>
+              <span class="tag success">当前模型：加权价值 ÷ 工作量系数 · v3.2</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g-3-2 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="sliders"></span>评审因素与权重</div>
+              <div class="card-sub">拖动权重可实时预览排序变化，确认后才生效</div>
+              <div class="card-head-actions"><button class="btn btn-sm" id="btnResetW">恢复默认</button>
+                <button class="btn btn-sm btn-primary" data-toast="模型 v3.3 已发布，需求池排序已重算">发布新版本</button></div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="factorTable"></table></div></div>
+            <div class="card-foot">权重合计 <b id="wSum">100</b>%（自动归一化）· 修改后下方排序实时预览</div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="cpu"></span>计算方式</div></div>
+              <div class="card-body">
+                <div class="field"><label>算法模板</label>
+                  <select class="select" id="algoSel">
+                    <option>加权价值 ÷ 工作量系数（默认）</option>
+                    <option>RICE（Reach × Impact × Confidence ÷ Effort）</option>
+                    <option>WSJF（延迟成本 ÷ 工作量）</option>
+                    <option>纯加权求和（不除工作量）</option>
+                    <option>自定义表达式</option>
+                  </select></div>
+                <div class="field"><label>公式</label>
+                  <div class="terminal" style="max-height:none;font-size:11px">
+                    <div class="cmd"># 优先级得分（越高越先做）</div>
+                    <div><span class="ok">加权价值</span> = Σ( 因素分 × 权重 )</div>
+                    <div><span class="ok">工作量系数</span> = 1 + 预估人日 ÷ 20</div>
+                    <div><span class="warn">优先级得分</span> = 加权价值 × 2 ÷ 工作量系数</div>
+                    <div class="dim"># 合规类需求命中强制规则，直接置顶</div>
+                  </div></div>
+                <div class="field"><label>强制规则（优先于算法）</label>
+                  <div id="forceRules"></div></div>
+              </div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>模型版本记录</div></div>
+              <div class="card-body" id="modelVer"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="list"></span>排序预览与得分拆解</div>
+            <div class="card-sub">每条需求的得分可逐因素拆解，评审会上直接对着看</div>
+            <div class="card-head-actions"><span class="tag warning" id="rankChanged">调整权重后此处实时重排</span></div></div>
+          <div class="card-body flush"><div class="table-wrap" style="max-height:520px;overflow:auto"><table class="tbl" id="scoreTable"></table></div></div>
+        </div>
+      </div>
+
       <!-- 需求分析 -->
       <div class="tab-pane" data-pane="insight">
         <div class="grid g3 mb16">
@@ -227,6 +318,7 @@
     </div>
   </div>
   <div class="drawer-foot">
+    <button class="btn" data-modal="mToProject"><span data-icon="kanban" data-size="13"></span>推送到项目管理</button>
     <button class="btn" data-toast="已驳回并通知提出人">驳回</button>
     <button class="btn" data-toast="已挂起">挂起</button>
     <button class="btn btn-primary" data-toast="评审通过，已进入排期池">评审通过</button>
@@ -270,6 +362,50 @@
     <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">提交后立即发起需求评审流程</span></div>
   </div>
   <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn" data-close data-toast="已保存为草稿">存为草稿</button><button class="btn btn-primary" data-close data-toast="需求已提交，评审流程已发起">提交需求</button></div>
+</div>
+
+<div class="modal" id="mToProject" style="width:660px">
+  <div class="modal-head"><span data-icon="kanban"></span><span class="modal-title">需求推送到项目管理</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16">推送后需求与工作项建立<b>双向关联</b>：工作项进度自动回算需求进度，需求上线自动回写来源工单并回访客户。</div>
+    <div class="field"><label>需求</label><input class="input" value="REQ-2041 支付网关多渠道智能路由能力（价值 92 · 紧迫 88）" readonly></div>
+    <div class="form-row">
+      <div class="field"><label>目标项目<span class="req">*</span></label><select class="select"><option>PRJ-018 统一支付网关 3.0 重构</option><option>PRJ-016 商户运营中心体验升级</option><option>新建项目…</option></select></div>
+      <div class="field"><label>目标迭代</label><select class="select"><option>Sprint 26-15（07-28 ~ 08-10）</option><option>Sprint 26-16</option><option>进入 Backlog 待排期</option></select></div>
+    </div>
+    <div class="field"><label>拆分为工作项<span class="req">*</span></label>
+      <div id="splitList"></div>
+      <button class="btn btn-sm mt8"><span data-icon="plus" data-size="13"></span>添加工作项</button>
+      <button class="btn btn-sm mt8" style="margin-left:6px"><span data-icon="sparkles" data-size="13"></span>AI 建议拆分</button></div>
+    <div class="field"><label>分发方式</label>
+      <div class="pills"><span class="pill active">投放任务池（研发自助认领）</span><span class="pill">按技能自动指派</span><span class="pill">手动指定</span></div></div>
+    <div class="field"><label>阶段计划（自动带入需求排期）</label>
+      <div class="grid g4" style="gap:8px">
+        <div><div class="hint" style="margin:0 0 4px">开始设计</div><input class="input" value="07-21"></div>
+        <div><div class="hint" style="margin:0 0 4px">开始编码</div><input class="input" value="07-28"></div>
+        <div><div class="hint" style="margin:0 0 4px">计划提测</div><input class="input" value="09-13"></div>
+        <div><div class="hint" style="margin:0 0 4px">计划上线</div><input class="input" value="09-30"></div>
+      </div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">推送后通过企业微信通知项目经理与研发负责人</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="已推送到 PRJ-018 Sprint 26-15，生成 4 个工作项并投放任务池">推送到项目</button></div>
+</div>
+
+<div class="modal" id="mEnrich" style="width:640px">
+  <div class="modal-head"><span data-icon="sparkles"></span><span class="modal-title">需求富化（信息补全）</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16">系统已从<b>来源工单、客户档案、历史相似需求</b>中自动提取信息，产品经理确认或修改即可，减少重复录入。</div>
+    <div id="enrichList"></div>
+    <div class="field mt16"><label>AI 补全建议</label>
+      <div class="terminal" style="max-height:none;font-size:11px">
+        <div class="cmd"># 基于 8 条来源工单自动生成</div>
+        <div><span class="ok">业务背景</span>：8 家客户（含 2 家战略客户）反馈月结账单导出超时，影响 128 家门店对账…</div>
+        <div><span class="ok">建议验收标准</span>：① 12 万行账单导出成功率 100%；② 导出完成推送通知；③ 支持断点续传</div>
+        <div><span class="ok">建议客户影响面</span>：8 家客户 · GMV 12.4 亿 · 客诉 23 起</div>
+      </div>
+      <div class="hint">采纳后仍可编辑，AI 生成内容会标注来源工单编号以便追溯</div></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn" data-close data-toast="已保存">仅保存</button><button class="btn btn-primary" data-close data-toast="已富化完成并标记为就绪，可进入评审">采纳并标记就绪</button></div>
 </div>
 
 <script src="assets/js/icons.js"></script>
@@ -342,7 +478,8 @@ document.getElementById('reqTable').innerHTML =
   }).join('') + '</tbody>';
 
 function rowMenu(el) {
-  UI.menu(el, [{ label: '编辑需求', icon: 'edit' }, { label: '分配负责人', icon: 'user' }, { label: '加入迭代', icon: 'kanban' },
+  UI.menu(el, [{ label: '推送到项目管理', icon: 'kanban', onClick: function () { UI.openModal('mToProject'); } },
+    { label: '编辑需求', icon: 'edit' }, { label: '分配负责人', icon: 'user' }, { label: '富化补全信息', icon: 'sparkles' },
     { label: '拆分为用户故事', icon: 'layers' }, { label: '关联代码分支', icon: 'branch' }, '-', { label: '挂起', icon: 'pause' }, { label: '删除', icon: 'trash', danger: true }], 'right');
 }
 document.querySelector('#reqTable').addEventListener('click', function (e) {
@@ -451,6 +588,202 @@ Charts.hbar('#riceRank', {
   data: REQS.slice().sort(function (a, b) { return b.val - a.val; }).slice(0, 5).map(function (r) { return { name: r.id + ' ' + r.t.slice(0, 12), value: r.val }; }),
   unit: ' 分'
 });
+
+/* ================= 清洗与归档 ================= */
+document.getElementById('cwStats').innerHTML = [
+  { l: '待清洗需求', v: 11, u: '条', i: 'filter', c: '#2b5cff', bg: 'var(--brand-50)', f: '最长滞留 12 天' },
+  { l: '信息不全', v: 5, u: '条', i: 'alert', c: '#f59e0b', bg: 'var(--warning-bg)', f: '缺验收标准/价值量化' },
+  { l: '疑似重复', v: 3, u: '条', i: 'copy', c: '#7c5cff', bg: 'var(--purple-bg)', f: '相似度 ≥ 0.75' },
+  { l: '本月已归档', v: 26, u: '条', i: 'folder', c: '#15a86b', bg: 'var(--success-bg)', f: '可检索复活' },
+  { l: '需求池健康度', v: 86, u: '分', i: 'target', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '就绪率 78%' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+document.getElementById('cwTable').innerHTML =
+  '<thead><tr><th style="width:30px"><span class="checkbox"></span></th><th style="width:26%">需求</th><th>来源</th><th>问题类型</th>' +
+  '<th style="width:22%">缺失项 / 处理建议</th><th>滞留</th><th>提出人</th><th style="width:120px">就绪度</th></tr></thead><tbody>' +
+  [['REQ-2046', '商户后台大额账单异步导出与进度提醒', 'TK-3821 工单', '信息不全', '缺：可量化收益、验收标准（仅 1 条）', '2 天', '孙悦', 45],
+   ['REQ-2047', '账单支持导出 PDF 格式', 'TK-3814 工单', '疑似重复', '与 REQ-2046 相似度 0.81，建议合并为同一需求', '3 天', '孙悦', 60],
+   ['REQ-2048', '批量退款增加进度提示', 'TK-3810 工单', '疑似重复', '与 REQ-2046 属同一体验问题域，建议合并', '4 天', '孙悦', 55],
+   ['REQ-2049', '开放平台交易数据查询接口', 'TK-3811 工单', '信息不全', '缺：客户影响面、目标版本、技术可行性结论', '5 天', '陈立', 40],
+   ['REQ-2034', '风控模型特征平台自助取数', '数据洞察', '长期无进展', '排期池滞留 12 天无人推进，建议归档或重新评估价值', '12 天', '郑宇', 70],
+   ['REQ-2050', '希望增加多级审批流程配置', 'TK-3802 工单', '疑似重复', '产品已支持，应转为咨询并沉淀 FAQ', '1 天', '孙悦', 30],
+   ['REQ-2051', '门店维度分账能力（客户呼声 6 家）', '客户反馈', '信息不全', '缺：分账规则细则、资金合规确认', '6 天', '孙悦', 50],
+   ['REQ-2028', '统一登录与多因子认证升级', '内部技术', '长期无进展', '与安全中台规划重复，建议归档并关联 SEC-1102', '18 天', '王倩', 65],
+   ['REQ-2052', '经营看板支持自定义指标', '竞品对标', '信息不全', '缺：竞品对标结论、预期收益量化', '4 天', '孙悦', 45],
+   ['REQ-2053', '对账文件字段增加中文表头', 'TK-3805 工单', '长期无进展', '价值偏低（38 分）且无客户强诉求，建议归档', '9 天', '周雅', 55],
+   ['REQ-2054', '支持商户自定义结算周期', '客户反馈', '信息不全', '缺：资金风险评估、监管口径确认', '3 天', '周雅', 50]
+  ].map(function (r) {
+    var t = { '信息不全': 'warning', '疑似重复': 'purple', '长期无进展': '' }[r[3]];
+    return '<tr><td><span class="checkbox"></span></td>' +
+      '<td><div class="row-flex"><span class="tico req">' + icon('bulb', 11) + '</span>' +
+      '<div style="min-width:0"><div class="t-main ellipsis" style="max-width:250px">' + r[1] + '</div>' +
+      '<div class="id-link">' + r[0] + '</div></div></div></td>' +
+      '<td><span class="tag line">' + r[2] + '</span></td>' +
+      '<td><span class="tag ' + t + '">' + r[3] + '</span></td>' +
+      '<td class="fz12 muted">' + r[4] + '</td>' +
+      '<td class="dim fz12">' + r[5] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[6], 'sm') + '<span class="fz12">' + r[6] + '</span></div></td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(r[7], r[7] >= 70 ? 'green' : 'orange', 'thin') + '</div>' +
+      '<span class="fz11">' + r[7] + '%</span></div></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('dorBox').innerHTML = [
+  ['业务背景与目标用户清晰', 92], ['收益可量化（GMV/成功率/成本/效率）', 68],
+  ['验收标准 ≥ 3 条且可测试', 74], ['已关联来源工单/客户', 88],
+  ['已完成价值与紧迫性评分', 81], ['技术方案已评审、依赖已识别', 63],
+  ['已拆分为 ≤ 8 故事点', 58]
+].map(function (d) {
+  return '<div class="mb10"><div class="flex fz12 mb4"><span class="dim">' + d[0] + '</span>' +
+    '<b class="ml-auto" style="color:' + (d[1] >= 80 ? 'var(--success)' : d[1] >= 65 ? 'var(--warning)' : 'var(--danger)') + '">' + d[1] + '%</b></div>' +
+    UI.bar(d[1], d[1] >= 80 ? 'green' : d[1] >= 65 ? '' : 'orange', 'thin') + '</div>';
+}).join('') + '<div class="tl-box mt8">「拆分为 ≤8 点」达标率最低（58%），是当前需求进入迭代后返工的主要原因。</div>';
+
+document.getElementById('archTable').innerHTML =
+  '<thead><tr><th>需求</th><th>归档原因</th><th>归档时间</th><th></th></tr></thead><tbody>' +
+  [['REQ-2028 统一登录与多因子认证升级', '与安全中台规划重复', '07-10'],
+   ['REQ-1986 商户社区论坛', '与产品定位不符', '06-22'],
+   ['REQ-1972 支持比特币支付', '合规不允许', '06-08'],
+   ['REQ-1965 单客户定制报表', '仅 1 家客户，无普适价值', '05-30']
+  ].map(function (a) {
+    return '<tr><td class="t-main fz12">' + a[0] + '</td><td class="dim fz12">' + a[1] + '</td>' +
+      '<td class="muted fz11">' + a[2] + '</td>' +
+      '<td><button class="btn btn-sm" data-toast="已复活到需求池并进入清洗队列">复活</button></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('enrichList').innerHTML = [
+  ['业务背景', '来自 TK-3821 等 8 条工单', 1], ['可量化收益', '待补充（建议：对账工时 −70%）', 0],
+  ['客户影响面', '8 家客户 · GMV 12.4 亿（自动计算）', 1], ['验收标准', '已生成 3 条建议', 0],
+  ['目标版本', 'V2.6（按客户承诺 08-20 推算）', 1], ['预估工作量', '8 人日（参考相似需求 REQ-2039）', 1]
+].map(function (e) {
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="checkbox' + (e[2] ? ' checked' : '') + '"></span>' +
+    '<div style="flex:1"><div class="fz12 fw5">' + e[0] + '</div><div class="muted fz11 mt4">' + e[1] + '</div></div>' +
+    '<span class="tag ' + (e[2] ? 'success' : 'warning') + '">' + (e[2] ? '已自动补全' : '待确认') + '</span></div>';
+}).join('');
+
+/* ================= 优先级模型 ================= */
+var FACTORS = [
+  { k: 'value', n: '业务价值', w: 30, src: '人工打分 + 收益量化（自动校验）', desc: '解决问题的重要程度与预期收益', dir: '正向' },
+  { k: 'cust', n: '客户权重', w: 20, src: '自动：客户呼声数 × 客户等级系数', desc: '多少客户提出、客户量级如何', dir: '正向' },
+  { k: 'goal', n: '团队目标支持度', w: 15, src: '人工：与季度 OKR 对齐度', desc: '是否支撑当季战略目标', dir: '正向' },
+  { k: 'urg', n: '紧迫性', w: 15, src: '自动：承诺日期/合规窗口 + 人工修正', desc: '不做的代价随时间增长的速度', dir: '正向' },
+  { k: 'comp', n: '竞品对标', w: 10, src: '人工：竞品覆盖度与差距', desc: '竞品已有而我们缺失的能力', dir: '正向' },
+  { k: 'risk', n: '风险与合规', w: 10, src: '规则：合规类自动置 100', desc: '合规、安全、资损风险', dir: '正向' },
+  { k: 'effort', n: '工作量（成本）', w: 0, src: '自动：预估人日（研发评估）', desc: '作为除数，越大得分越低', dir: '反向' }
+];
+function factorsOf(r) {
+  var goal = { P0: 95, P1: 80, P2: 60, P3: 40 }[r.pri];
+  var comp = { '功能需求': 70, '体验优化': 60, '技术需求': 45, '合规需求': 30 }[r.type] || 55;
+  var risk = r.type === '合规需求' ? 100 : r.type === '技术需求' ? 65 : 40;
+  var cust = Math.min(100, r.cust ? r.cust * 11 + (r.ch === '工单' ? 12 : 0) : (r.ch === '监管合规' ? 90 : 30));
+  return { value: r.val, cust: cust, goal: goal, urg: r.urg, comp: comp, risk: risk, effort: r.eff };
+}
+function computeScore(r) {
+  var f = factorsOf(r), sum = 0, wsum = 0;
+  FACTORS.forEach(function (x) {
+    if (x.k === 'effort') return;
+    sum += f[x.k] * x.w; wsum += x.w;
+  });
+  var weighted = wsum ? sum / wsum : 0;
+  var effortFactor = 1 + f.effort / 20;
+  return { f: f, weighted: +weighted.toFixed(1), score: +(weighted * 2 / effortFactor).toFixed(1), ef: +effortFactor.toFixed(2) };
+}
+var baseOrder = REQS.slice().sort(function (a, b) { return computeScore(b).score - computeScore(a).score; }).map(function (r) { return r.id; });
+
+function renderFactors() {
+  document.getElementById('factorTable').innerHTML =
+    '<thead><tr><th>评审因素</th><th style="width:24%">说明</th><th>取值方式 / 数据来源</th><th>方向</th><th style="width:180px">权重</th></tr></thead><tbody>' +
+    FACTORS.map(function (f, i) {
+      return '<tr><td class="t-main">' + f.n + '</td><td class="fz12 muted">' + f.desc + '</td>' +
+        '<td class="fz12 dim">' + f.src + '</td>' +
+        '<td><span class="tag ' + (f.dir === '正向' ? 'success' : 'danger') + '">' + f.dir + '</span></td>' +
+        '<td>' + (f.k === 'effort' ? '<span class="muted fz12">作为除数（工作量系数 = 1 + 人日/20）</span>' :
+          '<div class="row-flex"><input type="range" min="0" max="50" value="' + f.w + '" data-wi="' + i + '" style="flex:1">' +
+          '<b class="fz12" style="width:34px;text-align:right" id="wv' + i + '">' + f.w + '%</b></div>') + '</td></tr>';
+    }).join('') + '</tbody>';
+  document.querySelectorAll('[data-wi]').forEach(function (el) {
+    el.oninput = function () {
+      FACTORS[+el.dataset.wi].w = +el.value;
+      document.getElementById('wv' + el.dataset.wi).textContent = el.value + '%';
+      document.getElementById('wSum').textContent = FACTORS.reduce(function (a, b) { return a + b.w; }, 0);
+      document.getElementById('rankChanged').textContent = '权重已调整，排序为实时预览（未发布）';
+      document.getElementById('rankChanged').className = 'tag danger';
+      renderScores();
+    };
+  });
+  document.getElementById('wSum').textContent = FACTORS.reduce(function (a, b) { return a + b.w; }, 0);
+}
+function renderScores() {
+  var rows = REQS.map(function (r) { return { r: r, s: computeScore(r) }; })
+    .sort(function (a, b) { return b.s.score - a.s.score; });
+  document.getElementById('scoreTable').innerHTML =
+    '<thead><tr><th style="width:52px">排名</th><th style="width:24%">需求</th>' +
+    FACTORS.filter(function (f) { return f.k !== 'effort'; }).map(function (f) { return '<th class="num">' + f.n + '<div class="muted fz11">' + f.w + '%</div></th>'; }).join('') +
+    '<th class="num">加权价值</th><th class="num">工作量</th><th class="num">优先级得分</th><th>排名变化</th></tr></thead><tbody>' +
+    rows.map(function (x, i) {
+      var old = baseOrder.indexOf(x.r.id);
+      var move = old - i;
+      return '<tr onclick="openReq(\'' + x.r.id + '\')"><td class="tc">' +
+        (i < 3 ? '<span class="tag brand" style="width:24px;justify-content:center">' + (i + 1) + '</span>' : '<span class="muted">' + (i + 1) + '</span>') + '</td>' +
+        '<td><div><div class="t-main ellipsis" style="max-width:230px">' + x.r.t + '</div>' +
+        '<div class="id-link">' + x.r.id + ' · ' + x.r.p + '</div></div></td>' +
+        FACTORS.filter(function (f) { return f.k !== 'effort'; }).map(function (f) {
+          var v = x.s.f[f.k];
+          return '<td class="num" style="color:' + (v >= 85 ? 'var(--success)' : v >= 60 ? 'var(--ink-700)' : 'var(--ink-400)') + '">' + v + '</td>';
+        }).join('') +
+        '<td class="num"><b>' + x.s.weighted + '</b></td>' +
+        '<td class="num dim">' + x.r.eff + ' 人日<div class="muted fz11">×' + x.s.ef + '</div></td>' +
+        '<td class="num"><b style="font-size:14px;color:var(--brand-600)">' + x.s.score + '</b></td>' +
+        '<td>' + (move === 0 ? '<span class="muted fz11">—</span>' :
+          '<span class="trend ' + (move > 0 ? 'up' : 'down') + '">' + icon(move > 0 ? 'arrowUp' : 'arrowDown', 11) + Math.abs(move) + '</span>') + '</td></tr>';
+    }).join('') + '</tbody>';
+}
+renderFactors();
+renderScores();
+document.getElementById('btnResetW').onclick = function () {
+  [30, 20, 15, 15, 10, 10, 0].forEach(function (w, i) { FACTORS[i].w = w; });
+  document.getElementById('rankChanged').textContent = '已恢复默认权重（v3.2）';
+  document.getElementById('rankChanged').className = 'tag warning';
+  renderFactors(); renderScores();
+};
+document.getElementById('forceRules').innerHTML = [
+  ['监管合规类需求', '直接置顶，不参与算法排序', 1],
+  ['P0 生产故障相关需求', '插队进入当前迭代', 1],
+  ['战略客户合同承诺', '得分 × 1.3 加成', 1],
+  ['技术债专项', '每迭代保底 15% 容量，不与业务需求竞争', 1],
+  ['单一客户定制', '得分 × 0.6，除非付费定制', 0]
+].map(function (r) {
+  return '<div class="flex items-center gap10" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + r[0] + '</div><div class="muted fz11 mt4">' + r[1] + '</div></div>' +
+    '<span class="switch ' + (r[2] ? 'on' : '') + '"></span></div>';
+}).join('');
+document.getElementById('modelVer').innerHTML = [
+  ['v3.2', '当前生效', '客户权重 15%→20%，竞品 15%→10%', '周雅', '07-01', 1],
+  ['v3.1', '历史', '新增「团队目标支持度」因素', '沈知远', '04-08', 0],
+  ['v3.0', '历史', '由 RICE 切换为加权价值÷工作量', '周雅', '01-15', 0],
+  ['v2.4', '历史', 'RICE 模型', '周雅', '2025-09-02', 0]
+].map(function (v) {
+  return '<div class="flex items-start gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag ' + (v[5] ? 'success' : '') + '" style="width:44px;justify-content:center">' + v[0] + '</span>' +
+    '<div style="flex:1"><div class="fz12">' + v[2] + '</div>' +
+    '<div class="muted fz11 mt4">' + v[3] + ' · ' + v[4] + '</div></div>' +
+    (v[5] ? '' : '<button class="btn btn-sm" data-toast="已回滚到该版本并重算排序">回滚</button>') + '</div>';
+}).join('');
+
+document.getElementById('splitList').innerHTML = [
+  ['用户故事', '路由策略配置界面', 5, '前端'], ['用户故事', '成本与成功率实时计算引擎', 8, '后端'],
+  ['用户故事', '灰度切流与回滚机制', 5, 'SRE'], ['任务', '路由引擎性能压测（12k TPS）', 5, 'SRE']
+].map(function (t) {
+  return '<div class="flex items-center gap8" style="padding:7px 9px;background:var(--ink-50);border-radius:8px;margin-bottom:6px">' +
+    '<span class="tag ' + (t[0] === '用户故事' ? 'success' : 'brand') + '">' + t[0] + '</span>' +
+    '<span class="fz12" style="flex:1">' + t[1] + '</span>' +
+    '<span class="tag">' + t[2] + ' 点</span><span class="tag line">' + t[3] + '</span>' +
+    '<button class="icon-btn" style="width:22px;height:22px">' + icon('x', 13) + '</button></div>';
+}).join('');
 
 /* ---------- 阶段排期 ---------- */
 /* 阶段计划：[设计, 编码, 联调, 测试, 发布]，每项 [计划开始, 计划结束]；act 为实际进度（0-1）；delay 为延期天数 */

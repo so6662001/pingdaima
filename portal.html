@@ -56,6 +56,7 @@
   <nav class="p-nav">
     <a class="active" data-p="v1">需求进度</a>
     <a data-p="v2">我的工单</a>
+    <a data-p="v5">产品路线图</a>
     <a data-p="v3">版本发布</a>
     <a data-p="v4">研发进展</a>
   </nav>
@@ -109,6 +110,34 @@
         <div class="card-body" id="slaBox"></div></div>
       <div class="card"><div class="card-head"><div class="card-title"><span data-icon="help"></span>常见问题自助</div></div>
         <div class="card-body" id="faq"></div></div>
+    </div>
+  </div>
+
+  <!-- 产品路线图（对外同步） -->
+  <div class="p-pane" data-p="v5" style="display:none">
+    <div class="card mb16">
+      <div class="card-body" style="padding:14px 18px">
+        <div class="flex items-center gap12">
+          <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="compass" data-size="17"></span>
+          <div style="flex:1">
+            <div class="fw6 fz13">产品路线图（研发团队实时同步）</div>
+            <div class="muted fz12 mt4">这里展示未来 3 个季度的规划方向。<b>Now</b> 表示本季度正在做，<b>Next</b> 表示下季度计划，<b>Later</b> 表示在评估中。
+              标注「你反馈的」表示该方向来源于你或你部门提交的需求/工单。</div>
+          </div>
+          <div class="flex items-center gap8">
+            <span class="tag success"><span class="dot-status green"></span>2 分钟前同步</span>
+            <button class="btn btn-sm" data-toast="已订阅，路线图更新时会通过企业微信通知你"><span data-icon="bell" data-size="13"></span>订阅更新</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grid g3 mb16" id="rmCols"></div>
+    <div class="grid g-2-1">
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="building"></span>你的诉求在路线图中的位置</div>
+        <div class="card-sub">你提交的需求分别落在哪个规划阶段</div></div>
+        <div class="card-body flush"><table class="tbl" id="myRmTable"></table></div></div>
+      <div class="card"><div class="card-head"><div class="card-title"><span data-icon="help"></span>关于路线图的说明</div></div>
+        <div class="card-body" id="rmNote"></div></div>
     </div>
   </div>
 
@@ -292,6 +321,66 @@ document.getElementById('faq').innerHTML = [
 ].map(function (f) {
   return '<div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100);cursor:pointer">' +
     icon('help', 14) + '<span class="fz12" style="flex:1">' + f + '</span>' + icon('right', 13) + '</div>';
+}).join('');
+
+/* 产品路线图（客户/业务方视角） */
+var RM = [
+  { k: 'Now', t: '本季度进行中（2026 Q3）', c: '#15a86b', items: [
+    ['商户中心体验升级', '信息架构重构 + 大额账单异步导出 + 批量操作进度提示', 1, '预计 8 月'],
+    ['支付网关 3.0 智能路由', '按成功率与成本自动选路，提升支付成功率与稳定性', 0, '预计 9 月'],
+    ['风控规则热更新', '风控策略调整无需发版，分钟级生效', 0, '预计 8 月'],
+    ['数据中台指标口径统一', '各系统报表口径一致，减少对账差异', 0, '预计 8 月']
+  ] },
+  { k: 'Next', t: '下季度规划（2026 Q4）', c: '#2b5cff', items: [
+    ['营销活动核销实时看板', '活动数据实时可见，支持自定义维度分析', 1, '预计 9 月中'],
+    ['门店维度分账能力', '支持按门店自动分账，减少人工分摊', 1, 'Q4'],
+    ['开放平台 API 限流可视化', '开发者可自助查看与申请限额', 0, 'Q4'],
+    ['商户增长营销工具', '优惠券、活动模板等经营工具', 0, 'Q4']
+  ] },
+  { k: 'Later', t: '评估中（2027 H1 及以后）', c: '#7c5cff', items: [
+    ['开发者门户与沙箱', '自助接入、在线调试与测试数据', 0, '待定'],
+    ['跨境支付能力', '多币种与跨境结算', 0, '待定'],
+    ['自助分析与取数', '业务人员自助拖拽出报表', 1, '待定']
+  ] }
+];
+document.getElementById('rmCols').innerHTML = RM.map(function (col) {
+  return '<div class="card"><div style="height:4px;border-radius:12px 12px 0 0;background:' + col.c + '"></div>' +
+    '<div class="card-body">' +
+    '<div class="flex items-center gap8 mb12"><span class="dot-status" style="background:' + col.c + '"></span>' +
+    '<b class="fz15">' + col.k + '</b><span class="muted fz11">' + col.t + '</span>' +
+    '<span class="tag ml-auto">' + col.items.length + ' 项</span></div>' +
+    col.items.map(function (it) {
+      return '<div style="padding:11px 12px;border:1px solid ' + (it[2] ? 'var(--brand-200)' : 'var(--ink-200)') + ';border-radius:9px;margin-bottom:8px;' +
+        'background:' + (it[2] ? 'var(--brand-50)' : '#fff') + '">' +
+        '<div class="flex items-center gap6"><b class="fz13">' + it[0] + '</b>' +
+        (it[2] ? '<span class="tag brand ml-auto">你反馈的</span>' : '') + '</div>' +
+        '<div class="muted fz12 mt4" style="line-height:1.7">' + it[1] + '</div>' +
+        '<div class="flex items-center gap6 mt8"><span class="tag line">' + it[3] + '</span>' +
+        '<span class="ml-auto fz11 pointer" style="color:var(--brand-600)" onclick="UI.toast(\'已提交关注，该方向有进展时会通知你\')">关注此方向 ›</span></div></div>';
+    }).join('') + '</div></div>';
+}).join('');
+document.getElementById('myRmTable').innerHTML =
+  '<thead><tr><th>你提交的需求</th><th>来源</th><th>所处阶段</th><th>对应路线图方向</th><th>预计</th><th>状态</th></tr></thead><tbody>' +
+  [['REQ-2036 商户后台大额账单异步导出', '工单 TK-3821', 'Now', '商户中心体验升级', '8 月', '研发中', 'brand'],
+   ['REQ-2039 结算单据自助下载与批量归档', '客户反馈', 'Now', '商户中心体验升级', '8 月 20 日', '研发中', 'brand'],
+   ['REQ-2044 营销活动核销实时看板', '产品规划', 'Next', '营销活动核销实时看板', '9 月中', '已排期', 'purple'],
+   ['REQ-2019 门店维度分账能力', '客户反馈', 'Next', '门店维度分账能力', 'Q4', '已规划', 'purple'],
+   ['REQ-2052 经营看板自定义指标', '客户反馈', 'Later', '自助分析与取数', '待定', '评估中', ''],
+   ['REQ-2031 支付成功率实时大盘', '客户经理转达', '已交付', '—', '已上线 07-18', '已上线', 'success']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td>' +
+      '<td><span class="tag ' + (r[2] === 'Now' ? 'success' : r[2] === 'Next' ? 'brand' : r[2] === '已交付' ? '' : 'purple') + '">' + r[2] + '</span></td>' +
+      '<td class="fz12">' + r[3] + '</td><td class="dim fz12">' + r[4] + '</td>' +
+      '<td><span class="tag ' + r[6] + '">' + r[5] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('rmNote').innerHTML = [
+  ['为什么不写具体日期？', 'Now/Next/Later 表达的是<b>优先顺序</b>而非承诺日期。进入研发后会在「需求进度」中给出预计上线时间，届时以版本发布计划为准。'],
+  ['我的需求为什么在 Later？', '优先级由业务价值、客户影响面、紧急程度、团队目标支持度、工作量共同计算得出，评分与排序对所有人公开。如有新情况（如合规要求、业务窗口）可联系产品经理补充说明重新评估。'],
+  ['路线图会变吗？', '会。每两周随迭代规划滚动更新一次，重大调整会主动通知已关注/订阅的同事与客户。'],
+  ['如何影响路线图？', '提交需求时把<b>业务影响量化</b>（涉及人数、金额、耗时）填清楚，这些会直接进入价值评分；同类诉求越多，权重越高。']
+].map(function (n) {
+  return '<div style="padding:10px 0;border-bottom:1px solid var(--ink-100)"><div class="fz12 fw6">' + n[0] + '</div>' +
+    '<div class="muted fz12 mt4" style="line-height:1.75">' + n[1] + '</div></div>';
 }).join('');
 
 /* 版本发布 */

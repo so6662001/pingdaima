@@ -43,17 +43,43 @@
 
       <!-- 路线图 -->
       <div class="tab-pane" data-pane="p2">
+        <div class="card mb12" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+          <div class="card-body" style="padding:11px 16px">
+            <div class="flex items-center gap12">
+              <span style="width:32px;height:32px;border-radius:9px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="share" data-size="16"></span>
+              <div style="flex:1">
+                <div class="fw6 fz13">以客户为中心的路线图：每个特性都能追溯到背后的客户声音，并可选择性对外同步</div>
+                <div class="muted fz11 mt4">条目上的客户徽标显示有多少客户在等这个特性，点击可查看原声反馈与来源工单；对外同步后客户可在门户看到（可控制粒度）。</div>
+              </div>
+              <div class="flex items-center gap12">
+                <div class="tc"><div class="fw6 fz15">12</div><div class="muted fz11">对外公开条目</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--success)">已同步</div><div class="muted fz11">2 分钟前</div></div>
+                <button class="btn btn-sm btn-primary" data-modal="mSync"><span data-icon="share" data-size="13"></span>对外同步设置</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="toolbar">
-          <div class="btn-group"><button class="active">按产品线</button><button>按业务主题</button><button>按团队</button></div>
-          <div class="filter on"><span data-icon="calendar"></span>时间：<b>2026 全年</b><span data-icon="down"></span></div>
-          <div class="filter"><span data-icon="flag"></span>仅看关键里程碑</div>
+          <span class="fz12 muted">视图</span>
+          <div class="btn-group" id="rmView">
+            <button class="active" data-v="time"><span data-icon="calendar" data-size="13"></span>时间轴</button>
+            <button data-v="ver"><span data-icon="rocket" data-size="13"></span>版本</button>
+            <button data-v="sprint"><span data-icon="refresh" data-size="13"></span>迭代</button>
+            <button data-v="ms"><span data-icon="flag" data-size="13"></span>里程碑</button>
+            <button data-v="nnl"><span data-icon="kanban" data-size="13"></span>Now / Next / Later</button>
+          </div>
+          <div class="vdivider"></div>
+          <div class="filter on"><span data-icon="box"></span>产品线：<b>全部</b><span data-icon="down"></span></div>
+          <div class="filter" id="fCust"><span data-icon="building"></span>仅看有客户诉求</div>
+          <div class="filter" id="fPub"><span data-icon="share"></span>仅看对外公开</div>
           <div class="ml-auto legend">
             <span><i style="background:#2b5cff"></i>已交付</span><span><i style="background:#15a86b"></i>进行中</span>
             <span><i style="background:#7c5cff"></i>已规划</span><span><i style="background:#b3bfd0"></i>候选</span>
             <span><i style="background:#f59e0b;transform:rotate(45deg);border-radius:1px"></i>里程碑</span>
+            <span><span data-icon="building" data-size="12"></span> = 背后的客户诉求数</span>
           </div>
         </div>
-        <div class="card"><div class="card-body flush"><div class="gantt" id="roadmap"></div></div></div>
+        <div class="card"><div class="card-body flush"><div id="rmBody"><div class="gantt" id="roadmap"></div></div></div></div>
         <div class="grid g2 mt16">
           <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>年度产品战略主题</div></div>
             <div class="card-body" id="themes"></div></div>
@@ -136,6 +162,63 @@
   <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close data-toast="版本 V3.1 已创建">创建版本</button></div>
 </div>
 
+<div class="drawer" id="dRoad" style="width:700px">
+  <div class="drawer-head">
+    <span class="tico req"><span data-icon="compass" data-size="11"></span></span>
+    <div style="flex:1;min-width:0">
+      <div class="fw6" style="font-size:15px;color:var(--ink-900)" id="riTitle">路线图举措</div>
+      <div class="flex items-center gap6 mt4 flex-wrap" id="riMeta"></div>
+    </div>
+    <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
+  </div>
+  <div class="drawer-body" style="padding:16px 18px">
+    <div class="fw6 mb8">关联需求</div>
+    <div id="riReq"></div>
+    <div class="fw6 mt20 mb8">背后的客户声音</div>
+    <div id="riCust"></div>
+    <div class="fw6 mt20 mb8">对外可见性</div>
+    <div class="grid g2" style="gap:10px">
+      <div style="background:var(--ink-50);border-radius:9px;padding:11px 13px">
+        <div class="muted fz11">门户可见范围</div><div class="fw6 fz13 mt4">客户 + 业务方</div>
+        <div class="muted fz11 mt4">显示名称与季度，不显示具体日期</div></div>
+      <div style="background:var(--ink-50);border-radius:9px;padding:11px 13px">
+        <div class="muted fz11">最近同步</div><div class="fw6 fz13 mt4">2 分钟前</div>
+        <div class="muted fz11 mt4">路线图变更自动同步并通知订阅客户</div></div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" data-toast="已通知关联客户该举措进度">通知关联客户</button>
+    <button class="btn" data-modal="mSync">调整对外可见性</button>
+    <button class="btn btn-primary" onclick="location.href='requirement-detail.html'">查看需求详情</button>
+  </div>
+</div>
+
+<div class="modal" id="mSync" style="width:680px">
+  <div class="modal-head"><span data-icon="share"></span><span class="modal-title">路线图对外同步设置</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="tl-box mb16">对外同步遵循「<b>可控粒度</b>」原则：只公开你选择的条目，且可选择是否展示具体日期，避免过度承诺。同步后客户在门户中实时看到最新状态。</div>
+    <div class="field"><label>公开范围</label>
+      <div class="pills"><span class="pill active">指定条目（推荐）</span><span class="pill">整条产品线</span><span class="pill">全部路线图</span></div></div>
+    <div class="field"><label>可见受众</label>
+      <div class="flex flex-wrap gap8">
+        <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">内部业务方（全员）</span></span>
+        <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">战略客户</span></span>
+        <span class="flex items-center gap6"><span class="checkbox checked"></span><span class="fz12">KA 客户</span></span>
+        <span class="flex items-center gap6"><span class="checkbox"></span><span class="fz12">全部客户</span></span>
+      </div></div>
+    <div class="field"><label>展示粒度</label>
+      <div class="pills"><span class="pill">Now / Next / Later（不含日期）</span><span class="pill active">按季度（推荐）</span><span class="pill">精确到版本发布日</span></div>
+      <div class="hint">越精确的日期承诺，变更时的解释成本越高；建议对客户使用季度粒度</div></div>
+    <div class="field"><label>公开条目（12 / 18）</label>
+      <div class="table-wrap" style="max-height:220px;overflow:auto"><table class="tbl" id="syncTable"></table></div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">路线图变更时自动同步并通过企业微信/邮件通知订阅的客户经理</span></div>
+    <div class="flex items-center gap8 mt8"><span class="switch on"></span><span class="fz12 dim">生成对外分享链接（有效期 90 天，带水印与访问审计）</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button>
+    <button class="btn" data-close data-toast="分享链接已生成并复制：https://portal.xinglian.com/roadmap/xk8f2"><span data-icon="link" data-size="13"></span>生成分享链接</button>
+    <button class="btn btn-primary" data-close data-toast="已同步至业务方门户与客户视图">保存并同步</button></div>
+</div>
+
 <script src="assets/js/icons.js"></script>
 <script src="assets/js/ui.js"></script>
 <script src="assets/js/charts.js"></script>
@@ -211,57 +294,218 @@ document.getElementById('matrix').innerHTML =
     }).join('') + '<td class="tc"><b>' + avg + '</b> / 5</td></tr>';
   }).join('') + '</tbody>';
 
-/* 路线图甘特 */
+/* ================= 路线图（多视角 · 客户中心 · 可对外同步） ================= */
 var Q = ['Q1', 'Q2', 'Q3', 'Q4'];
 var ROAD = [
   { p: '统一支付网关', items: [
-    { t: '支付核心 2.9 稳定性专项', s: 0, e: 1.6, st: 'done' },
-    { t: '支付网关 3.0 架构重构', s: 1.4, e: 3.0, st: 'doing' },
-    { t: '智能路由与成本优化', s: 2.0, e: 3.2, st: 'doing' },
-    { t: '跨境支付能力建设', s: 3.1, e: 4, st: 'plan' }
+    { t: '支付核心 2.9 稳定性专项', s: 0, e: 1.6, st: 'done', ver: 'V2.9', sp: '26-04 ~ 26-09', ms: 'V2.9 发布', cust: 2, reqs: ['REQ-2031'], pub: 1 },
+    { t: '支付网关 3.0 架构重构', s: 1.4, e: 3.0, st: 'doing', ver: 'V3.0', sp: '26-10 ~ 26-18', ms: 'V3.0 GA', cust: 3, reqs: ['REQ-2041', 'REQ-2035'], pub: 1 },
+    { t: '智能路由与成本优化', s: 2.0, e: 3.2, st: 'doing', ver: 'V3.0', sp: '26-14 ~ 26-19', ms: 'V3.0 GA', cust: 3, reqs: ['REQ-2041'], pub: 1 },
+    { t: '跨境支付能力建设', s: 3.1, e: 4, st: 'plan', ver: 'V3.1', sp: '26-20 ~ 27-02', ms: 'V3.1', cust: 1, reqs: [], pub: 0 }
   ], ms: [{ x: 3.0, t: 'V3.0 GA' }] },
   { p: '智能风控平台', items: [
-    { t: '规则引擎 V2 重构', s: 0.3, e: 2.2, st: 'done' },
-    { t: '实时特征平台', s: 2.0, e: 3.4, st: 'doing' },
-    { t: '风控决策引擎 V2', s: 2.6, e: 4, st: 'doing' },
-    { t: '联邦学习反欺诈模型', s: 3.4, e: 4, st: 'idea' }
+    { t: '规则引擎 V2 重构', s: 0.3, e: 2.2, st: 'done', ver: 'V2.8', sp: '26-02 ~ 26-11', ms: 'V2.8 发布', cust: 1, reqs: ['REQ-2029'], pub: 1 },
+    { t: '实时特征平台', s: 2.0, e: 3.4, st: 'doing', ver: 'V2.9', sp: '26-12 ~ 26-18', ms: 'V2.9 上线', cust: 0, reqs: ['REQ-2034'], pub: 0 },
+    { t: '风控决策引擎 V2', s: 2.6, e: 4, st: 'doing', ver: 'V3.0', sp: '26-15 ~ 26-24', ms: 'V3.0', cust: 2, reqs: ['REQ-2038'], pub: 1 },
+    { t: '联邦学习反欺诈模型', s: 3.4, e: 4, st: 'idea', ver: '候选', sp: '待定', ms: '—', cust: 0, reqs: [], pub: 0 }
   ], ms: [{ x: 3.8, t: 'V3.0' }] },
   { p: '商户运营中心', items: [
-    { t: '商户自助服务体系', s: 0, e: 1.8, st: 'done' },
-    { t: '经营分析看板', s: 1.6, e: 2.8, st: 'done' },
-    { t: '体验升级（信息架构重构）', s: 2.4, e: 3.3, st: 'doing' },
-    { t: '商户增长营销工具', s: 3.2, e: 4, st: 'plan' }
+    { t: '商户自助服务体系', s: 0, e: 1.8, st: 'done', ver: 'V2.4', sp: '26-01 ~ 26-08', ms: 'V2.4 发布', cust: 4, reqs: ['REQ-2039'], pub: 1 },
+    { t: '经营分析看板', s: 1.6, e: 2.8, st: 'done', ver: 'V2.5', sp: '26-09 ~ 26-14', ms: 'V2.5 发布', cust: 2, reqs: ['REQ-2024'], pub: 1 },
+    { t: '体验升级（信息架构重构）', s: 2.4, e: 3.3, st: 'doing', ver: 'V2.6', sp: '26-15 ~ 26-20', ms: 'V2.6 GA', cust: 8, reqs: ['REQ-2036', 'REQ-2033'], pub: 1 },
+    { t: '商户增长营销工具', s: 3.2, e: 4, st: 'plan', ver: 'V2.7', sp: '26-21 ~ 27-01', ms: 'V2.7', cust: 6, reqs: ['REQ-2019'], pub: 1 }
   ], ms: [{ x: 2.65, t: 'V2.6' }] },
   { p: '数据资产中台', items: [
-    { t: '数据接入与治理一期', s: 0.6, e: 3.0, st: 'doing' },
-    { t: '指标口径统一', s: 2.2, e: 3.1, st: 'doing' },
-    { t: '自助分析与取数', s: 3.0, e: 4, st: 'plan' }
+    { t: '数据接入与治理一期', s: 0.6, e: 3.0, st: 'doing', ver: 'V1.4', sp: '26-05 ~ 26-18', ms: '一期验收', cust: 0, reqs: ['REQ-2032'], pub: 0 },
+    { t: '指标口径统一', s: 2.2, e: 3.1, st: 'doing', ver: 'V1.4', sp: '26-13 ~ 26-18', ms: '一期验收', cust: 0, reqs: ['REQ-2032'], pub: 0 },
+    { t: '自助分析与取数', s: 3.0, e: 4, st: 'plan', ver: 'V1.5', sp: '26-19 ~ 27-02', ms: 'V1.5', cust: 2, reqs: [], pub: 1 }
   ], ms: [{ x: 3.05, t: '一期验收' }] },
   { p: '开放能力平台', items: [
-    { t: 'OpenAPI 网关建设', s: 2.3, e: 3.9, st: 'doing' },
-    { t: '开发者门户与沙箱', s: 3.2, e: 4, st: 'plan' },
-    { t: '生态伙伴计划', s: 3.6, e: 4, st: 'idea' }
+    { t: 'OpenAPI 网关建设', s: 2.3, e: 3.9, st: 'doing', ver: 'V1.4', sp: '26-14 ~ 26-24', ms: 'V1.4 公测', cust: 5, reqs: ['REQ-2037'], pub: 1 },
+    { t: '开发者门户与沙箱', s: 3.2, e: 4, st: 'plan', ver: 'V1.5', sp: '26-22 ~ 27-04', ms: 'V1.5', cust: 3, reqs: ['REQ-2030'], pub: 1 },
+    { t: '生态伙伴计划', s: 3.6, e: 4, st: 'idea', ver: '候选', sp: '待定', ms: '—', cust: 0, reqs: [], pub: 0 }
   ], ms: [] }
 ];
 var STC2 = { done: '#2b5cff', doing: '#15a86b', plan: '#7c5cff', idea: '#b3bfd0' };
-(function () {
+var STN = { done: '已交付', doing: '进行中', plan: '已规划', idea: '候选' };
+var rmState = { v: 'time', cust: 0, pub: 0 };
+
+function itemsFiltered() {
+  var out = [];
+  ROAD.forEach(function (g) {
+    g.items.forEach(function (it) {
+      if (rmState.cust && !it.cust) return;
+      if (rmState.pub && !it.pub) return;
+      out.push(Object.assign({ p: g.p }, it));
+    });
+  });
+  return out;
+}
+function custBadge(it) {
+  if (!it.cust) return '<span class="tag" style="height:17px">内部驱动</span>';
+  return '<span class="tag brand pointer" style="height:17px" onclick="event.stopPropagation();openCustFb(\'' + it.t + '\',' + it.cust + ')">' +
+    icon('building', 10) + it.cust + ' 家客户</span>';
+}
+function pubBadge(it) {
+  return it.pub ? '<span class="tag success" style="height:17px">' + icon('share', 10) + '对外公开</span>'
+    : '<span class="tag" style="height:17px">仅内部</span>';
+}
+
+function renderTime() {
   var html = '<div class="gantt-grid"><div class="gantt-head"><div class="gantt-name">产品线 / 举措</div><div class="gantt-ticks">' +
     Q.map(function (q) { return '<div>2026 ' + q + '</div>'; }).join('') + '</div></div>';
   ROAD.forEach(function (g) {
+    var items = g.items.filter(function (it) { return (!rmState.cust || it.cust) && (!rmState.pub || it.pub); });
+    if (!items.length) return;
     html += '<div class="gantt-row" style="background:var(--ink-50)"><div class="gantt-name"><b style="font-size:12.5px">' + g.p + '</b></div>' +
       '<div class="gantt-track">' + g.ms.map(function (m) {
         return '<div class="milestone" style="left:' + (m.x / 4 * 100) + '%" title="' + m.t + '"></div>' +
           '<span style="position:absolute;left:calc(' + (m.x / 4 * 100) + '% + 10px);top:50%;transform:translateY(-50%);font-size:10.5px;color:#b8760a">' + m.t + '</span>';
       }).join('') + '</div></div>';
-    g.items.forEach(function (it) {
-      html += '<div class="gantt-row"><div class="gantt-name" style="padding-left:26px"><span class="dot-status" style="background:' + STC2[it.st] + '"></span><span class="fz12">' + it.t + '</span></div>' +
-        '<div class="gantt-track"><div class="gantt-bar" style="left:' + (it.s / 4 * 100) + '%;width:' + ((it.e - it.s) / 4 * 100) + '%;background:' + STC2[it.st] + '">' +
-        '<span>' + it.t + '</span></div></div></div>';
+    items.forEach(function (it) {
+      html += '<div class="gantt-row" style="height:38px"><div class="gantt-name" style="padding-left:26px">' +
+        '<span class="dot-status" style="background:' + STC2[it.st] + '"></span>' +
+        '<div style="overflow:hidden"><div class="fz12 ellipsis">' + it.t + '</div>' +
+        '<div class="flex items-center gap4 mt4">' + custBadge(it) + '<span class="tag line" style="height:16px">' + it.ver + '</span></div></div></div>' +
+        '<div class="gantt-track"><div class="gantt-bar" style="left:' + (it.s / 4 * 100) + '%;width:' + ((it.e - it.s) / 4 * 100) + '%;background:' + STC2[it.st] + '"' +
+        ' onclick="openRoadItem(\'' + it.t + '\')"><span>' + it.t + '</span></div></div></div>';
     });
   });
   html += '<div class="gantt-today" style="left:calc(230px + (100% - 230px) * 0.56)"></div></div>';
-  document.getElementById('roadmap').innerHTML = html;
-})();
+  return html;
+}
+function groupCards(groupBy, title) {
+  var items = itemsFiltered();
+  var keys = [];
+  items.forEach(function (it) { var k = it[groupBy]; if (keys.indexOf(k) < 0) keys.push(k); });
+  keys.sort();
+  return '<div style="padding:14px">' + keys.map(function (k) {
+    var list = items.filter(function (it) { return it[groupBy] === k; });
+    return '<div class="mb16"><div class="flex items-center gap8 mb8">' +
+      '<span class="tag brand lg">' + title + ' ' + k + '</span>' +
+      '<span class="muted fz12">' + list.length + ' 项举措 · 涉及客户诉求 ' + list.reduce(function (a, b) { return a + b.cust; }, 0) + ' 家</span>' +
+      '<span class="ml-auto fz12 muted">' + list.filter(function (x) { return x.pub; }).length + ' 项对外公开</span></div>' +
+      '<div class="grid g4" style="gap:10px">' + list.map(function (it) {
+        return '<div class="card hover-card pointer" onclick="openRoadItem(\'' + it.t + '\')">' +
+          '<div style="height:3px;border-radius:12px 12px 0 0;background:' + STC2[it.st] + '"></div>' +
+          '<div class="card-body" style="padding:11px 13px">' +
+          '<div class="flex items-center gap6 mb8"><span class="tag" style="background:' + STC2[it.st] + '18;color:' + STC2[it.st] + '">' + STN[it.st] + '</span>' +
+          '<span class="muted fz11 ml-auto">' + it.p + '</span></div>' +
+          '<div class="fz13 fw6" style="line-height:1.5">' + it.t + '</div>' +
+          '<div class="flex flex-wrap gap4 mt8">' + custBadge(it) + pubBadge(it) + '</div>' +
+          '<div class="muted fz11 mt8">' + (it.reqs.length ? '关联需求 ' + it.reqs.join('、') : '尚未拆解需求') + '</div>' +
+          '</div></div>';
+      }).join('') + '</div></div>';
+  }).join('') + '</div>';
+}
+function renderNNL() {
+  var map = { doing: 'Now（本季在做）', plan: 'Next（下季规划）', idea: 'Later（候选储备）', done: 'Shipped（已交付）' };
+  var order = ['doing', 'plan', 'idea', 'done'];
+  var items = itemsFiltered();
+  return '<div style="padding:14px"><div class="grid g4" style="gap:12px;align-items:start">' +
+    order.map(function (k) {
+      var list = items.filter(function (it) { return it.st === k; });
+      return '<div style="background:var(--ink-50);border-radius:12px;padding:10px"><div class="flex items-center gap6 mb8">' +
+        '<span class="dot-status" style="background:' + STC2[k] + '"></span><b class="fz13">' + map[k] + '</b>' +
+        '<span class="tag ml-auto">' + list.length + '</span></div>' +
+        list.map(function (it) {
+          return '<div class="card mb8 pointer" style="box-shadow:none" onclick="openRoadItem(\'' + it.t + '\')"><div class="card-body" style="padding:10px 12px">' +
+            '<div class="fz12 fw5" style="line-height:1.5">' + it.t + '</div>' +
+            '<div class="muted fz11 mt4">' + it.p + ' · ' + it.ver + '</div>' +
+            '<div class="flex flex-wrap gap4 mt8">' + custBadge(it) + pubBadge(it) + '</div></div></div>';
+        }).join('') +
+        (list.length ? '' : '<div class="empty" style="padding:16px">' + icon('inbox', 24) + '<div class="t fz12">暂无</div></div>') +
+        '</div>';
+    }).join('') + '</div>' +
+    '<div class="tl-box mt12">Now / Next / Later 是给业务方与客户看的粗粒度视图：不承诺具体日期，只承诺顺序，避免"日期承诺"在需求变化时反复失信。</div></div>';
+}
+function renderMilestone() {
+  var items = itemsFiltered().filter(function (it) { return it.ms && it.ms !== '—'; });
+  var keys = [];
+  items.forEach(function (it) { if (keys.indexOf(it.ms) < 0) keys.push(it.ms); });
+  return '<div style="padding:16px 18px"><div class="timeline">' + keys.map(function (k) {
+    var list = items.filter(function (it) { return it.ms === k; });
+    var st = list[0].st;
+    return '<div class="tl-item"><span class="tl-dot ' + (st === 'done' ? 'green' : st === 'doing' ? 'brand' : '') + '">' + icon('flag', 8) + '</span>' +
+      '<div class="tl-title"><b>' + k + '</b> <span class="tag ' + (st === 'done' ? 'success' : st === 'doing' ? 'brand' : '') + '">' + STN[st] + '</span>' +
+      '<span class="muted fz11" style="margin-left:8px">' + list.length + ' 项举措 · ' + list.reduce(function (a, b) { return a + b.cust; }, 0) + ' 家客户在等</span></div>' +
+      '<div class="tl-box">' + list.map(function (it) {
+        return '<div class="flex items-center gap6" style="padding:4px 0"><span class="dot-status" style="background:' + STC2[it.st] + '"></span>' +
+          '<span class="fz12" style="flex:1">' + it.t + '</span>' + custBadge(it) + pubBadge(it) + '</div>';
+      }).join('') + '</div></div>';
+  }).join('') + '</div></div>';
+}
+function renderRoadmap() {
+  var el = document.getElementById('rmBody');
+  var v = rmState.v;
+  el.innerHTML = v === 'time' ? '<div class="gantt">' + renderTime() + '</div>'
+    : v === 'ver' ? groupCards('ver', '版本')
+      : v === 'sprint' ? groupCards('sp', '迭代')
+        : v === 'ms' ? renderMilestone() : renderNNL();
+  UI.hydrateIcons(el);
+}
+renderRoadmap();
+document.getElementById('rmView').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  rmState.v = b.dataset.v; renderRoadmap();
+};
+document.getElementById('fCust').onclick = function () { this.classList.toggle('on'); rmState.cust = this.classList.contains('on'); renderRoadmap(); };
+document.getElementById('fPub').onclick = function () { this.classList.toggle('on'); rmState.pub = this.classList.contains('on'); renderRoadmap(); };
+
+/* 路线图条目详情（含客户反馈） */
+function openRoadItem(t) {
+  var it = null;
+  ROAD.forEach(function (g) { g.items.forEach(function (x) { if (x.t === t) it = Object.assign({ p: g.p }, x); }); });
+  if (!it) return;
+  document.getElementById('riTitle').textContent = it.t;
+  document.getElementById('riMeta').innerHTML =
+    '<span class="tag" style="background:' + STC2[it.st] + '18;color:' + STC2[it.st] + '">' + STN[it.st] + '</span>' +
+    '<span class="tag line">' + it.p + '</span><span class="tag line">' + it.ver + '</span>' +
+    '<span class="tag line">迭代 ' + it.sp + '</span>' + (it.ms !== '—' ? '<span class="tag warning">' + it.ms + '</span>' : '') +
+    pubBadge(it);
+  document.getElementById('riReq').innerHTML = (it.reqs.length ? it.reqs : ['—']).map(function (r) {
+    return '<div class="link-item" onclick="location.href=\'requirement-detail.html\'"><span class="tico req">' + icon('bulb', 11) + '</span>' +
+      '<div style="flex:1"><div class="fz12">' + r + (r === 'REQ-2041' ? ' 支付网关多渠道智能路由能力' : r === 'REQ-2036' ? ' 商户后台大额账单异步导出' : '') + '</div>' +
+      '<div class="muted fz11 mt4">' + (r === '—' ? '尚未拆解为需求' : '价值 92 · 紧迫 88 · 开发中') + '</div></div>' +
+      (r === '—' ? '' : icon('right', 13)) + '</div>';
+  }).join('');
+  renderCustFb(it.cust);
+  UI.hydrateIcons(document.getElementById('dRoad'));
+  UI.openDrawer('dRoad');
+}
+function openCustFb(t, n) { openRoadItem(t); }
+function renderCustFb(n) {
+  var FB = [
+    ['华南连锁商超集团', '战略', 'TK-3821', '大额账单导出超时，影响 32 家门店月度对账，希望 8 月前解决', 5],
+    ['云上餐饮连锁', 'KA', 'TK-3820', '希望支持按门店维度自动分账，目前靠人工分摊', 4],
+    ['星辰出行科技', 'KA', 'TK-3816', '大促期间通道拥塞导致成功率下降，希望能自动切换', 5],
+    ['优鲜生活超市', '普通', 'TK-3814', '账单希望支持导出 PDF，便于财务归档', 3],
+    ['悦享连锁酒店', 'KA', 'FB-1042', '结算单据希望能批量下载并按月归档', 4],
+    ['万联便利', 'KA', 'TK-3805', '对账文件字段希望增加中文表头', 3],
+    ['数智物流科技', '普通', 'TK-3811', '需要交易数据的开放查询接口', 4],
+    ['鲜丰果业', '普通', 'FB-1055', '希望有开发者沙箱环境便于自测', 3]
+  ].slice(0, Math.max(n, 0));
+  document.getElementById('riCust').innerHTML = n ? FB.map(function (f) {
+    return '<div style="padding:10px 12px;border-left:3px solid var(--brand-400);background:var(--ink-50);border-radius:0 8px 8px 0;margin-bottom:8px">' +
+      '<div class="flex items-center gap6"><span class="tag ' + (f[1] === '战略' ? 'danger' : f[1] === 'KA' ? 'purple' : '') + '">' + f[1] + '</span>' +
+      '<b class="fz12">' + f[0] + '</b><span class="id-link ml-auto">' + f[2] + '</span></div>' +
+      '<div class="fz12 mt4" style="color:var(--ink-600);line-height:1.7">「' + f[3] + '」</div></div>';
+  }).join('') + '<div class="tl-box mt8">共 <b>' + n + '</b> 家客户提出同类诉求，客户权重已计入需求优先级评分。上线后系统会自动回访这些客户。</div>'
+    : '<div class="empty" style="padding:26px">' + icon('building', 32) + '<div class="t">该举措由内部规划驱动，暂无直接客户诉求</div></div>';
+}
+
+document.getElementById('syncTable').innerHTML =
+  '<thead><tr><th style="width:34px"></th><th>路线图条目</th><th>产品线</th><th>状态</th><th>客户诉求</th><th>展示粒度</th></tr></thead><tbody>' +
+  ROAD.reduce(function (acc, g) {
+    g.items.forEach(function (it) { acc.push({ p: g.p, it: it }); });
+    return acc;
+  }, []).map(function (x) {
+    return '<tr><td><span class="checkbox' + (x.it.pub ? ' checked' : '') + '"></span></td>' +
+      '<td class="t-main fz12">' + x.it.t + '</td><td class="dim fz12">' + x.p + '</td>' +
+      '<td><span class="tag" style="background:' + STC2[x.it.st] + '18;color:' + STC2[x.it.st] + '">' + STN[x.it.st] + '</span></td>' +
+      '<td>' + (x.it.cust ? '<span class="tag brand">' + x.it.cust + ' 家</span>' : '<span class="muted fz11">—</span>') + '</td>' +
+      '<td class="dim fz12">' + (x.it.pub ? '季度' : '不公开') + '</td></tr>';
+  }).join('') + '</tbody>';
 
 document.getElementById('themes').innerHTML = [
   { t: '降本：支付通道综合成本下降 8%', p: 62, d: '智能路由 · 通道议价 · 失败重试优化', o: '李思远' },
