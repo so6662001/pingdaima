@@ -285,7 +285,8 @@ document.getElementById('sprintCards').innerHTML = SPRINTS.map(function (s, i) {
     '<b class="ml-auto">' + pct + '%</b></div></div>' +
     '<div class="mt12" id="bd' + i + '"></div>' +
     '<div class="flex items-center mt8" style="padding-top:10px;border-top:1px solid var(--ink-100)">' + UI.avatarGroup(s.team, 4) +
-    '<a class="btn btn-sm ml-auto" href="project-detail.html">进入迭代</a></div>' +
+    '<a class="btn btn-sm ml-auto" href="board.html#scope=prj:' + s.p.split(' ')[0] + '">看板</a>' +
+    '<a class="btn btn-sm" style="margin-left:6px" href="project-detail.html">进入迭代</a></div>' +
     '</div></div>';
 }).join('');
 SPRINTS.forEach(function (s, i) {

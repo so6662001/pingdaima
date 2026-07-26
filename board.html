@@ -28,6 +28,10 @@
   .kb-ico span { width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; color: var(--ink-400); cursor: pointer; }
   .kb-ico span:hover { background: rgba(255,255,255,.95); color: var(--brand-600); }
   .kb-sub { font-size: 10.5px; color: var(--ink-400); margin-top: 4px; display: flex; gap: 8px; }
+  /* 跨项目聚合时的项目构成条 */
+  .kb-mix { display: flex; gap: 2px; margin-top: 6px; height: 4px; border-radius: 2px; overflow: hidden; }
+  .kb-mix i { display: block; border-radius: 2px; min-width: 4px; }
+  .kb-col.collapsed .kb-mix { display: none; }
   .kb-body { padding: 2px 8px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 90px; }
   .kb-empty { border: 1.5px dashed var(--ink-200); border-radius: 9px; padding: 14px; text-align: center; color: var(--ink-300); font-size: 11.5px; }
 
@@ -83,7 +87,7 @@
   .legend-bar b { color: var(--ink-700); }
   .kb-col.collapsed { width: 46px; background: #eef1f6; cursor: pointer; }
   .kb-col.collapsed:hover { background: #e4e9f2; }
-  .kb-col.collapsed .kb-body, .kb-col.collapsed .kb-sub { display: none; }
+  .kb-col.collapsed .kb-body, .kb-col.collapsed .kb-sub, .kb-col.collapsed .kb-mix { display: none; }
   .kb-col.collapsed .kb-head { padding: 10px 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .kb-col.collapsed .kb-title { flex-direction: column; gap: 8px; }
   .kb-col.collapsed .kb-title .n { writing-mode: vertical-rl; letter-spacing: 2px; }
@@ -123,10 +127,29 @@
         <div class="tab" data-bd="mine"><span data-icon="user" data-size="14"></span>我的看板</div>
       </div>
 
+      <!-- 范围选择器 -->
+      <div class="card mb12" style="border-color:var(--brand-200)">
+        <div class="card-body" style="padding:11px 14px">
+          <div class="flex items-center gap10 flex-wrap">
+            <span class="fz12 muted" style="flex:none">范围</span>
+            <div class="btn-group" id="scopeDim">
+              <button class="active" data-d="all"><span data-icon="grid" data-size="13"></span>全部</button>
+              <button data-d="prod"><span data-icon="box" data-size="13"></span>按产品线</button>
+              <button data-d="prj"><span data-icon="kanban" data-size="13"></span>按项目</button>
+              <button data-d="team"><span data-icon="users" data-size="13"></span>按团队</button>
+            </div>
+            <div class="vdivider"></div>
+            <div id="scopePick" class="flex items-center gap6 flex-wrap" style="flex:1"></div>
+            <div id="scopeSummary" class="fz12 muted" style="flex:none"></div>
+          </div>
+          <div id="scopeNote" class="mt8"></div>
+        </div>
+      </div>
+
       <!-- 工具条 -->
       <div class="toolbar" style="margin-bottom:10px" id="bdBar2">
         <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索工作项 / 分支 / 经办人" id="kbSearch"></div>
-        <div class="filter" data-f="mine"><span data-icon="user"></span>只看我的</div>
+        <div class="filter" data-f="mine"><span data-icon="user"></span>只看我的 <b>4</b></div>
         <div class="filter" data-f="blocked"><span data-icon="alert"></span>阻塞 <b>3</b></div>
         <div class="filter" data-f="aging"><span data-icon="clock"></span>超期停留 <b>4</b></div>
         <div class="filter" data-f="ci"><span data-icon="zap"></span>CI 失败 <b>2</b></div>
@@ -134,6 +157,8 @@
         <span class="fz12 muted">泳道</span>
         <div class="btn-group" id="laneGroup">
           <button class="active" data-lane="none">不分泳道</button>
+          <button data-lane="prj">按项目</button>
+          <button data-lane="prod">按产品线</button>
           <button data-lane="req">按需求</button>
           <button data-lane="pri">按优先级</button>
           <button data-lane="own">按经办人</button>
@@ -213,7 +238,7 @@
   <div class="drawer-head">
     <span class="tico task"><span data-icon="chart" data-size="11"></span></span>
     <div style="flex:1"><div class="fw6" style="font-size:14.5px">看板度量</div>
-      <div class="muted fz12">Sprint 26-14 · 交易平台组 · 用流动效率而非忙碌程度衡量团队</div></div>
+      <div class="muted fz12" id="mtScope">用流动效率而非忙碌程度衡量团队</div></div>
     <button class="icon-btn" data-close><span data-icon="x" data-size="17"></span></button>
   </div>
   <div class="drawer-body" style="padding:16px 18px">
@@ -314,44 +339,93 @@ var COLS = [
 
 /* ================= 卡片数据 ================= */
 var CARDS = [
-  { id: 'STORY-3318', ty: 'story', t: '通道限额中心对接', pri: 'P0', pt: 8, own: '', col: 'todo', age: 1, req: 'REQ-2041', reqN: '智能路由', skills: ['Java', '支付核心'], claim: 1 },
-  { id: 'TASK-5541', ty: 'debt', t: '老网关流量镜像回放工具', pri: 'P1', pt: 5, own: '', col: 'todo', age: 3, req: '技术债', reqN: '技术债', skills: ['中间件', '压测'], claim: 1 },
-  { id: 'STORY-3321', ty: 'story', t: '风控前置调用并行化改造', pri: 'P1', pt: 5, own: '', col: 'todo', age: 1, req: 'REQ-2041', reqN: '智能路由', skills: ['并发', '风控'], claim: 1 },
-  { id: 'TASK-5531', ty: 'task', t: '路由引擎性能压测（12k TPS）', pri: 'P0', pt: 5, own: '', col: 'todo', age: 5, req: '风险专项', reqN: '风险专项', skills: ['压测', 'SRE'], claim: 1, blocked: '压测环境 K8s 节点未扩容，依赖基础架构组（已等待 2 天）' },
+  /* ===== PRJ-018 统一支付网关 3.0 重构 · Sprint 26-14 ===== */
+  { id: 'STORY-3318', ty: 'story', t: '通道限额中心对接', pri: 'P0', pt: 8, own: '', col: 'todo', age: 1, req: 'REQ-2041', reqN: '智能路由', skills: ['Java', '支付核心'], claim: 1, prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'TASK-5541', ty: 'debt', t: '老网关流量镜像回放工具', pri: 'P1', pt: 5, own: '', col: 'todo', age: 3, req: '技术债', reqN: '技术债', skills: ['中间件', '压测'], claim: 1, prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3321', ty: 'story', t: '风控前置调用并行化改造', pri: 'P1', pt: 5, own: '', col: 'todo', age: 1, req: 'REQ-2041', reqN: '智能路由', skills: ['并发', '风控'], claim: 1, prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'TASK-5531', ty: 'task', t: '路由引擎性能压测（12k TPS）', pri: 'P0', pt: 5, own: '', col: 'todo', age: 5, req: '风险专项', reqN: '风险专项', skills: ['压测', 'SRE'], claim: 1, blocked: '压测环境 K8s 节点未扩容，依赖基础架构组（已等待 2 天）', prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3314', ty: 'story', t: '灰度切流与回滚机制', pri: 'P0', pt: 5, own: '林小满', col: 'design', age: 2, req: 'REQ-2041', reqN: '智能路由', doc: '方案 V0.9 评审中', prj: 'PRJ-018', prod: '统一支付网关', team: '基础架构组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3313', ty: 'story', t: '成本与成功率实时计算引擎', pri: 'P0', pt: 8, own: '何俊', col: 'dev', age: 3, req: 'REQ-2041', reqN: '智能路由', br: 'feature/smart-router', commits: 12, pg: 60, sub: '2/4', ci: 'fail', prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3320', ty: 'story', t: '渠道适配层重构（招行/工行）', pri: 'P1', pt: 8, own: '何俊', col: 'dev', age: 2, req: 'REQ-2041', reqN: '智能路由', br: 'feature/adapter-v2', commits: 8, pg: 45, sub: '1/3', ci: 'ok', prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3312', ty: 'story', t: '路由策略配置界面', pri: 'P0', pt: 5, own: '王倩', col: 'dev', age: 4, req: 'REQ-2041', reqN: '智能路由', br: 'feature/router-ui', commits: 6, pg: 85, sub: '3/4', ci: 'ok', ready: 1, prj: 'PRJ-018', prod: '统一支付网关', team: '前端体验组', sp: 'Sprint 26-14' },
+  { id: 'TASK-5540', ty: 'task', t: '对账差错工单自动派发', pri: 'P1', pt: 3, own: '何俊', col: 'dev', age: 6, req: 'REQ-2035', reqN: '对账核销', br: 'feature/settle-dispatch', commits: 4, pg: 70, ci: 'ok', blocked: '限额中心接口未就绪，已推动风控算法组（已等待 3 天）', prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'BUG-770', ty: 'bug', t: '熔断后备用通道限额校验缺失', pri: 'P1', pt: 2, own: '何俊', col: 'dev', age: 1, req: 'REQ-2041', reqN: '智能路由', br: 'hotfix/limit-check', commits: 3, pg: 80, ci: 'run', prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3308', ty: 'story', t: '通道费率配置中心接口对接', pri: 'P1', pt: 3, own: '林小满', col: 'review', age: 1, req: 'REQ-2041', reqN: '智能路由', br: 'feature/rate-config', pr: '#482', ci: 'ok', rev: '1/2', prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3311', ty: 'story', t: '路由决策日志埋点', pri: 'P2', pt: 2, own: '林小满', col: 'review', age: 3, req: 'REQ-2041', reqN: '智能路由', br: 'feature/router-log', pr: '#479', ci: 'ok', rev: '2/2', ready: 1, prj: 'PRJ-018', prod: '统一支付网关', team: '基础架构组', sp: 'Sprint 26-14' },
+  { id: 'TASK-5545', ty: 'debt', t: '收银台组件库升级至 v4', pri: 'P2', pt: 5, own: '王倩', col: 'review', age: 5, req: '技术债', reqN: '技术债', br: 'refactor/ui-v4', pr: '#312', ci: 'fail', rev: '0/2', prj: 'PRJ-018', prod: '统一支付网关', team: '前端体验组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3305', ty: 'story', t: '数字人民币受理协议对接', pri: 'P0', pt: 13, own: '吴敏', col: 'test', age: 4, req: 'REQ-2040', reqN: '数币支付', cases: '18/26', bugs: 2, env: '测试环境', prj: 'PRJ-018', prod: '统一支付网关', team: '质量保障部', sp: 'Sprint 26-14' },
+  { id: 'BUG-762', ty: 'bug', t: '钱包签约回调重复通知', pri: 'P1', pt: 2, own: '吴敏', col: 'test', age: 2, req: 'REQ-2040', reqN: '数币支付', cases: '6/6', bugs: 0, env: '测试环境', ready: 1, prj: 'PRJ-018', prod: '统一支付网关', team: '质量保障部', sp: 'Sprint 26-14' },
+  { id: 'TASK-5530', ty: 'task', t: '费率配置中心联调验证', pri: 'P1', pt: 3, own: '吴敏', col: 'test', age: 1, req: 'REQ-2041', reqN: '智能路由', cases: '9/12', bugs: 1, env: '测试环境', prj: 'PRJ-018', prod: '统一支付网关', team: '质量保障部', sp: 'Sprint 26-14' },
+  { id: 'STORY-3301', ty: 'story', t: '收银台组件视觉规范落地', pri: 'P2', pt: 5, own: '周雅', col: 'accept', age: 2, req: 'REQ-2033', reqN: '首页重构', ac: '4/5', prj: 'PRJ-018', prod: '统一支付网关', team: '产品部', sp: 'Sprint 26-14' },
+  { id: 'STORY-3298', ty: 'story', t: '对账文件解析与标准化', pri: 'P1', pt: 8, own: '周雅', col: 'accept', age: 1, req: 'REQ-2035', reqN: '对账核销', ac: '5/5', ready: 1, prj: 'PRJ-018', prod: '统一支付网关', team: '产品部', sp: 'Sprint 26-14' },
+  { id: 'TASK-5532', ty: 'task', t: '技术方案评审与文档归档', pri: 'P2', pt: 2, own: '陈立', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由', prj: 'PRJ-018', prod: '统一支付网关', team: '技术架构组', sp: 'Sprint 26-14' },
+  { id: 'STORY-3296', ty: 'story', t: '交易受理层接口重构', pri: 'P1', pt: 8, own: '何俊', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由', prj: 'PRJ-018', prod: '统一支付网关', team: '交易平台组', sp: 'Sprint 26-14' },
+  { id: 'TASK-5528', ty: 'task', t: '压测脚本与影子库准备', pri: 'P1', pt: 3, own: '林小满', col: 'done', age: 0, req: '风险专项', reqN: '风险专项', prj: 'PRJ-018', prod: '统一支付网关', team: '基础架构组', sp: 'Sprint 26-14' },
 
-  { id: 'STORY-3314', ty: 'story', t: '灰度切流与回滚机制', pri: 'P0', pt: 5, own: '林小满', col: 'design', age: 2, req: 'REQ-2041', reqN: '智能路由', doc: '方案 V0.9 评审中' },
-  { id: 'STORY-3330', ty: 'story', t: '商户后台账单异步导出', pri: 'P1', pt: 5, own: '王倩', col: 'design', age: 1, req: 'REQ-2036', reqN: '账单导出', doc: '交互稿评审中', cust: 8 },
+  /* ===== PRJ-021 智能风控决策引擎 V2 · Sprint 26-07 ===== */
+  { id: 'STORY-4102', ty: 'story', t: '规则热更新推送通道', pri: 'P0', pt: 8, own: '', col: 'todo', age: 2, req: 'REQ-2038', reqN: '规则热更新', skills: ['Go', '风控'], claim: 1, prj: 'PRJ-021', prod: '智能风控平台', team: '风控算法组', sp: 'Sprint 26-07' },
+  { id: 'STORY-4105', ty: 'story', t: '实时特征平台自助取数', pri: 'P1', pt: 8, own: '郑宇', col: 'design', age: 3, req: 'REQ-2034', reqN: '特征平台', doc: '方案评审中', prj: 'PRJ-021', prod: '智能风控平台', team: '风控算法组', sp: 'Sprint 26-07' },
+  { id: 'STORY-4108', ty: 'story', t: '决策引擎规则编排 DSL', pri: 'P0', pt: 13, own: '郑宇', col: 'dev', age: 5, req: 'REQ-2038', reqN: '规则热更新', br: 'feature/rule-dsl', commits: 16, pg: 55, ci: 'ok', prj: 'PRJ-021', prod: '智能风控平台', team: '风控算法组', sp: 'Sprint 26-07' },
+  { id: 'TASK-6011', ty: 'task', t: '第三方征信接口备用供应商接入', pri: 'P0', pt: 5, own: '郑宇', col: 'dev', age: 4, req: '风险专项', reqN: '风险专项', br: 'feature/credit-backup', commits: 6, pg: 40, ci: 'ok', blocked: '第三方征信接口 SLA 不达标，等待供应商反馈（已等待 4 天）', prj: 'PRJ-021', prod: '智能风控平台', team: '风控算法组', sp: 'Sprint 26-07' },
+  { id: 'BUG-751', ty: 'bug', t: '风控规则灰度期间命中率统计偏差', pri: 'P2', pt: 3, own: '郑宇', col: 'test', age: 4, req: 'REQ-2038', reqN: '规则热更新', cases: '8/10', bugs: 1, env: '预发环境', prj: 'PRJ-021', prod: '智能风控平台', team: '质量保障部', sp: 'Sprint 26-07' },
+  { id: 'STORY-4096', ty: 'story', t: '反洗钱名单实时同步优化', pri: 'P0', pt: 5, own: '郑宇', col: 'done', age: 0, req: 'REQ-2029', reqN: '反洗钱', prj: 'PRJ-021', prod: '智能风控平台', team: '风控算法组', sp: 'Sprint 26-07' },
 
-  { id: 'STORY-3313', ty: 'story', t: '成本与成功率实时计算引擎', pri: 'P0', pt: 8, own: '何俊', col: 'dev', age: 3, req: 'REQ-2041', reqN: '智能路由', br: 'feature/smart-router', commits: 12, pg: 60, sub: '2/4', ci: 'fail' },
-  { id: 'STORY-3320', ty: 'story', t: '渠道适配层重构（招行/工行）', pri: 'P1', pt: 8, own: '何俊', col: 'dev', age: 2, req: 'REQ-2041', reqN: '智能路由', br: 'feature/adapter-v2', commits: 8, pg: 45, sub: '1/3', ci: 'ok' },
-  { id: 'STORY-3312', ty: 'story', t: '路由策略配置界面', pri: 'P0', pt: 5, own: '王倩', col: 'dev', age: 4, req: 'REQ-2041', reqN: '智能路由', br: 'feature/router-ui', commits: 6, pg: 85, sub: '3/4', ci: 'ok', ready: 1 },
-  { id: 'TASK-5540', ty: 'task', t: '对账差错工单自动派发', pri: 'P1', pt: 3, own: '何俊', col: 'dev', age: 6, req: 'REQ-2035', reqN: '对账核销', br: 'feature/settle-dispatch', commits: 4, pg: 70, ci: 'ok', blocked: '限额中心接口未就绪，已推动风控算法组（已等待 3 天）' },
-  { id: 'BUG-770', ty: 'bug', t: '熔断后备用通道限额校验缺失', pri: 'P1', pt: 2, own: '何俊', col: 'dev', age: 1, req: 'REQ-2041', reqN: '智能路由', br: 'hotfix/limit-check', commits: 3, pg: 80, ci: 'run' },
+  /* ===== PRJ-016 商户运营中心体验升级 · Sprint 26-22 ===== */
+  { id: 'STORY-3330', ty: 'story', t: '商户后台账单异步导出', pri: 'P1', pt: 5, own: '', col: 'todo', age: 1, req: 'REQ-2036', reqN: '账单导出', skills: ['Java', '异步任务'], claim: 1, prj: 'PRJ-016', prod: '商户运营中心', team: '前端体验组', sp: 'Sprint 26-22' },
+  { id: 'STORY-3334', ty: 'story', t: '结算单据批量下载与归档', pri: 'P1', pt: 5, own: '王倩', col: 'dev', age: 2, req: 'REQ-2039', reqN: '结算单据', br: 'feature/settle-download', commits: 7, pg: 78, ci: 'ok', prj: 'PRJ-016', prod: '商户运营中心', team: '前端体验组', sp: 'Sprint 26-22' },
+  { id: 'STORY-3336', ty: 'story', t: '商户中心首页信息架构重构', pri: 'P2', pt: 8, own: '王倩', col: 'accept', age: 1, req: 'REQ-2033', reqN: '首页重构', ac: '5/5', ready: 1, prj: 'PRJ-016', prod: '商户运营中心', team: '前端体验组', sp: 'Sprint 26-22' },
+  { id: 'BUG-759', ty: 'bug', t: '商户后台账单导出超 10 万行超时', pri: 'P2', pt: 3, own: '王倩', col: 'dev', age: 5, req: 'REQ-2036', reqN: '账单导出', br: 'hotfix/export-timeout', commits: 3, pg: 30, ci: 'ok', prj: 'PRJ-016', prod: '商户运营中心', team: '前端体验组', sp: 'Sprint 26-22' },
+  { id: 'TASK-6102', ty: 'task', t: '商户后台埋点与体验监测', pri: 'P2', pt: 3, own: '孙悦', col: 'test', age: 2, req: 'REQ-2033', reqN: '首页重构', cases: '12/12', bugs: 0, env: '测试环境', ready: 1, prj: 'PRJ-016', prod: '商户运营中心', team: '产品部', sp: 'Sprint 26-22' },
 
-  { id: 'STORY-3308', ty: 'story', t: '通道费率配置中心接口对接', pri: 'P1', pt: 3, own: '何俊', col: 'review', age: 1, req: 'REQ-2041', reqN: '智能路由', br: 'feature/rate-config', pr: '#482', ci: 'ok', rev: '1/2' },
-  { id: 'STORY-3311', ty: 'story', t: '路由决策日志埋点', pri: 'P2', pt: 2, own: '林小满', col: 'review', age: 3, req: 'REQ-2041', reqN: '智能路由', br: 'feature/router-log', pr: '#479', ci: 'ok', rev: '2/2', ready: 1 },
-  { id: 'TASK-5545', ty: 'debt', t: '收银台组件库升级至 v4', pri: 'P2', pt: 5, own: '王倩', col: 'review', age: 5, req: '技术债', reqN: '技术债', br: 'refactor/ui-v4', pr: '#312', ci: 'fail', rev: '0/2' },
+  /* ===== PRJ-014 数据资产中台一期 · Sprint 26-18 ===== */
+  { id: 'STORY-5201', ty: 'story', t: '指标口径统一元数据模型', pri: 'P1', pt: 8, own: '陈立', col: 'dev', age: 3, req: 'REQ-2032', reqN: '指标治理', br: 'feature/metric-model', commits: 9, pg: 55, ci: 'ok', prj: 'PRJ-014', prod: '数据资产中台', team: '数据平台组', sp: 'Sprint 26-18' },
+  { id: 'STORY-5204', ty: 'story', t: '自助取数查询引擎', pri: 'P2', pt: 8, own: '张诚', col: 'dev', age: 6, req: 'REQ-2032', reqN: '指标治理', br: 'feature/self-query', commits: 5, pg: 35, ci: 'fail', prj: 'PRJ-014', prod: '数据资产中台', team: '数据平台组', sp: 'Sprint 26-18' },
+  { id: 'TASK-6205', ty: 'task', t: '数据血缘采集与展示', pri: 'P2', pt: 5, own: '', col: 'todo', age: 4, req: 'REQ-2032', reqN: '指标治理', skills: ['Scala', '数据治理'], claim: 1, prj: 'PRJ-014', prod: '数据资产中台', team: '数据平台组', sp: 'Sprint 26-18' },
+  { id: 'STORY-5198', ty: 'story', t: '数据接入标准化框架', pri: 'P1', pt: 13, own: '何俊', col: 'done', age: 0, req: 'REQ-2032', reqN: '指标治理', prj: 'PRJ-014', prod: '数据资产中台', team: '数据平台组', sp: 'Sprint 26-18' },
 
-  { id: 'STORY-3305', ty: 'story', t: '数字人民币受理协议对接', pri: 'P0', pt: 13, own: '吴敏', col: 'test', age: 4, req: 'REQ-2040', reqN: '数币支付', cases: '18/26', bugs: 2, env: '测试环境' },
-  { id: 'BUG-762', ty: 'bug', t: '钱包签约回调重复通知', pri: 'P1', pt: 2, own: '吴敏', col: 'test', age: 2, req: 'REQ-2040', reqN: '数币支付', cases: '6/6', bugs: 0, env: '测试环境', ready: 1 },
-  { id: 'TASK-5530', ty: 'task', t: '费率配置中心联调验证', pri: 'P1', pt: 3, own: '吴敏', col: 'test', age: 1, req: 'REQ-2041', reqN: '智能路由', cases: '9/12', bugs: 1, env: '测试环境' },
-
-  { id: 'STORY-3301', ty: 'story', t: '收银台组件视觉规范落地', pri: 'P2', pt: 5, own: '周雅', col: 'accept', age: 2, req: 'REQ-2033', reqN: '首页重构', ac: '4/5' },
-  { id: 'STORY-3298', ty: 'story', t: '对账文件解析与标准化', pri: 'P1', pt: 8, own: '周雅', col: 'accept', age: 1, req: 'REQ-2035', reqN: '对账核销', ac: '5/5', ready: 1 },
-
-  { id: 'TASK-5532', ty: 'task', t: '技术方案评审与文档归档', pri: 'P2', pt: 2, own: '陈立', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由' },
-  { id: 'TASK-5533', ty: 'task', t: '灰度运营 SOP 编写', pri: 'P2', pt: 3, own: '周雅', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由' },
-  { id: 'BUG-755', ty: 'bug', t: '收银台在低端安卓机白屏', pri: 'P1', pt: 2, own: '王倩', col: 'done', age: 0, req: 'REQ-2033', reqN: '首页重构' },
-  { id: 'STORY-3296', ty: 'story', t: '交易受理层接口重构', pri: 'P1', pt: 8, own: '何俊', col: 'done', age: 0, req: 'REQ-2041', reqN: '智能路由' },
-  { id: 'TASK-5528', ty: 'task', t: '压测脚本与影子库准备', pri: 'P1', pt: 3, own: '林小满', col: 'done', age: 0, req: '风险专项', reqN: '风险专项' }
+  /* ===== PRJ-023 开放平台 OpenAPI 网关 · Sprint 26-05 ===== */
+  { id: 'STORY-7101', ty: 'story', t: 'OpenAPI 网关限流与配额', pri: 'P1', pt: 8, own: '陈立', col: 'dev', age: 4, req: 'REQ-2037', reqN: 'API 限流', br: 'feature/rate-limit', commits: 8, pg: 40, ci: 'ok', prj: 'PRJ-023', prod: '开放能力平台', team: '技术架构组', sp: 'Sprint 26-05' },
+  { id: 'STORY-7104', ty: 'story', t: '开发者应用注册与密钥管理', pri: 'P2', pt: 5, own: '', col: 'todo', age: 3, req: 'REQ-2030', reqN: '开发者沙箱', skills: ['Go', '安全'], claim: 1, prj: 'PRJ-023', prod: '开放能力平台', team: '技术架构组', sp: 'Sprint 26-05' },
+  { id: 'TASK-7108', ty: 'task', t: 'API 文档自动生成与校验', pri: 'P3', pt: 3, own: '陈立', col: 'review', age: 2, req: 'REQ-2030', reqN: '开发者沙箱', br: 'feature/api-doc', pr: '#141', ci: 'ok', rev: '1/2', prj: 'PRJ-023', prod: '开放能力平台', team: '技术架构组', sp: 'Sprint 26-05' }
 ];
+
+/* 项目 / 产品 / 团队 元数据 */
+var PRJS = [
+  { k: 'PRJ-018', n: '统一支付网关 3.0 重构', prod: '统一支付网关', sp: 'Sprint 26-14', d: '07-14 ~ 07-27', left: 3, commit: 42, done: 28, health: '健康' },
+  { k: 'PRJ-021', n: '智能风控决策引擎 V2', prod: '智能风控平台', sp: 'Sprint 26-07', d: '07-14 ~ 07-27', left: 3, commit: 34, done: 14, health: '风险' },
+  { k: 'PRJ-016', n: '商户运营中心体验升级', prod: '商户运营中心', sp: 'Sprint 26-22', d: '07-14 ~ 07-27', left: 3, commit: 26, done: 22, health: '健康' },
+  { k: 'PRJ-014', n: '数据资产中台一期', prod: '数据资产中台', sp: 'Sprint 26-18', d: '07-14 ~ 07-27', left: 3, commit: 21, done: 19, health: '健康' },
+  { k: 'PRJ-023', n: '开放平台 OpenAPI 网关', prod: '开放能力平台', sp: 'Sprint 26-05', d: '07-14 ~ 07-27', left: 3, commit: 29, done: 9, health: '关注' }
+];
+var PRODS = ['统一支付网关', '智能风控平台', '商户运营中心', '数据资产中台', '开放能力平台'];
+var TEAMS = ['交易平台组', '风控算法组', '前端体验组', '基础架构组', '数据平台组', '质量保障部', '技术架构组', '产品部'];
+var PRJ_COLOR = { 'PRJ-018': '#2b5cff', 'PRJ-021': '#e5484d', 'PRJ-016': '#15a86b', 'PRJ-014': '#7c5cff', 'PRJ-023': '#f59e0b' };
 
 var TY = {
   story: { n: '用户故事', c: '#15a86b', i: 'file' }, task: { n: '任务', c: '#2b5cff', i: 'kanban' },
   bug: { n: '缺陷', c: '#e5484d', i: 'bug' }, debt: { n: '技术债', c: '#7c5cff', i: 'database' }
 };
 var ME = '何俊';
-var state = { lane: 'none', dens: 'normal', filters: {}, q: '', collapsed: { done: true }, bd: 'sprint' };
+var state = {
+  lane: 'none', dens: 'normal', filters: {}, q: '', collapsed: { done: true }, bd: 'sprint', tab: 'sprint',
+  /* 看板范围：dim = all | prod | prj | team */
+  scope: { dim: 'all', prod: PRODS[0], prj: 'PRJ-018', team: TEAMS[0], sp: 'cur' }
+};
+try {
+  var _sv = JSON.parse(localStorage.getItem('df_board_scope') || 'null');
+  if (_sv && _sv.dim) state.scope = _sv;
+} catch (e) { }
+function saveScope() { try { localStorage.setItem('df_board_scope', JSON.stringify(state.scope)); } catch (e) { } }
+
+/* 经办人 → 团队（未显式标注 team 的卡片按人归属团队） */
+var OWN_TEAM = {
+  '何俊': '交易平台组', '林小满': '基础架构组', '王倩': '前端体验组', '吴敏': '质量保障部',
+  '郑宇': '风控算法组', '陈立': '技术架构组', '张诚': '数据平台组',
+  '周雅': '产品部', '李思远': '产品部', '孙悦': '产品部'
+};
+function cTeam(c) { return c.team || OWN_TEAM[c.own] || '未归属'; }
+function prjName(k) { var x = PRJS.filter(function (p) { return p.k === k; })[0]; return x ? x.n : k; }
+function prjOf(k) { return PRJS.filter(function (p) { return p.k === k; })[0] || {}; }
 
 /* ===== 需求看板 ===== */
 var REQ_COLS = [
@@ -379,6 +453,13 @@ var REQ_CARDS = [
   { id: 'REQ-2031', t: '支付成功率实时大盘与自动告警', col: 'r7', pri: 'P1', ch: '客户反馈', cust: 3, val: 79, urg: 72, eff: 12, own: '林小满', ver: 'V2.9', age: 0, pg: 100 },
   { id: 'REQ-2029', t: '反洗钱名单库实时同步', col: 'r7', pri: 'P0', ch: '监管合规', cust: 0, val: 90, urg: 96, eff: 19, own: '郑宇', ver: 'V2.8', age: 0, pg: 100 }
 ];
+/* 需求 → 产品线（需求看板范围过滤） */
+var REQ_PROD = {
+  'REQ-2030': '开放能力平台', 'REQ-2042': '统一支付网关', 'REQ-2041': '统一支付网关', 'REQ-2036': '商户运营中心',
+  'REQ-2044': '智能风控平台', 'REQ-2037': '开放能力平台', 'REQ-2034': '智能风控平台', 'REQ-2040': '统一支付网关',
+  'REQ-2039': '商户运营中心', 'REQ-2035': '统一支付网关', 'REQ-2038': '智能风控平台', 'REQ-2033': '商户运营中心',
+  'REQ-2031': '数据资产中台', 'REQ-2029': '智能风控平台'
+};
 var CHTAG2 = { '工单': 'brand', '客户反馈': 'teal', '产品规划': 'purple', '监管合规': 'danger', '数据洞察': 'warning', '竞品对标': '' };
 
 /* ===== 缺陷看板 ===== */
@@ -404,6 +485,12 @@ var BUG_CARDS = [
   { id: 'BUG-748', t: '开放平台 API 文档示例返回码错误', col: 'b2', pri: 'P3', env: '生产', mod: '开放平台', own: '陈立', age: 8, sla: '剩余 5 天' }
 ];
 
+/* 缺陷模块 → 产品线 */
+var MOD_PROD = {
+  '商户后台': '商户运营中心', '清结算': '统一支付网关', '路由与渠道': '统一支付网关',
+  '风控决策': '智能风控平台', '收银台前端': '统一支付网关', '开放平台': '开放能力平台'
+};
+
 /* ===== 发布看板 ===== */
 var REL_COLS = [
   { k: 'v1', n: '版本规划中', c: '#b3bfd0', wip: 0, hint: '范围确定中', inn: ['已确定版本主题'], out: ['需求范围冻结'] },
@@ -424,6 +511,13 @@ var REL_CARDS = [
   { id: 'V2.8.0', t: '智能风控平台 · 反洗钱名单实时同步', col: 'v6', date: '2026-07-18', ready: 100, reqs: 6, bugs: 2, own: '郑宇', age: 0 }
 ];
 
+/* ===== 范围字段归一化：让四类看板都能按 产品线 / 项目 / 团队 过滤 ===== */
+var PROD_PRJ = {};
+PRJS.forEach(function (p) { PROD_PRJ[p.prod] = p.k; });
+REQ_CARDS.forEach(function (c) { c.prod = REQ_PROD[c.id] || PRODS[0]; c.prj = PROD_PRJ[c.prod]; });
+BUG_CARDS.forEach(function (c) { c.prod = MOD_PROD[c.mod] || PRODS[0]; c.prj = PROD_PRJ[c.prod]; });
+REL_CARDS.forEach(function (c) { c.prod = c.t.split(' · ')[0]; c.prj = PROD_PRJ[c.prod]; });
+
 /* ================= 渲染 ================= */
 function ageCls(d) { return d <= 2 ? 'g' : d <= 4 ? 'y' : 'r'; }
 function curCols() {
@@ -439,7 +533,7 @@ function reqCardHtml(c) {
     '<span class="id-link">' + c.id + '</span>' + UI.priority(c.pri) +
     '<span class="ml-auto age ' + ageCls(c.age) + '">' + icon('clock', 11) + c.age + 'd</span></div>' +
     '<div class="title">' + c.t + '</div>' +
-    '<div class="kb-badges"><span class="chip ' + (CHTAG2[c.ch] || '') + '">' + c.ch + '</span>' +
+    '<div class="kb-badges">' + prjChip(c) + '<span class="chip ' + (CHTAG2[c.ch] || '') + '">' + c.ch + '</span>' +
     (c.cust ? '<span class="chip brand">' + icon('building', 10) + c.cust + ' 家客户</span>' : '') +
     '<span class="chip">价值 ' + c.val + '</span><span class="chip ' + (c.urg >= 80 ? 'fail' : 'warn') + '">紧迫 ' + c.urg + '</span>' +
     '<span class="chip">' + c.eff + ' 人日</span><span class="chip mono">' + c.ver + '</span></div>' +
@@ -456,7 +550,7 @@ function bugCardHtml(c) {
     '<span class="id-link">' + c.id + '</span>' + UI.priority(c.pri) +
     '<span class="ml-auto age ' + ageCls(c.age) + '">' + icon('clock', 11) + c.age + 'd</span></div>' +
     '<div class="title">' + c.t + '</div>' +
-    '<div class="kb-badges"><span class="chip ' + (c.env === '生产' ? 'fail' : c.env === '预发' ? 'warn' : '') + '">' + c.env + '环境</span>' +
+    '<div class="kb-badges">' + prjChip(c) + '<span class="chip ' + (c.env === '生产' ? 'fail' : c.env === '预发' ? 'warn' : '') + '">' + c.env + '环境</span>' +
     '<span class="chip">' + c.mod + '</span>' +
     '<span class="chip ' + (c.sla.indexOf('超时') > -1 ? 'fail' : 'ok') + '">SLA ' + c.sla + '</span>' +
     (c.cust ? '<span class="chip brand">' + icon('building', 10) + '影响 ' + c.cust + ' 客户</span>' : '') + '</div>' +
@@ -471,7 +565,7 @@ function relCardHtml(c) {
     '<b class="fz12">' + c.id + '</b>' +
     '<span class="ml-auto chip mono">' + c.date + '</span></div>' +
     '<div class="title">' + c.t + '</div>' +
-    '<div class="kb-badges"><span class="chip">需求 ' + c.reqs + '</span>' +
+    '<div class="kb-badges"><span class="chip">' + c.prod + '</span><span class="chip">需求 ' + c.reqs + '</span>' +
     '<span class="chip ' + (c.bugs > 4 ? 'fail' : c.bugs ? 'warn' : 'ok') + '">缺陷 ' + c.bugs + '</span>' +
     (c.ms ? '<span class="chip warn">' + icon('flag', 10) + c.ms + '</span>' : '') +
     (c.gate ? '<span class="chip fail">' + icon('alert', 10) + c.gate + '</span>' : '') + '</div>' +
@@ -482,8 +576,133 @@ function relCardHtml(c) {
 function renderCard(c) {
   return state.bd === 'req' ? reqCardHtml(c) : state.bd === 'bug' ? bugCardHtml(c) : state.bd === 'release' ? relCardHtml(c) : cardHtml(c);
 }
+/* ===== 范围逻辑 ===== */
+function inScope(c) {
+  var sc = state.scope;
+  if (sc.dim === 'prod') return c.prod === sc.prod;
+  if (sc.dim === 'prj') return c.prj === sc.prj;
+  if (sc.dim === 'team') return cTeam(c) === sc.team;
+  return true;
+}
+/* 当前范围内涉及的项目数 —— >1 即为跨项目聚合视图 */
+function scopePrjs() {
+  var r = [];
+  curCards().filter(inScope).forEach(function (c) { if (r.indexOf(c.prj) < 0) r.push(c.prj); });
+  return r.sort();
+}
+function isAgg() { return state.scope.dim !== 'prj' && scopePrjs().length > 1; }
+var _multiPrj = true;
+/* 跨项目时卡片上补一个项目标识，单项目视图下不重复显示 */
+function prjChip(c) {
+  if (state.scope.dim === 'prj' || !_multiPrj || !c.prj) return '';
+  var col = PRJ_COLOR[c.prj] || '#8c9ab1';
+  return '<span class="chip" style="border-color:' + col + '40;background:' + col + '12;color:' + col +
+    '" title="' + prjName(c.prj) + '">' + c.prj.replace('PRJ-', '#') + '</span>';
+}
+
+function renderScope() {
+  var sc = state.scope, pick = '', note = '';
+  if (sc.dim === 'all') {
+    pick = '<span class="tag brand lg">全部 ' + PRJS.length + ' 个项目 · ' + PRODS.length + ' 条产品线</span>' +
+      '<span class="fz12 muted">投资组合视角：适合研发负责人看整体流动与瓶颈</span>';
+  } else if (sc.dim === 'prod') {
+    pick = '<span class="fz12 muted">产品线</span><div class="pills" id="scProd">' + PRODS.map(function (x) {
+      return '<span class="pill' + (x === sc.prod ? ' active' : '') + '" data-v="' + x + '">' + x + '</span>';
+    }).join('') + '</div>';
+  } else if (sc.dim === 'prj') {
+    var pj = prjOf(sc.prj);
+    pick = '<span class="fz12 muted">项目</span>' +
+      '<select class="input" id="scPrj" style="width:230px;height:28px">' + PRJS.map(function (x) {
+        return '<option value="' + x.k + '"' + (x.k === sc.prj ? ' selected' : '') + '>' + x.k + ' ' + x.n + '</option>';
+      }).join('') + '</select>' +
+      '<span class="fz12 muted" style="margin-left:4px">迭代</span>' +
+      '<select class="input" id="scSp" style="width:150px;height:28px">' +
+      '<option value="cur"' + (sc.sp === 'cur' ? ' selected' : '') + '>' + (pj.sp || '当前迭代') + '（当前）</option>' +
+      '<option value="next">下一迭代（规划中）</option><option value="all"' + (sc.sp === 'all' ? ' selected' : '') + '>全部迭代 + Backlog</option>' +
+      '</select>' +
+      '<a class="btn btn-sm btn-soft" href="project-detail.html"><span data-icon="external" data-size="12"></span>项目详情</a>';
+  } else {
+    pick = '<span class="fz12 muted">团队</span><div class="pills" id="scTeam">' + TEAMS.map(function (x) {
+      return '<span class="pill' + (x === sc.team ? ' active' : '') + '" data-v="' + x + '">' + x + '</span>';
+    }).join('') + '</div>';
+  }
+  document.getElementById('scopePick').innerHTML = pick;
+
+  var list = curCards().filter(inScope), ps = scopePrjs();
+  var teams = [];
+  list.forEach(function (c) { if (teams.indexOf(cTeam(c)) < 0) teams.push(cTeam(c)); });
+  document.getElementById('scopeSummary').innerHTML =
+    '范围内 <b style="color:var(--ink-800)">' + list.length + '</b> 张卡片 · ' +
+    ps.length + ' 个项目 · ' + teams.length + ' 个团队';
+
+  if (isAgg() && (state.tab === 'sprint' || state.tab === 'mine' || state.tab === 'bug')) {
+    note = '<div class="flex items-center gap8" style="padding:8px 11px;border-radius:8px;background:var(--warning-bg)">' +
+      icon('info', 14) + '<span class="fz11" style="color:#8a5a12;line-height:1.7">' +
+      '<b>跨项目视图：</b>WIP 上限是团队级约定，聚合后不能直接相加比较，因此列头 WIP 改为显示各项目占比，超限告警按「项目 + 列」分别判定。' +
+      '需要严格执行 WIP 与流转策略、拖拽流转卡片时，请切到<b>按项目</b>。</span>' +
+      '<button class="btn btn-sm ml-auto" onclick="setDim(\'prj\')">切到按项目</button></div>';
+  } else if (state.tab === 'release') {
+    note = '<div class="flex items-center gap8" style="padding:8px 11px;border-radius:8px;background:var(--ink-50)">' +
+      icon('info', 14) + '<span class="fz11 muted" style="line-height:1.7">' +
+      '版本以<b>产品线</b>为单位组织，因此发布看板不提供「按项目」范围；一个版本通常由多个项目的需求共同构成。</span></div>';
+  } else if (state.tab === 'req' && state.scope.dim === 'prj') {
+    note = '<div class="flex items-center gap8" style="padding:8px 11px;border-radius:8px;background:var(--ink-50)">' +
+      icon('info', 14) + '<span class="fz11 muted" style="line-height:1.7">' +
+      '需求在进入项目前没有项目归属，按项目筛选只会看到<b>已排期</b>的需求；查看完整需求池请切到<b>按产品线</b>或<b>全部</b>。</span></div>';
+  }
+  /* 发布看板下「按项目」不适用，置灰提示 */
+  var dimPrjBtn = document.querySelector('#scopeDim button[data-d="prj"]');
+  if (dimPrjBtn) {
+    var off = state.tab === 'release';
+    dimPrjBtn.style.opacity = off ? '.45' : '';
+    dimPrjBtn.style.cursor = off ? 'not-allowed' : '';
+    dimPrjBtn.title = off ? '发布看板以产品线为单位组织版本' : '';
+  }
+  document.getElementById('scopeNote').innerHTML = note;
+  UI.hydrateIcons(document.getElementById('scopePick'));
+  UI.hydrateIcons(document.getElementById('scopeNote'));
+
+  /* 选择器事件 */
+  var sp = document.getElementById('scProd');
+  if (sp) sp.onclick = function (e) {
+    var b = e.target.closest('.pill'); if (!b) return;
+    state.scope.prod = b.dataset.v; saveScope(); apply('已切换到产品线「' + b.dataset.v + '」');
+  };
+  var st = document.getElementById('scTeam');
+  if (st) st.onclick = function (e) {
+    var b = e.target.closest('.pill'); if (!b) return;
+    state.scope.team = b.dataset.v; saveScope(); apply('已切换到团队「' + b.dataset.v + '」');
+  };
+  var sj = document.getElementById('scPrj');
+  if (sj) sj.onchange = function () {
+    state.scope.prj = this.value; saveScope(); apply('已切换到项目「' + prjName(this.value) + '」');
+  };
+  var ss = document.getElementById('scSp');
+  if (ss) ss.onchange = function () {
+    state.scope.sp = this.value; saveScope();
+    UI.toast(this.value === 'all' ? '已显示该项目全部迭代与 Backlog' : this.value === 'next' ? '已切换到下一迭代（规划中，卡片为示例）' : '已切回当前迭代');
+    apply();
+  };
+}
+function setDim(d) {
+  state.scope.dim = d;
+  /* 跨项目/多项目范围下默认按项目分泳道，单项目回到不分泳道 */
+  if (d === 'prj') { if (state.lane === 'prj') setLane('none'); }
+  else if (state.lane === 'none' && (state.bd === 'sprint' || state.bd === 'bug')) setLane('prj');
+  document.querySelectorAll('#scopeDim button').forEach(function (x) { x.classList.toggle('active', x.dataset.d === d); });
+  saveScope();
+  apply({ all: '已切换到全部范围（投资组合视角）', prod: '已按产品线查看', prj: '已按项目查看', team: '已按团队查看' }[d]);
+}
+function setLane(l) {
+  state.lane = l;
+  document.querySelectorAll('#laneGroup button').forEach(function (x) { x.classList.toggle('active', x.dataset.lane === l); });
+}
+/* 范围/看板变化后的统一刷新入口 */
+function apply(msg) { updateHead(); renderScope(); render(); if (msg) UI.toast(msg); }
+
 function visible(c) {
   var f = state.filters;
+  if (!inScope(c)) return false;
   if (f.mine && c.own !== ME) return false;
   if (f.blocked && !c.blocked && !c.esc) return false;
   if (f.aging && c.age <= 4) return false;
@@ -497,6 +716,7 @@ function visible(c) {
 function cardHtml(c) {
   var ty = TY[c.ty];
   var badges = [];
+  if (prjChip(c)) badges.push(prjChip(c));
   if (c.pt) badges.push('<span class="chip">' + c.pt + ' 点</span>');
   if (c.br) badges.push('<span class="chip mono">' + icon('branch', 10) + c.br.replace(/^(feature|hotfix|refactor)\//, '') + '</span>');
   if (c.commits) badges.push('<span class="chip mono">' + icon('commit', 10) + c.commits + '</span>');
@@ -519,7 +739,7 @@ function cardHtml(c) {
     '<span class="id-link">' + c.id + '</span>' + UI.priority(c.pri) +
     '<span class="ml-auto age ' + ageCls(c.age) + '">' + icon('clock', 11) + (c.col === 'done' ? '已完成' : c.age + 'd') + '</span></div>' +
     '<div class="title">' + c.t + '</div>' +
-    (state.dens === 'compact' ? '' :
+    (state.dens === 'compact' ? (prjChip(c) ? '<div class="kb-badges">' + prjChip(c) + '</div>' : '') :
       '<div class="parent">' + icon('link', 10) + '<b>' + c.req + '</b> ' + c.reqN + '</div>' +
       '<div class="kb-badges">' + badges.join('') + '</div>' +
       (c.pg ? '<div class="kcard-bar" style="margin:8px 0 0"><i style="width:' + c.pg + '%"></i></div>' : '') +
@@ -540,50 +760,97 @@ function colHtml(col, cards, inLane) {
       '<span class="n">' + col.n + '</span><span class="c">' + cards.length + '</span></div>' +
       '<span style="margin-top:auto;color:var(--ink-400)">' + icon('left', 13) + '</span></div></div>';
   }
-  var over = col.wip && cards.length > col.wip;
-  var warn = col.wip && cards.length === col.wip;
+  var agg = isAgg();
+  var over = !agg && col.wip && cards.length > col.wip;
+  var warn = !agg && col.wip && cards.length === col.wip;
   var pts = cards.reduce(function (a, b) { return a + (b.pt || 0); }, 0);
+  /* 聚合视图：列头不比较 WIP 数值，改为展示各项目构成 */
+  var wipHtml = col.wip ? (agg
+    ? '<span class="kb-wip" title="跨项目聚合，WIP 上限按各项目分别判定">各项目 WIP ' + col.wip + '</span>'
+    : '<span class="kb-wip ' + (over ? 'over' : warn ? 'warn' : '') + '">WIP ' + cards.length + '/' + col.wip + '</span>') : '';
+  var mix = '';
+  if (agg && cards.length) {
+    var byP = {};
+    cards.forEach(function (c) { byP[c.prj] = (byP[c.prj] || 0) + 1; });
+    mix = '<div class="kb-mix">' + Object.keys(byP).sort().map(function (k) {
+      return '<i style="flex:' + byP[k] + ';background:' + (PRJ_COLOR[k] || '#8c9ab1') + '" title="' + prjName(k) + '：' + byP[k] + ' 项"></i>';
+    }).join('') + '</div>';
+  }
   return '<div class="kb-col ' + (state.dens === 'compact' ? 'compact ' : '') + (over ? 'over ' : '') + (col.k === 'done' ? 'done-col' : '') + '" data-col="' + col.k + '">' +
     (inLane ? '' :
       '<div class="kb-head"><div class="kb-title"><span class="dot-status" style="background:' + col.c + '"></span>' +
       '<span class="n">' + col.n + '</span><span class="c">' + cards.length + '</span>' +
-      (col.wip ? '<span class="kb-wip ' + (over ? 'over' : warn ? 'warn' : '') + '">WIP ' + cards.length + '/' + col.wip + '</span>' : '') +
+      wipHtml +
       '<span class="kb-ico"><span class="tip" data-tip="列策略（准入/准出）" onclick="event.stopPropagation();showPolicy(\'' + col.k + '\',this)">' + icon('help', 13) + '</span>' +
       '<span onclick="event.stopPropagation();UI.toast(\'在此列新建工作项\')">' + icon('plus', 13) + '</span>' +
       '<span class="tip" data-tip="折叠此列" onclick="event.stopPropagation();toggleCol(\'' + col.k + '\')">' + icon('minus', 13) + '</span></span></div>' +
-      '<div class="kb-sub"><span>' + pts + ' 点</span><span>·</span><span>' + col.hint + '</span></div></div>') +
+      '<div class="kb-sub">' + (pts ? '<span>' + pts + ' 点</span><span>·</span>' : '') + '<span>' + col.hint + '</span></div>' + mix + '</div>') +
     '<div class="kb-body">' + (cards.length ? cards.map(renderCard).join('')
       : '<div class="kb-empty">' + (col.k === 'todo' ? '任务池为空' : '拖入卡片') + '</div>') + '</div></div>';
 }
+var LANE_N = { req: '需求', pri: '优先级', own: '经办人', prj: '项目', prod: '产品线', team: '团队' };
+function laneKey(c, key) {
+  return key === 'own' ? (c.own || '未认领')
+    : key === 'pri' ? (c.pri || '—')
+      : key === 'prj' ? (c.prj || '未归属')
+        : key === 'prod' ? (c.prod || '未归属')
+          : key === 'team' ? cTeam(c)
+            : (c.req || c.mod || c.ver || c.id);
+}
+/* 从泳道一键下钻到单项目视图 */
+function drillPrj(k) {
+  state.scope.prj = k; setDim('prj');
+}
 function render() {
+  _multiPrj = scopePrjs().length > 1;
   var list = curCards().filter(visible);
   var html = '';
-  if (state.lane === 'none') {
+  var lane = state.lane;
+  /* 泳道维度在当前范围内只有一组时没有信息量，自动退化为不分泳道 */
+  if (lane === 'prj' || lane === 'prod') {
+    var gk = [];
+    list.forEach(function (c) { var g = laneKey(c, lane); if (gk.indexOf(g) < 0) gk.push(g); });
+    if (gk.length < 2) lane = 'none';
+  }
+  if (lane === 'none') {
     html = curCols().map(function (col) {
       return colHtml(col, list.filter(function (c) { return c.col === col.k; }), false);
     }).join('');
     document.getElementById('kb').className = 'kb';
     document.getElementById('kb').innerHTML = html;
   } else {
-    var key = { req: 'req', pri: 'pri', own: 'own' }[state.lane];
+    var key = lane;
     var groups = [];
     list.forEach(function (c) {
-      var g = key === 'own' ? (c.own || '未认领') : key === 'pri' ? (c.pri || '—') : (c.req || c.mod || c.ver || c.id);
+      var g = laneKey(c, key);
       if (groups.indexOf(g) < 0) groups.push(g);
     });
-    groups.sort();
+    /* 项目/产品泳道按既定优先顺序排列，其余按字典序 */
+    var order = key === 'prj' ? PRJS.map(function (p) { return p.k; }) : key === 'prod' ? PRODS : null;
+    groups.sort(order ? function (a, b) {
+      var ia = order.indexOf(a), ib = order.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    } : undefined);
     html = '<div style="width:100%"><div class="lane-cols-head">' + curCols().map(function (col) {
       return '<div><span class="dot-status" style="background:' + col.c + '"></span> ' + col.n +
         (col.wip ? ' <span class="muted">(WIP ' + col.wip + ')</span>' : '') + '</div>';
     }).join('') + '</div>' +
       groups.map(function (g) {
-        var gc = list.filter(function (c) { return (key === 'own' ? (c.own || '未认领') : key === 'pri' ? (c.pri || '—') : (c.req || c.mod || c.ver || c.id)) === g; });
+        var gc = list.filter(function (c) { return laneKey(c, key) === g; });
         var expedite = key === 'pri' && g === 'P0';
+        var isPrjLane = key === 'prj';
+        var pj = isPrjLane ? prjOf(g) : null;
         return '<div class="lane"><div class="lane-head' + (expedite ? ' expedite' : '') + '">' +
-          (expedite ? '<span class="tag danger">加急泳道</span>' : '<span class="tag brand">' + (key === 'own' ? '经办人' : key === 'pri' ? '优先级' : '需求') + '</span>') +
-          '<b class="fz13">' + g + '</b>' +
-          '<span class="muted fz11">' + gc.length + ' 项 · ' + gc.reduce(function (a, b) { return a + (b.pt || 0); }, 0) + ' 点</span>' +
-          (expedite ? '<span class="muted fz11 ml-auto">加急项不受 WIP 限制，但需在 24 小时内闭环</span>' : '') + '</div>' +
+          (expedite ? '<span class="tag danger">加急泳道</span>'
+            : isPrjLane ? '<span class="tag" style="background:' + (PRJ_COLOR[g] || '#8c9ab1') + '18;color:' + (PRJ_COLOR[g] || '#8c9ab1') + '">项目</span>'
+              : '<span class="tag brand">' + LANE_N[key] + '</span>') +
+          '<b class="fz13">' + (isPrjLane ? g + ' ' + (pj.n || '') : g) + '</b>' +
+          (isPrjLane && pj.sp ? '<span class="tag">' + pj.sp + '</span>' +
+            '<span class="tag ' + (pj.health === '风险' ? 'danger' : pj.health === '关注' ? 'warning' : 'success') + '">' + pj.health + '</span>' : '') +
+          '<span class="muted fz11">' + gc.length + ' 项' +
+          (gc.reduce(function (a, b) { return a + (b.pt || 0); }, 0) ? ' · ' + gc.reduce(function (a, b) { return a + (b.pt || 0); }, 0) + ' 点' : '') + '</span>' +
+          (expedite ? '<span class="muted fz11 ml-auto">加急项不受 WIP 限制，但需在 24 小时内闭环</span>'
+            : isPrjLane ? '<a class="fz11 ml-auto" style="color:var(--brand-600)" href="javascript:;" onclick="drillPrj(\'' + g + '\')">只看该项目 →</a>' : '') + '</div>' +
           '<div class="kb" style="min-width:min-content">' + curCols().map(function (col) {
             return colHtml(col, gc.filter(function (c) { return c.col === col.k; }), true);
           }).join('') + '</div></div>';
@@ -591,21 +858,46 @@ function render() {
     document.getElementById('kb').className = '';
     document.getElementById('kb').innerHTML = html;
   }
-  // WIP 告警
-  var overs = curCols().filter(function (col) {
-    return col.wip && curCards().filter(function (c) { return c.col === col.k; }).length > col.wip;
-  });
+  // WIP 告警：单项目直接比较；跨项目按「项目 + 列」分别判定
+  var scoped = curCards().filter(inScope), overs = [];
+  if (isAgg()) {
+    scopePrjs().forEach(function (k) {
+      curCols().forEach(function (col) {
+        if (!col.wip) return;
+        var n = scoped.filter(function (c) { return c.prj === k && c.col === col.k; }).length;
+        if (n > col.wip) overs.push(k.replace('PRJ-', '#') + ' ' + col.n + '（' + n + '/' + col.wip + '）');
+      });
+    });
+  } else {
+    curCols().forEach(function (col) {
+      if (!col.wip) return;
+      var n = scoped.filter(function (c) { return c.col === col.k; }).length;
+      if (n > col.wip) overs.push(col.n + '（' + n + '/' + col.wip + '）');
+    });
+  }
   document.getElementById('wipAlert').innerHTML = overs.length ?
     '<div class="card mb10" style="border-color:#f3b4b6;background:var(--danger-bg)"><div class="card-body" style="padding:9px 14px">' +
     '<div class="flex items-center gap8"><span style="color:var(--danger)">' + icon('alert', 16) + '</span>' +
-    '<span class="fz12" style="color:#a3282c"><b>WIP 超限：</b>' + overs.map(function (o) { return o.n; }).join('、') +
+    '<span class="fz12" style="color:#a3282c"><b>WIP 超限：</b>' + overs.join('、') +
     ' 在制品超过上限，团队正在并行做太多事。建议先合力完成右侧卡片再拉取新任务（看板核心原则：停止开始，开始完成）。</span>' +
     '<button class="btn btn-sm ml-auto" data-toast="已在站会议题中添加 WIP 超限讨论">加入站会议题</button></div></div></div>' : '';
-  document.getElementById('kbCount').textContent = '共 ' + list.length + ' 项 · ' +
-    list.reduce(function (a, b) { return a + (b.pt || 0); }, 0) + ' 故事点';
+  /* 过滤器计数按当前范围动态刷新，避免出现与视图不符的静态数字 */
+  var sc2 = curCards().filter(inScope);
+  var fc = {
+    mine: sc2.filter(function (c) { return c.own === ME; }).length,
+    blocked: sc2.filter(function (c) { return c.blocked || c.esc || c.gate; }).length,
+    aging: sc2.filter(function (c) { return c.age > 4; }).length,
+    ci: sc2.filter(function (c) { return c.ci === 'fail'; }).length
+  };
+  Object.keys(fc).forEach(function (k) {
+    var el = document.querySelector('[data-f="' + k + '"] b');
+    if (el) el.textContent = fc[k];
+  });
+  document.getElementById('kbCount').textContent = '当前视图 ' + list.length + ' 张卡片 · ' +
+    list.reduce(function (a, b) { return a + (b.pt || 0); }, 0) + ' 点（含任务与缺陷，非迭代承诺口径）';
   UI.hydrateIcons(document.getElementById('kb'));
 }
-render();
+
 
 /* ================= 拖拽（委托，重渲染后依然有效） ================= */
 (function () {
@@ -637,19 +929,23 @@ render();
     e.preventDefault();
     var col = e.target.closest('.kb-col'); if (!col || !dragging) return;
     var id = dragging.dataset.id, k = col.dataset.col;
-    var card = CARDS.filter(function (c) { return c.id === id; })[0];
-    var def = COLS.filter(function (c) { return c.k === k; })[0];
+    var card = curCards().filter(function (c) { return c.id === id; })[0];
+    var def = curCols().filter(function (c) { return c.k === k; })[0];
+    if (!def) return;
     if (card) {
       card.col = k; card.age = 0; card.ready = 0;
       if (k !== 'todo') card.claim = 0;
     }
-    var cnt = CARDS.filter(function (c) { return c.col === k; }).length;
+    /* WIP 判定限定在卡片所属项目内，跨项目视图下不会误报 */
+    var cnt = curCards().filter(function (c) {
+      return c.col === k && (isAgg() && card ? c.prj === card.prj : true);
+    }).length;
     if (def.wip && cnt > def.wip) {
-      UI.toast('⚠ ' + def.n + ' 已超 WIP 上限（' + cnt + '/' + def.wip + '），建议先完成在制项', 'error');
+      UI.toast('⚠ ' + (isAgg() && card ? card.prj + ' ' : '') + def.n + ' 已超 WIP 上限（' + cnt + '/' + def.wip + '），建议先完成在制项', 'error');
     } else {
       UI.toast('已移动到「' + def.n + '」，状态与企业微信通知已同步');
     }
-    render();
+    updateHead(); renderScope(); render();
   });
 })();
 
@@ -675,30 +971,148 @@ document.getElementById('btnFull').onclick = function () {
   window.dispatchEvent(new Event('resize'));
 };
 var BD_META = {
-  sprint: { n: '迭代看板', sub: '统一支付网关 3.0 重构 · 迭代目标：完成路由引擎核心链路与灰度框架 · 42 点承诺 / 28 点已完成', tag: 'Sprint 26-14', tag2: '剩余 3 天', collapse: { done: true } },
-  req: { n: '需求看板', sub: '全产品线需求流动 · 从提出到上线的端到端状态 · 128 条在研需求', tag: '全部产品线', tag2: '本月交付 23 条', collapse: { r7: true } },
-  bug: { n: '缺陷看板', sub: '缺陷生命周期与 SLA · 未关闭 38 个（P0 1 · P1 9）· 平均修复 18.6h', tag: '未关闭 38', tag2: 'SLA 超时 4', collapse: { b5: true } },
-  release: { n: '发布看板', sub: '各产品线版本发布流水线 · 8 个在研版本 · 本月发布 24 次（成功率 95.8%）', tag: '在研版本 8', tag2: '本月发布 24 次', collapse: {} },
-  mine: { n: '我的看板', sub: '仅显示指派给我的工作项 · 何俊 · 本迭代 21 点（容量 13 点）', tag: 'Sprint 26-14', tag2: '负载 110%', collapse: { done: true } }
+  sprint: { n: '迭代看板', collapse: { done: true } },
+  req: { n: '需求看板', collapse: { r7: true } },
+  bug: { n: '缺陷看板', collapse: { b5: true } },
+  release: { n: '发布看板', collapse: {} },
+  mine: { n: '我的看板', collapse: { done: true } }
+};
+function scopeLabel() {
+  var sc = state.scope;
+  return sc.dim === 'prod' ? sc.prod + ' 产品线'
+    : sc.dim === 'prj' ? prjName(sc.prj)
+      : sc.dim === 'team' ? sc.team
+        : '全部项目 · 全部产品线';
+}
+/* 头部标题/标签/描述随范围与看板类型联动 */
+function updateHead() {
+  var k = state.tab, m = BD_META[k], sc = state.scope;
+  var list = curCards().filter(inScope), ps = scopePrjs();
+  var tag, tag2, sub;
+  if (k === 'sprint' || k === 'mine') {
+    var pjs = PRJS.filter(function (p) { return ps.indexOf(p.k) > -1; });
+    var cm = pjs.reduce(function (a, b) { return a + b.commit; }, 0);
+    var dn = pjs.reduce(function (a, b) { return a + b.done; }, 0);
+    if (sc.dim === 'prj') {
+      var pj = prjOf(sc.prj);
+      tag = pj.sp; tag2 = '剩余 ' + pj.left + ' 天';
+      sub = pj.k + ' ' + pj.n + ' · ' + pj.d + ' · ' + pj.commit + ' 点承诺 / ' + pj.done + ' 点已完成' +
+        (k === 'mine' ? ' · 仅看我（何俊）' : '');
+    } else {
+      tag = ps.length + ' 个并行迭代'; tag2 = '本周期剩余 3 天';
+      sub = scopeLabel() + ' · ' + pjs.length + ' 个项目同周期迭代（07-14 ~ 07-27）· 迭代承诺合计 ' +
+        cm + ' 点 / 已完成 ' + dn + ' 点' + (k === 'mine' ? ' · 仅看我（何俊）' : '');
+    }
+    if (k === 'mine') {
+      var my = list.filter(function (c) { return c.own === ME && c.col !== 'done'; });
+      var mp = my.reduce(function (a, b) { return a + (b.pt || 0); }, 0);
+      var myPrj = [];
+      my.forEach(function (c) { if (myPrj.indexOf(c.prj) < 0) myPrj.push(c.prj); });
+      tag2 = '在制 ' + mp + ' 点 / 迭代容量 13 点（' + Math.round(mp / 13 * 100) + '%）';
+      sub = '仅显示指派给我的在制工作项 · ' + ME + ' · 跨 ' + myPrj.length + ' 个项目 · ' + my.length + ' 张卡片 · ' +
+        (mp > 13 ? '已过载，建议在站会上与 Scrum Master 重新排序' : '负载正常');
+    }
+  } else if (k === 'req') {
+    tag = scopeLabel(); tag2 = list.length + ' 条在研需求';
+    sub = scopeLabel() + ' · 需求流动（从提出到上线的端到端状态）· 未分配 ' +
+      list.filter(function (c) { return !c.own; }).length + ' 条 · 阻塞 ' + list.filter(function (c) { return c.blocked; }).length + ' 条';
+  } else if (k === 'bug') {
+    tag = scopeLabel(); tag2 = '未关闭 ' + list.filter(function (c) { return c.col !== 'b5'; }).length;
+    sub = scopeLabel() + ' · 缺陷生命周期与 SLA · P0 ' + list.filter(function (c) { return c.pri === 'P0'; }).length +
+      ' · P1 ' + list.filter(function (c) { return c.pri === 'P1'; }).length +
+      ' · SLA 超时 ' + list.filter(function (c) { return c.sla.indexOf('超时') > -1; }).length + ' · 平均修复 18.6h';
+  } else {
+    tag = scopeLabel(); tag2 = '在研版本 ' + list.filter(function (c) { return c.col !== 'v6'; }).length;
+    sub = scopeLabel() + ' · 版本发布流水线 · 本月发布 24 次（成功率 95.8%）· 门禁未达标 ' +
+      list.filter(function (c) { return c.gate; }).length + ' 个';
+  }
+  document.getElementById('bdTitle').textContent = m.n;
+  document.getElementById('bdTag').textContent = tag;
+  document.getElementById('bdTag2').textContent = tag2;
+  document.getElementById('bdSub').textContent = sub;
+  renderBar();
+}
+/* 迭代信息条：单项目=该迭代详情；跨项目=并行迭代总览 */
+function renderBar() {
+  var bar = document.getElementById('bdBar');
+  if (state.tab !== 'sprint' && state.tab !== 'mine') { bar.innerHTML = ''; return; }
+  var sc = state.scope, ps = scopePrjs();
+  if (sc.dim === 'prj') {
+    var pj = prjOf(sc.prj), pct = Math.round(pj.done / pj.commit * 100);
+    bar.innerHTML = '<div class="card mb10"><div class="card-body" style="padding:11px 14px">' +
+      '<div class="flex items-center gap12 flex-wrap">' +
+      '<span class="tag" style="background:' + PRJ_COLOR[pj.k] + '18;color:' + PRJ_COLOR[pj.k] + '">' + pj.k + '</span>' +
+      '<div style="min-width:230px"><div class="fz12 fw6">' + pj.sp + ' · ' + pj.d + '</div>' +
+      '<div class="muted fz11 mt4">迭代目标：' + (SP_GOAL[pj.k] || '按计划交付本迭代范围') + '</div></div>' +
+      '<div style="flex:1;min-width:200px"><div class="flex fz11 mb4"><span class="muted">完成度</span>' +
+      '<b class="ml-auto">' + pj.done + ' / ' + pj.commit + ' 点（' + pct + '%）</b></div>' +
+      UI.bar(pct, pct >= 70 ? 'green' : pct >= 45 ? '' : 'orange', 'thin') + '</div>' +
+      '<span class="tag ' + (pj.health === '风险' ? 'danger' : pj.health === '关注' ? 'warning' : 'success') + '">' + pj.health + '</span>' +
+      '<a class="btn btn-sm" href="project-detail.html"><span data-icon="chart" data-size="13"></span>燃尽图</a>' +
+      '<a class="btn btn-sm" href="agile.html"><span data-icon="users" data-size="13"></span>站会</a>' +
+      '</div></div></div>';
+  } else {
+    var pjs = PRJS.filter(function (p) { return ps.indexOf(p.k) > -1; });
+    if (state.tab === 'mine') pjs = pjs.filter(function (p) { return CARDS.some(function (c) { return c.prj === p.k && c.own === ME; }); });
+    bar.innerHTML = '<div class="card mb10"><div class="card-head" style="padding:9px 14px">' +
+      '<div class="card-title" style="font-size:12.5px"><span data-icon="layers" data-size="14"></span>并行迭代总览（' + pjs.length + ' 个项目同周期）</div>' +
+      '<div class="ml-auto"><a class="btn btn-sm btn-soft" href="agile.html"><span data-icon="external" data-size="12"></span>敏捷迭代中心</a></div></div>' +
+      '<div class="card-body" style="padding:0"><div class="table-wrap"><table class="tbl"><thead><tr>' +
+      '<th style="width:210px">项目</th><th>迭代</th><th>周期</th><th style="width:130px">承诺 / 完成</th>' +
+      '<th style="width:150px">完成度</th><th>当前视图卡片</th><th>健康度</th><th style="width:96px"></th></tr></thead><tbody>' +
+      pjs.map(function (pj) {
+        var pct = Math.round(pj.done / pj.commit * 100);
+        var n = curCards().filter(function (c) { return visible(c) && c.prj === pj.k; }).length;
+        return '<tr><td class="t-main"><span class="dot-status" style="background:' + PRJ_COLOR[pj.k] + '"></span> ' + pj.n +
+          '<div class="muted fz11 mt4">' + pj.k + ' · ' + pj.prod + '</div></td>' +
+          '<td class="fz12">' + pj.sp + '</td><td class="dim fz12">' + pj.d + ' <span class="muted">（剩 ' + pj.left + ' 天）</span></td>' +
+          '<td class="fz12">' + pj.commit + ' / <b>' + pj.done + '</b> 点</td>' +
+          '<td>' + UI.bar(pct, pct >= 70 ? 'green' : pct >= 45 ? '' : 'orange', 'thin') + '<span class="muted fz11">' + pct + '%</span></td>' +
+          '<td class="fz12">' + n + ' 项</td>' +
+          '<td><span class="tag ' + (pj.health === '风险' ? 'danger' : pj.health === '关注' ? 'warning' : 'success') + '">' + pj.health + '</span></td>' +
+          '<td><button class="btn btn-sm" onclick="drillPrj(\'' + pj.k + '\')">只看它</button></td></tr>';
+      }).join('') + '</tbody></table></div></div></div>';
+  }
+  UI.hydrateIcons(bar);
+}
+var SP_GOAL = {
+  'PRJ-018': '完成路由引擎核心链路与灰度框架',
+  'PRJ-021': '规则热更新链路打通 + 特征平台方案定稿',
+  'PRJ-016': '商户自助能力上线，账单导出体验达标',
+  'PRJ-014': '指标口径统一，自助取数可用',
+  'PRJ-023': 'OpenAPI 网关限流与开发者注册闭环'
 };
 document.querySelectorAll('[data-bd]').forEach(function (t) {
   t.onclick = function () {
     document.querySelectorAll('[data-bd]').forEach(function (x) { x.classList.remove('active'); });
     t.classList.add('active');
     var k = t.dataset.bd, m = BD_META[k];
+    state.tab = k;
     state.bd = k === 'mine' ? 'sprint' : k;
     state.collapsed = JSON.parse(JSON.stringify(m.collapse));
     state.filters.mine = k === 'mine';
     document.querySelector('[data-f="mine"]').classList.toggle('on', k === 'mine');
-    document.getElementById('bdTitle').textContent = m.n;
-    document.getElementById('bdTag').textContent = m.tag;
-    document.getElementById('bdTag2').textContent = m.tag2;
-    document.getElementById('bdSub').textContent = m.sub;
-    document.getElementById('bdBar').style.display = (k === 'sprint' || k === 'mine') ? '' : 'none';
-    render();
-    UI.toast('已切换到「' + m.n + '」，列与卡片字段已按看板类型适配');
+    /* 发布看板以产品线为单位，项目维度无意义，自动收敛到产品线/全部 */
+    if (k === 'release' && state.scope.dim === 'prj') {
+      state.scope.prod = prjOf(state.scope.prj).prod; state.scope.dim = 'prod';
+      document.querySelectorAll('#scopeDim button').forEach(function (x) { x.classList.toggle('active', x.dataset.d === 'prod'); });
+    }
+    if (k === 'release' || k === 'req') { if (state.lane === 'prj') setLane('prod'); }
+    apply('已切换到「' + m.n + '」，列、卡片字段与可选范围已适配');
   };
 });
+document.getElementById('scopeDim').onclick = function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.d === 'prj' && state.tab === 'release') { UI.toast('发布看板以产品线为单位组织版本，请选择产品线或全部', 'error'); return; }
+  setDim(b.dataset.d);
+};
+
+/* ================= 初始化（恢复上次选择的范围） ================= */
+(function initBoard() {
+  document.querySelectorAll('#scopeDim button').forEach(function (x) { x.classList.toggle('active', x.dataset.d === state.scope.dim); });
+  if (state.scope.dim !== 'prj' && state.lane === 'none') setLane('prj');
+  updateHead(); renderScope(); render();
+})();
 
 function toggleCol(k) { state.collapsed[k] = !state.collapsed[k]; render(); }
 
@@ -741,7 +1155,7 @@ function openCard(id) {
   colEl.className = 'tag'; colEl.style.background = col.c + '18'; colEl.style.color = col.c;
   document.getElementById('cdQuick').innerHTML = [
     ['类型', ty.n], ['故事点', (c.pt || '-') + ' 点'], ['本列停留', c.age + ' 天'],
-    ['经办人', c.own || '待认领'], ['所属需求', c.req]
+    ['经办人', c.own || '待认领'], ['项目 / 迭代', c.prj.replace('PRJ-', '#') + ' · ' + (c.sp || '')]
   ].map(function (q) {
     return '<div style="flex:1;background:var(--ink-50);border-radius:9px;padding:9px 11px">' +
       '<div class="muted fz11">' + q[0] + '</div><div class="fw6 fz13 mt4">' + q[1] + '</div></div>';
@@ -750,7 +1164,9 @@ function openCard(id) {
     ['当前列', col.n], ['优先级', UI.priority(c.pri)],
     ['经办人', c.own ? UI.avatar(c.own, 'sm') + ' ' + c.own : '<span class="tag warn">待认领</span>'],
     ['所属需求', '<a style="color:var(--brand-600)" href="requirement-detail.html">' + c.req + '</a>'],
-    ['迭代', 'Sprint 26-14'], ['本列停留', c.age + ' 天' + (c.age > 4 ? '（超过阈值）' : '')],
+    ['所属项目', '<a style="color:var(--brand-600)" href="project-detail.html">' + c.prj + ' ' + prjName(c.prj) + '</a>'],
+    ['产品线 / 团队', c.prod + ' · ' + cTeam(c)],
+    ['迭代', c.sp || prjOf(c.prj).sp || '—'], ['本列停留', c.age + ' 天' + (c.age > 4 ? '（超过阈值）' : '')],
     ['分支', c.br ? '<span class="branch-chip">' + icon('branch', 11) + c.br + '</span>' : '<span class="muted">未创建</span>'],
     ['PR', c.pr ? '<a style="color:var(--brand-600)" href="devops.html">' + c.pr + '</a>' : '<span class="muted">—</span>'],
     ['CI 状态', c.ci ? '<span class="chip ' + c.ci + '">' + (c.ci === 'ok' ? '通过' : c.ci === 'fail' ? '失败' : '运行中') + '</span>' : '<span class="muted">—</span>'],
@@ -800,6 +1216,8 @@ function openCard(id) {
 
 /* ================= 看板度量 ================= */
 document.getElementById('btnMetrics').onclick = function () {
+  document.getElementById('mtScope').textContent =
+    scopeLabel() + ' · ' + BD_META[state.tab].n + ' · 用流动效率而非忙碌程度衡量团队';
   UI.openDrawer('dMetrics');
   setTimeout(drawMetrics, 60);
 };
@@ -902,8 +1320,17 @@ function drawMetrics() {
       render();
     }
   }
-  var bm = h.match(/bd=(\w+)/);
+  var bm = h.match(/(?:bd|tab)=(\w+)/);
   if (bm) { var bb = document.querySelector('[data-bd="' + bm[1] + '"]'); if (bb) bb.click(); }
+  /* #scope=all | prod:统一支付网关 | prj:PRJ-021 | team:交易平台组 */
+  var sm = decodeURIComponent(h).match(/scope=([a-z]+)(?::([^&]+))?/);
+  if (sm) {
+    var d = sm[1], v = sm[2];
+    if (d === 'prod' && v) state.scope.prod = v;
+    if (d === 'prj' && v) state.scope.prj = v;
+    if (d === 'team' && v) state.scope.team = v;
+    if (['all', 'prod', 'prj', 'team'].indexOf(d) > -1) setDim(d);
+  }
   if (h.indexOf('metrics=1') > -1) setTimeout(function () { UI.openDrawer('dMetrics'); drawMetrics(); }, 120);
   if (h.indexOf('card=1') > -1) setTimeout(function () { openCard('STORY-3313'); }, 120);
 })();
