@@ -11,6 +11,8 @@
 
 原型为**纯静态页面**，零依赖、零构建，双击 `index.html` 即可在浏览器中完整体验（含图表、拖拽、抽屉、弹窗、命令面板）。
 
+配套的产品需求文档在 **[`docs/`](docs/)** 目录：[PRD 主文档](docs/PRD.md) · [用户故事与验收标准](docs/prd/user-stories.md) · [状态机设计](docs/prd/state-machines.md) · [数据模型与 ER 图](docs/prd/data-model.md) · [业务流程与流转图](docs/prd/flows.md) · [指标口径字典](docs/prd/metrics.md)。
+
 ---
 
 ## 一、快速预览
