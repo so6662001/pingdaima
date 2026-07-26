@@ -583,21 +583,21 @@ var CLEAN = [
 ];
 var JD = { '需求': ['purple', 'bulb'], '缺陷': ['danger', 'bug'], '重复': ['warning', 'copy'], '咨询': ['', 'help'] };
 document.getElementById('cleanTable').innerHTML =
-  '<thead><tr><th style="width:30px"><span class="checkbox"></span></th><th style="width:24%">工单</th><th>客户</th><th>工单类型</th>' +
-  '<th>系统预判</th><th class="num">置信度</th><th style="width:22%">预判依据</th><th>建议归属</th><th>等待</th><th style="width:150px">快捷判定</th></tr></thead><tbody>' +
+  '<thead><tr><th style="width:30px"><span class="checkbox"></span></th><th style="width:22%">工单</th><th style="width:130px">客户</th><th class="nowrap">类型</th>' +
+  '<th class="nowrap">系统预判</th><th class="num">置信度</th><th style="width:20%">预判依据</th><th class="nowrap">建议归属</th><th class="nowrap">等待</th><th style="width:146px">快捷判定</th></tr></thead><tbody>' +
   CLEAN.map(function (c) {
     var j = JD[c[5]];
     return '<tr><td><span class="checkbox"></span></td>' +
       '<td><div class="row-flex"><span class="tico req">' + icon('inbox', 11) + '</span>' +
       '<div style="min-width:0"><div class="t-main ellipsis" style="max-width:250px">' + c[1] + '</div>' +
       '<div class="id-link">' + c[0] + '</div></div></div></td>' +
-      '<td><div class="row-flex"><span class="tag ' + LVTAG[c[3]] + '" style="height:17px">' + c[3] + '</span><span class="fz12">' + c[2] + '</span></div></td>' +
-      '<td class="dim fz12">' + c[4] + '</td>' +
+      '<td><div class="row-flex nowrap"><span class="tag ' + LVTAG[c[3]] + '" style="height:17px">' + c[3] + '</span><span class="fz12 nowrap">' + c[2] + '</span></div></td>' +
+      '<td class="dim fz12 nowrap">' + c[4] + '</td>' +
       '<td><span class="tag ' + j[0] + '">' + icon(j[1], 11) + c[5] + '</span></td>' +
       '<td class="num"><b style="color:' + (c[6] >= 85 ? 'var(--success)' : 'var(--warning)') + '">' + c[6] + '%</b></td>' +
       '<td class="fz12 muted">' + c[7] + '</td>' +
-      '<td class="dim fz12">' + c[8] + '</td>' +
-      '<td class="dim fz12">' + c[9] + '</td>' +
+      '<td class="dim fz12 nowrap">' + c[8] + '</td>' +
+      '<td class="dim fz12 nowrap">' + c[9] + '</td>' +
       '<td><div class="flex gap4">' +
       '<button class="btn btn-sm" style="height:24px;padding:0 7px" onclick="event.stopPropagation();UI.openModal(\'mToReq\')">需求</button>' +
       '<button class="btn btn-sm" style="height:24px;padding:0 7px" onclick="event.stopPropagation();UI.openModal(\'mToBug\')">缺陷</button>' +

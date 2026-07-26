@@ -479,6 +479,13 @@ document.getElementById('notices').innerHTML = [
 }).join('');
 
 /* 导航切换 */
+function switchPane(v) {
+  document.querySelectorAll('.p-nav a').forEach(function (x) { x.classList.toggle('active', x.dataset.p === v); });
+  document.querySelectorAll('.p-pane').forEach(function (p) { p.style.display = p.dataset.p === v ? '' : 'none'; });
+  window.dispatchEvent(new Event('resize'));
+}
+var ph = location.hash.match(/p=(v\d)/);
+if (ph) setTimeout(function () { switchPane(ph[1]); }, 60);
 document.querySelectorAll('.p-nav a').forEach(function (a) {
   a.onclick = function () {
     document.querySelectorAll('.p-nav a').forEach(function (x) { x.classList.remove('active'); });
