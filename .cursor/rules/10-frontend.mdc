@@ -1,0 +1,80 @@
+---
+description: 前端实现规范（Vue 3 + TypeScript + Vite），目录、路由深链、状态管理、数据获取与组件约束。
+globs: frontend/**
+alwaysApply: false
+---
+
+# 前端实现规范（Vue 3）
+
+## 技术栈（已定，不要替换）
+
+Vue 3（Composition API + `<script setup>`）+ TypeScript + Vite 5 + Vue Router 4 + Pinia + `@tanstack/vue-query`。
+
+**禁止引入 Element Plus / Ant Design Vue / Naive UI 等组件库**——样式必须来自原型 `app.css`，引入组件库必然破坏 100% 还原。
+
+## 目录结构
+
+```
+frontend/src/
+  generated/             由 contracts 与 openapi.yaml 生成，禁止手改
+  ui/                    设计系统
+    styles/app.css       原型样式，原样复制
+    Icon.vue             移植自 assets/js/icons.js
+    charts/*.ts          移植自 assets/js/charts.js（纯函数产出 SVG 字符串）
+    charts/Chart.vue     图表容器组件（负责挂载与 resize 重绘）
+    Toast/Drawer/Modal/Tabs/Switch/Checkbox/Menu/Kanban/*.vue
+    layout/{AppLayout,Sidebar,Topbar,CommandPalette,NotifyCenter}.vue
+  pages/<page>/          与原型页面一一对应，目录名同原型文件名
+    index.vue            页面容器：布局 + 数据获取
+    components/          该页面专属组件（对应原型里的各个 card / 面板）
+    <page>.css           页面内联 <style> 的迁移（不用 scoped，避免属性选择器影响还原）
+  api/                   接口客户端，按领域分文件，类型来自 generated
+  composables/           useBoardScope、useDeepLink 等
+  stores/                Pinia：视图偏好与会话
+  router/index.ts
+```
+
+## 组件写法约定
+
+- 一律 `<script setup lang="ts">`，props 用 `defineProps<T>()` 泛型声明
+- **模板里的 DOM 结构与 class 名必须与原型一字不差**，不要"顺手优化结构"，不要用组件库替换原生标签
+- 页面样式**不要用 `scoped`**：Vue 的 scoped 会给元素加 `data-v-xxx` 属性并改写选择器，容易与原型的后代选择器行为不一致；用原型自带的 class 命名空间隔离即可
+- 列表渲染的 `key` 用业务编号（`REQ-2041`），不要用数组下标
+- 大列表（看板 500+ 卡片）可用虚拟滚动，但**跑视觉回归时必须能关闭虚拟化**，否则 DOM 不完整导致对比失真
+
+## 路由与深链
+
+路由路径与原型文件名一致，原型的 hash 深链必须全部支持（先做一次 hash → query 的重定向）：
+
+| 原型 | 应用 |
+| --- | --- |
+| `board.html#bd=bug` | `/board?bd=bug` |
+| `board.html#scope=prj:PRJ-021` | `/board?scope=prj:PRJ-021` |
+| `board.html#lane=pri` / `#metrics=1` / `#card=1` | `/board?lane=pri` / `?metrics=1` / `?card=1` |
+| `requirement.html#tab=model&algo=1` | `/requirement?tab=model&algo=1` |
+| `requirement.html#tab=board&g=own` | `/requirement?tab=board&g=own` |
+| `requirement-detail.html#REQ-2041` | `/requirement/REQ-2041` |
+| `project-detail.html#tab=s7` | `/project/PRJ-018?tab=s7` |
+| `portal.html#p=v5` | `/portal?p=v5` |
+
+视图偏好（范围、泳道、密度、折叠列、侧边栏折叠）持久化到 localStorage，**key 沿用原型**：`df_board_scope`、`df_collapsed`。
+
+## 数据获取
+
+- 一律用 `@tanstack/vue-query`，query key 规范 `[域, 操作, 参数对象]`
+- 看板拖拽用乐观更新 + 失败回滚，回滚时用 Toast 提示后端返回的具体原因（对应原型的 `UI.toast(..., 'error')`）
+- 筛选条件同步到 URL query，刷新后可复现
+- **前端不做业务计算**：优先级得分、工时推算、指标聚合、漏测判定都由后端返回；前端只做展示格式化（千分位、百分比、`+2.4pt` 这类环比写法）
+- 接口类型只能从 `src/generated` 导入，禁止手写接口 interface
+
+## 交互还原
+
+- 图标只用 `<Icon name="..." :size="n" />`
+- 图表只用 `ui/charts`，禁止引入 ECharts 等图表库
+- Toast 文案、抽屉标题、确认弹窗措辞、空状态文字沿用原型原文
+- 动画时长与缓动沿用原型（抽屉滑入、tab 切换的 `fadeIn .18s`）
+
+## 性能
+
+- 路由级代码分割；首屏 P95 ≤ 1.5s
+- 看板 500 张卡片下拖拽响应 ≤ 100ms

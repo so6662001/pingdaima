@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>人员效能与贡献 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  .heat-cell { border-radius: 5px; text-align: center; font-size: 11px; padding: 5px 0; font-weight: 600; }
+  .rank-badge { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .rank-1 { background: #fff4d6; color: #b8760a; }
+  .rank-2 { background: #eef1f6; color: #64748b; }
+  .rank-3 { background: #fdeee4; color: #b45309; }
+  .pill-lv { font-size: 10.5px; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
+</style>
+</head>
+<body data-nav="people" data-crumb="工程效能/人员效能与贡献">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">人员效能与产品贡献</div>
+          <div class="page-desc">个人效能画像 · 产品贡献率 · 团队分布与人才识别，数据全部来自系统自动采集，口径公开可下钻</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn" id="scopeBtn"><span data-icon="building"></span>范围：研发中心 86 人</button>
+          <button class="btn" id="timeBtn"><span data-icon="calendar"></span>2026 Q3</button>
+          <button class="btn" data-toast="人才盘点报告已生成（含高潜/需帮助名单与建议）"><span data-icon="sparkles"></span>生成人才盘点</button>
+          <button class="btn btn-primary" data-toast="报表已导出（含指标口径说明）"><span data-icon="download"></span>导出</button>
+        </div>
+      </div>
+
+      <!-- 使用原则 -->
+      <div class="card mb16" style="border-color:var(--warning);background:linear-gradient(90deg,var(--warning-bg),#fff 45%)">
+        <div class="card-body" style="padding:11px 16px">
+          <div class="flex items-center gap10">
+            <span style="color:#b8760a" data-icon="shieldCheck" data-size="18"></span>
+            <div class="fz12" style="flex:1;line-height:1.7;color:var(--ink-700)">
+              <b>使用原则：</b>效能数据用于<b>发现瓶颈、合理配置人力、识别高潜与需要帮助的同事</b>，不作为唯一考核依据；
+              坚持「<b>多维评估 + 主管校准 + 结合业务结果</b>」，禁止用代码行数/提交次数单一排名。所有指标均可下钻到原始事实，成员本人可查看自己的全部数据并申诉。
+            </div>
+            <a class="btn btn-sm" href="#" onclick="document.querySelector('[data-tab=p5]').click();return false">查看指标口径</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="topStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="p1"><span data-icon="users" data-size="14"></span>人员总览 <span class="cnt">86</span></div>
+        <div class="tab" data-tab="p2"><span data-icon="user" data-size="14"></span>个人效能画像</div>
+        <div class="tab" data-tab="p3"><span data-icon="box" data-size="14"></span>产品贡献率</div>
+        <div class="tab" data-tab="p4"><span data-icon="grid" data-size="14"></span>团队分布与人才识别</div>
+        <div class="tab" data-tab="p5"><span data-icon="book" data-size="14"></span>指标口径与治理</div>
+      </div>
+
+      <!-- 人员总览 -->
+      <div class="tab-pane active" data-pane="p1">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索成员"></div>
+          <div class="filter on"><span data-icon="users"></span>团队：<b>全部</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="user"></span>角色<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="box"></span>产品线<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="sort"></span>综合效能 ↓</div>
+          <span class="ml-auto fz12 muted">展示核心 12 人 · 全中心 86 人 · 数据周期 2026 Q3（截至 07-25）</span>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="table-wrap" style="max-height:calc(100vh - 360px);overflow:auto">
+          <table class="tbl" id="peopleTable"></table></div></div>
+          <div class="card-foot">综合效能分 = 交付产出 30% + 交付质量 25% + 协作响应 20% + 技术贡献 15% + 知识与带人 10%，按团队内分位归一化</div>
+        </div>
+        <div class="grid g3 mt16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>综合效能 TOP 5</div></div>
+            <div class="card-body" id="topRank"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="trendUp"></span>进步最快 TOP 5</div>
+            <div class="card-sub">环比上季</div></div>
+            <div class="card-body" id="growRank"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title" style="color:var(--danger)"><span data-icon="alert"></span>需要关注</div>
+            <div class="card-sub">超载 / 效能下滑 / 单点依赖</div></div>
+            <div class="card-body" id="warnList"></div></div>
+        </div>
+      </div>
+
+      <!-- 个人效能画像 -->
+      <div class="tab-pane" data-pane="p2">
+        <div class="card mb16">
+          <div class="card-body" style="padding:16px 18px">
+            <div class="flex items-center gap12">
+              <span id="pfAvatar"></span>
+              <div>
+                <div class="flex items-center gap8"><span class="page-title" style="font-size:18px" id="pfName">何俊</span>
+                  <span class="tag brand" id="pfRole">高级研发工程师 · P6</span>
+                  <span class="tag success">综合效能分位 TOP 12%</span>
+                  <span class="tag warning">负载偏高 110%</span></div>
+                <div class="muted fz12 mt4" id="pfMeta">交易平台组 · 入职 3.2 年 · 主责产品：统一支付网关（68%）· 技能：Java / 支付核心 / 并发 / 中间件</div>
+              </div>
+              <div class="ml-auto flex items-center gap10">
+                <select class="select" style="width:150px" id="pfSelect"></select>
+                <button class="btn btn-sm"><span data-icon="mail" data-size="13"></span>发送效能反馈</button>
+                <button class="btn btn-sm btn-primary" data-toast="已生成 1:1 沟通要点（含优势、风险与发展建议）"><span data-icon="sparkles" data-size="13"></span>生成 1:1 要点</button>
+              </div>
+            </div>
+            <div class="grid g5 mt16" style="gap:10px" id="pfKpi"></div>
+          </div>
+        </div>
+
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>六维效能画像</div>
+            <div class="card-sub">与团队中位数、同职级对标</div></div>
+            <div class="card-body"><div style="display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:center">
+              <div id="pfRadar"></div>
+              <div id="pfDims"></div>
+            </div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="box"></span>产品贡献分布</div>
+            <div class="card-sub">他的投入产出落在哪些产品</div></div>
+            <div class="card-body"><div id="pfProdDonut"></div>
+              <div class="divider"></div>
+              <div id="pfProdList"></div></div></div>
+        </div>
+
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>贡献构成（有效投入拆解）</div>
+            <div class="card-sub">不是只有写代码才算贡献</div></div>
+            <div class="card-body"><div id="pfMix"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>业务价值贡献</div>
+            <div class="card-sub">参与需求的业务成果</div></div>
+            <div class="card-body" id="pfValue"></div></div>
+        </div>
+
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>效能趋势</div>
+            <div class="card-sub">近 6 个月，用趋势而非单点评判</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#2b5cff"></i>综合效能分</span><span><i style="background:#15a86b"></i>交付故事点</span><span><i style="background:#e5484d"></i>缺陷密度</span></div>
+              <div id="pfTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="bulb"></span>主管视角建议</div>
+            <div class="card-sub">系统建议，需主管校准后使用</div></div>
+            <div class="card-body" id="pfAdvice"></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="list"></span>贡献事实清单</div>
+            <div class="card-sub">所有分数都能追溯到具体事实，可点击下钻</div>
+            <div class="card-head-actions"><div class="btn-group"><button class="active">全部</button><button>需求</button><button>缺陷</button><button>评审</button><button>知识</button></div></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="pfFacts"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 产品贡献率 -->
+      <div class="tab-pane" data-pane="p3">
+        <div class="card mb16" style="background:var(--ink-50)">
+          <div class="card-body" style="padding:12px 16px">
+            <div class="flex items-center gap10">
+              <span style="color:var(--brand-500)" data-icon="workflow" data-size="18"></span>
+              <div class="fz12" style="flex:1;line-height:1.7;color:var(--ink-600)">
+                <b>贡献率口径：</b>加权贡献 = <b>有效工时 40%</b>（智能工时按 commit 归集）+ <b>交付故事点 30%</b>（已验收）+ <b>需求业务价值分 30%</b>（价值评估分 × 参与度）。
+                「个人视角」= 该成员各产品占其自身贡献的比例；「产品视角」= 该产品各成员的贡献占比。两个视角合计均为 100%。
+              </div>
+              <span class="tag success">数据自动采集，无人工填报</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="grid"></span>成员 × 产品贡献矩阵</div>
+            <div class="card-sub">格子内为该成员对该产品的贡献率（产品视角），颜色越深贡献越高</div>
+            <div class="card-head-actions"><div class="btn-group"><button class="active">产品视角</button><button>个人视角</button></div></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="matrix"></table></div></div>
+        </div>
+
+        <div class="grid g3 mb16" id="prodCards"></div>
+
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title" style="color:var(--danger)"><span data-icon="alert"></span>核心人员单点依赖</div>
+            <div class="card-sub">单人贡献率 &gt; 40% 视为高风险</div></div>
+            <div class="card-body" id="soloRisk"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>产品人力投入结构</div>
+            <div class="card-sub">2026 Q3 · 单位人日</div></div>
+            <div class="card-body"><div id="prodDonut"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 团队分布与人才识别 -->
+      <div class="tab-pane" data-pane="p4">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>产出 × 质量四象限</div>
+            <div class="card-sub">识别高绩效、需提质、需提效与需帮助人员</div></div>
+            <div class="card-body"><div id="quad"></div>
+              <div class="legend mt8"><span><i style="background:#15a86b"></i>高产出高质量（骨干）</span><span><i style="background:#2b5cff"></i>高质量待提效</span>
+                <span><i style="background:#f59e0b"></i>高产出待提质</span><span><i style="background:#b3bfd0"></i>需要帮助</span></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>团队效能分布</div>
+            <div class="card-sub">箱体=中位数与四分位</div></div>
+            <div class="card-body"><div id="teamBox"></div></div></div>
+        </div>
+        <div class="grid g3 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="crown"></span>骨干与高潜</div></div>
+            <div class="card-body" id="talentTop"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="thumb"></span>需要帮助</div></div>
+            <div class="card-body" id="talentHelp"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="share"></span>人力配置建议</div></div>
+            <div class="card-body" id="allocAdvice"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="grid"></span>团队效能矩阵</div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="teamTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 指标口径与治理 -->
+      <div class="tab-pane" data-pane="p5">
+        <div class="grid g-2-1">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="book"></span>指标定义与数据来源</div>
+              <div class="card-sub">全部自动采集，不新增填报负担</div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="defTable"></table></div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shield"></span>防误用与防作弊</div></div>
+              <div class="card-body" id="govList"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="lock"></span>可见范围</div></div>
+              <div class="card-body" id="visList"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>校准流程</div></div>
+              <div class="card-body" id="calList"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* ================= 数据 ================= */
+var PRODS = ['统一支付网关', '智能风控平台', '商户运营中心', '数据资产中台', '开放能力平台'];
+/* score: 综合效能分; dims: [交付产出,交付质量,协作响应,技术贡献,知识带人,交付稳定]; prod: 各产品贡献率(产品视角%) */
+var PEOPLE = [
+  { n: '何俊', team: '交易平台组', role: '高级研发工程师', lv: 'P6', score: 92.4, delta: 4.2, md: 62, pts: 46, reqs: 6, code: 4820, rev: 38, bug: 0.31, ontime: 94, load: 110, dims: [95, 88, 82, 90, 68, 86], prod: [18, 6, 3, 12, 0], mine: [68, 6, 4, 20, 2] },
+  { n: '郑宇', team: '风控算法组', role: '研发工程师', lv: 'P6', score: 89.6, delta: 2.8, md: 58, pts: 41, reqs: 5, code: 3410, rev: 26, bug: 0.24, ontime: 96, load: 95, dims: [86, 94, 78, 88, 74, 90], prod: [1, 44, 0, 4, 0], mine: [4, 84, 0, 10, 2] },
+  { n: '王倩', team: '前端体验组', role: '前端负责人', lv: 'P7', score: 87.2, delta: 1.6, md: 56, pts: 38, reqs: 7, code: 3960, rev: 42, bug: 0.48, ontime: 90, load: 90, dims: [88, 76, 92, 78, 80, 82], prod: [8, 0, 34, 0, 6], mine: [22, 0, 66, 0, 12] },
+  { n: '李思远', team: '交易平台组', role: '后端负责人', lv: 'P8', score: 90.8, delta: 3.1, md: 54, pts: 18, reqs: 9, code: 2280, rev: 86, bug: 0.22, ontime: 92, load: 105, dims: [72, 92, 96, 94, 88, 88], prod: [14, 2, 2, 3, 4], mine: [74, 6, 4, 8, 8] },
+  { n: '陈立', team: '技术架构组', role: '首席架构师', lv: 'P9', score: 91.6, delta: 2.2, md: 48, pts: 12, reqs: 11, code: 1840, rev: 96, bug: 0.18, ontime: 88, load: 70, dims: [64, 94, 92, 98, 96, 84], prod: [5, 4, 2, 8, 52], mine: [22, 10, 4, 18, 46] },
+  { n: '林小满', team: '基础架构组', role: 'SRE 负责人', lv: 'P7', score: 86.4, delta: 5.4, md: 52, pts: 24, reqs: 5, code: 1620, rev: 34, bug: 0.20, ontime: 91, load: 80, dims: [76, 92, 88, 86, 72, 94], prod: [8, 6, 2, 6, 10], mine: [40, 16, 6, 16, 22] },
+  { n: '吴敏', team: '质量保障部', role: '测试工程师', lv: 'P6', score: 84.8, delta: 3.6, md: 60, pts: 14, reqs: 12, code: 1120, rev: 12, bug: 0.14, ontime: 93, load: 100, dims: [82, 96, 84, 62, 66, 90], prod: [7, 8, 6, 3, 0], mine: [44, 26, 20, 10, 0] },
+  { n: '赵鹏', team: '质量保障部', role: '测试经理', lv: 'P7', score: 82.6, delta: 1.2, md: 44, pts: 8, reqs: 14, code: 380, rev: 18, bug: 0.12, ontime: 95, load: 60, dims: [64, 94, 86, 58, 84, 88], prod: [4, 3, 6, 1, 3], mine: [34, 20, 30, 6, 10] },
+  { n: '周雅', team: '产品部', role: '产品总监', lv: 'P8', score: 88.2, delta: 2.4, md: 46, pts: 0, reqs: 18, code: 0, rev: 24, bug: 0, ontime: 89, load: 88, dims: [86, 82, 94, 56, 90, 80], prod: [10, 3, 10, 2, 2], mine: [46, 10, 34, 6, 4] },
+  { n: '孙悦', team: '产品部', role: '产品经理', lv: 'P6', score: 79.4, delta: -1.8, md: 42, pts: 0, reqs: 12, code: 0, rev: 8, bug: 0, ontime: 82, load: 75, dims: [72, 68, 84, 48, 70, 74], prod: [3, 1, 18, 1, 8], mine: [14, 4, 62, 4, 16] },
+  { n: '徐磊', team: '项目管理办公室', role: '项目经理', lv: 'P7', score: 85.6, delta: 3.8, md: 40, pts: 0, reqs: 22, code: 0, rev: 6, bug: 0, ontime: 96, load: 72, dims: [78, 86, 96, 44, 88, 92], prod: [6, 5, 6, 5, 5], mine: [30, 20, 22, 16, 12] },
+  { n: '张诚', team: '数据平台组', role: '数据研发工程师', lv: 'P5', score: 72.8, delta: -3.2, md: 50, pts: 22, reqs: 3, code: 1860, rev: 8, bug: 0.68, ontime: 74, load: 96, dims: [70, 54, 62, 64, 48, 58], prod: [0, 0, 0, 46, 2], mine: [0, 0, 0, 94, 6] }
+];
+var DIM_NAME = ['交付产出', '交付质量', '协作响应', '技术贡献', '知识与带人', '交付稳定'];
+
+/* ================= 顶部指标 ================= */
+document.getElementById('topStats').innerHTML = [
+  { l: '研发人数', v: 86, u: '人', i: 'users', c: '#2b5cff', f: '在编 78 · 外包 8' },
+  { l: '人均综合效能', v: '84.6', u: '分', i: 'award', c: '#15a86b', f: '较上季 +2.6' },
+  { l: '人均周交付', v: '4.6', u: '点', i: 'zap', c: '#7c5cff', f: '中位数 4.2 点' },
+  { l: '效能离散度', v: '18.4', u: '%', i: 'activity', c: '#f59e0b', f: '标准差/均值，越低越均衡' },
+  { l: '单点依赖产品', v: 3, u: '个', i: 'alert', c: '#e5484d', f: '单人贡献率 > 40%' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+/* ================= 人员总览 ================= */
+function scoreColor(v) { return v >= 88 ? 'var(--success)' : v >= 80 ? 'var(--brand-600)' : v >= 75 ? 'var(--warning)' : 'var(--danger)'; }
+function mainProd(p) {
+  var m = 0, i = 0;
+  p.mine.forEach(function (v, k) { if (v > m) { m = v; i = k; } });
+  return { n: PRODS[i], v: m };
+}
+document.getElementById('peopleTable').innerHTML =
+  '<thead><tr><th style="width:30px"></th><th>成员</th><th>团队 / 角色</th><th class="num">投入</th><th class="num">交付点</th>' +
+  '<th class="num">参与需求</th><th class="num">代码当量</th><th class="num">评审</th><th class="num">缺陷密度</th><th class="num">按时率</th>' +
+  '<th style="width:110px">负载</th><th style="width:150px">主责产品（贡献率）</th><th style="width:120px">综合效能</th><th>环比</th></tr></thead><tbody>' +
+  PEOPLE.map(function (p, i) {
+    var mp = mainProd(p);
+    return '<tr onclick="openProfile(\'' + p.n + '\')">' +
+      '<td>' + (i < 3 ? '<span class="rank-badge rank-' + (i + 1) + '">' + (i + 1) + '</span>' : '<span class="muted fz11">' + (i + 1) + '</span>') + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(p.n, 'sm') + '<div><div class="t-main">' + p.n + '</div>' +
+      '<div class="muted fz11">' + p.lv + '</div></div></div></td>' +
+      '<td><div class="fz12">' + p.team + '</div><div class="muted fz11">' + p.role + '</div></td>' +
+      '<td class="num">' + p.md + ' 人日</td>' +
+      '<td class="num">' + (p.pts || '<span class="muted">—</span>') + '</td>' +
+      '<td class="num">' + p.reqs + '</td>' +
+      '<td class="num dim">' + (p.code || '<span class="muted">—</span>') + '</td>' +
+      '<td class="num dim">' + p.rev + '</td>' +
+      '<td class="num">' + (p.bug ? '<span style="color:' + (p.bug <= 0.3 ? 'var(--success)' : p.bug <= 0.5 ? 'var(--warning)' : 'var(--danger)') + '">' + p.bug + '</span>' : '<span class="muted">—</span>') + '</td>' +
+      '<td class="num">' + p.ontime + '%</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(Math.min(p.load, 100), p.load > 105 ? 'red' : p.load >= 95 ? 'orange' : 'green', 'thin') + '</div>' +
+      '<span class="fz11" style="color:' + (p.load > 105 ? 'var(--danger)' : '') + '">' + p.load + '%</span></div></td>' +
+      '<td><div class="fz12">' + mp.n + '</div><div class="muted fz11">占其贡献 ' + mp.v + '%</div></td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(p.score, p.score >= 88 ? 'green' : p.score >= 78 ? '' : 'orange', 'thin') + '</div>' +
+      '<b class="fz12" style="color:' + scoreColor(p.score) + '">' + p.score + '</b></div></td>' +
+      '<td><span class="trend ' + (p.delta > 0 ? 'up' : 'down') + '">' + icon(p.delta > 0 ? 'arrowUp' : 'arrowDown', 11) + Math.abs(p.delta) + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('topRank').innerHTML = PEOPLE.slice().sort(function (a, b) { return b.score - a.score; }).slice(0, 5)
+  .map(function (p, i) {
+    return '<div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100);cursor:pointer" onclick="openProfile(\'' + p.n + '\')">' +
+      '<span class="rank-badge ' + (i < 3 ? 'rank-' + (i + 1) : '') + '" style="' + (i > 2 ? 'background:var(--ink-100);color:var(--ink-500)' : '') + '">' + (i + 1) + '</span>' +
+      UI.avatar(p.n, 'sm') + '<div style="flex:1"><div class="fz12 fw5">' + p.n + '</div><div class="muted fz11">' + p.role + '</div></div>' +
+      '<b class="fz13" style="color:' + scoreColor(p.score) + '">' + p.score + '</b></div>';
+  }).join('');
+document.getElementById('growRank').innerHTML = PEOPLE.slice().sort(function (a, b) { return b.delta - a.delta; }).slice(0, 5)
+  .map(function (p) {
+    return '<div class="flex items-center gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+      UI.avatar(p.n, 'sm') + '<div style="flex:1"><div class="fz12 fw5">' + p.n + '</div><div class="muted fz11">' + p.team + '</div></div>' +
+      '<span class="trend up">' + icon('trendUp', 12) + '+' + p.delta + '</span></div>';
+  }).join('');
+document.getElementById('warnList').innerHTML = [
+  ['何俊', '负载 110%、连续 3 周加班 > 55h，且是「路由与清结算」模块单点（模块贡献率 52%）', '转出 5 点非核心任务 + 结对开发培养备份', 'danger'],
+  ['张诚', '综合效能环比 −3.2，缺陷密度 0.68（团队最高）', '建议结对开发 + 代码评审加强，1 个月后复评', 'danger'],
+  ['孙悦', '效能环比 −1.8，需求返工率 22%', '需求澄清能力待提升，建议参与需求评审辅导', 'warning'],
+  ['陈立', '架构评审占用 96 次，投入过于分散', '建议下放部分评审权限，聚焦核心架构', 'warning']
+].map(function (w) {
+  return '<div style="padding:9px 11px;border-radius:9px;background:var(--' + w[3] + '-bg);margin-bottom:8px">' +
+    '<div class="flex items-center gap6">' + UI.avatar(w[0], 'sm') + '<b class="fz12">' + w[0] + '</b>' +
+    '<span class="tag ' + w[3] + ' ml-auto">' + (w[3] === 'danger' ? '需介入' : '需关注') + '</span></div>' +
+    '<div class="fz12 mt4" style="color:var(--ink-700)">' + w[1] + '</div>' +
+    '<div class="muted fz11 mt4">建议：' + w[2] + '</div></div>';
+}).join('');
+
+/* ================= 个人画像 ================= */
+document.getElementById('pfSelect').innerHTML = PEOPLE.map(function (p) {
+  return '<option' + (p.n === '何俊' ? ' selected' : '') + '>' + p.n + ' · ' + p.role + '</option>';
+}).join('');
+document.getElementById('pfSelect').onchange = function () { openProfile(this.value.split(' · ')[0], 1); };
+
+function openProfile(name, stay) {
+  var p = PEOPLE.filter(function (x) { return x.n === name; })[0];
+  if (!p) return;
+  if (!stay) document.querySelector('[data-tab="p2"]').click();
+  document.getElementById('pfAvatar').innerHTML = UI.avatar(p.n, 'xl');
+  document.getElementById('pfName').textContent = p.n;
+  document.getElementById('pfRole').textContent = p.role + ' · ' + p.lv;
+  var mp = mainProd(p);
+  document.getElementById('pfMeta').textContent = p.team + ' · 主责产品：' + mp.n + '（' + mp.v + '%）· 投入 ' + p.md + ' 人日 · 参与需求 ' + p.reqs + ' 条';
+  document.getElementById('pfKpi').innerHTML = [
+    ['综合效能分', p.score, '团队中位 82.4', p.score >= 85 ? 'green' : ''],
+    ['交付故事点', p.pts || '—', p.pts ? '人均 ' + (p.pts / 12).toFixed(1) + ' 点/周' : '非研发角色', ''],
+    ['缺陷密度', p.bug || '—', p.bug ? (p.bug <= 0.3 ? '优于团队均值' : '高于团队均值') : '—', p.bug && p.bug > 0.5 ? 'red' : 'green'],
+    ['评审贡献', p.rev + ' 次', '响应 2.1 小时', ''],
+    ['负载率', p.load + '%', p.load > 105 ? '超载，需调整' : '健康区间', p.load > 105 ? 'red' : 'green']
+  ].map(function (k) {
+    return '<div style="background:var(--ink-50);border-radius:9px;padding:10px 12px">' +
+      '<div class="muted fz11">' + k[0] + '</div>' +
+      '<div class="fw6 mt4" style="font-size:17px;color:' + (k[3] === 'red' ? 'var(--danger)' : k[3] === 'green' ? 'var(--success)' : 'var(--ink-900)') + '">' + k[1] + '</div>' +
+      '<div class="muted fz11 mt4">' + k[2] + '</div></div>';
+  }).join('');
+
+  Charts.radar('#pfRadar', {
+    size: 280, axes: DIM_NAME,
+    series: [{ name: p.n, data: p.dims, color: '#2b5cff' },
+      { name: '团队中位', data: [78, 80, 82, 74, 72, 80], color: '#b3bfd0' }]
+  });
+  document.getElementById('pfDims').innerHTML = DIM_NAME.map(function (d, i) {
+    var v = p.dims[i], med = [78, 80, 82, 74, 72, 80][i];
+    var diff = v - med;
+    return '<div class="mb10"><div class="flex fz12 mb4"><span class="dim">' + d + '</span>' +
+      '<b class="ml-auto">' + v + '</b>' +
+      '<span class="fz11 ' + (diff >= 0 ? 'trend up' : 'trend down') + '" style="margin-left:6px">' + (diff >= 0 ? '+' : '') + diff + '</span></div>' +
+      UI.bar(v, v >= 88 ? 'green' : v >= 70 ? '' : 'orange', 'thin') + '</div>';
+  }).join('') + '<div class="tl-box fz11">灰色为团队中位数。<b>技术贡献</b>含架构改进、复用组件、技术债偿还；<b>知识与带人</b>含文档、分享、结对与新人辅导。</div>';
+
+  var pd = PRODS.map(function (n, i) { return { name: n, value: p.mine[i] }; }).filter(function (x) { return x.value > 0; });
+  Charts.donut('#pfProdDonut', { size: 158, thickness: 20, center: { value: p.mine.reduce(function (a, b) { return a + b; }, 0) + '%', label: '合计' }, data: pd });
+  document.getElementById('pfProdList').innerHTML = PRODS.map(function (n, i) {
+    if (!p.mine[i]) return '';
+    return '<div class="mb10"><div class="flex fz12 mb4"><span class="dim">' + n + '</span>' +
+      '<b class="ml-auto">占其贡献 ' + p.mine[i] + '%</b></div>' + UI.bar(p.mine[i], '', 'thin') +
+      '<div class="muted fz11 mt4">在该产品内贡献率 <b>' + p.prod[i] + '%</b>（产品视角）</div></div>';
+  }).join('');
+
+  Charts.hbar('#pfMix', { unit: '%', gap: 13, data: [
+    { name: '需求交付编码', value: p.code ? 46 : 0, color: '#2b5cff' },
+    { name: '缺陷修复', value: p.bug ? 14 : 4, color: '#e5484d' },
+    { name: '代码评审与协作', value: 12, color: '#7c5cff' },
+    { name: '方案设计与技术债', value: 14, color: '#0fb5ba' },
+    { name: '测试支持与联调', value: 8, color: '#f59e0b' },
+    { name: '知识沉淀与带人', value: 6, color: '#15a86b' }].filter(function (x) { return x.value; }) });
+  document.getElementById('pfValue').innerHTML =
+    '<div class="grid g2 mb12" style="gap:10px">' +
+    '<div style="background:var(--success-bg);border-radius:9px;padding:10px 12px"><div class="muted fz11">参与需求业务价值</div>' +
+    '<div class="fw6 fz17" style="color:var(--success)">' + (p.reqs * 78) + ' 分</div><div class="muted fz11">' + p.reqs + ' 条需求加权</div></div>' +
+    '<div style="background:var(--brand-50);border-radius:9px;padding:10px 12px"><div class="muted fz11">覆盖客户</div>' +
+    '<div class="fw6 fz17" style="color:var(--brand-600)">' + (p.reqs * 2) + ' 家</div><div class="muted fz11">含战略客户 ' + Math.min(p.reqs, 4) + ' 家</div></div></div>' +
+    [['REQ-2041 智能路由（价值 92）', '核心贡献', 'success'],
+     ['REQ-2040 数字人民币（价值 88）', '主要贡献', 'brand'],
+     ['REQ-2035 对账自动核销（价值 74）', '核心贡献', 'success'],
+     ['REQ-2032 指标口径治理（价值 70）', '参与', '']
+    ].map(function (v) {
+      return '<div class="flex items-center gap8" style="padding:6px 0;border-bottom:1px solid var(--ink-100)">' +
+        '<span class="tico req">' + icon('bulb', 11) + '</span>' +
+        '<span class="fz12 ellipsis" style="flex:1">' + v[0] + '</span>' +
+        '<span class="tag ' + v[2] + '">' + v[1] + '</span></div>';
+    }).join('') +
+    '<div class="tl-box mt8 fz11">业务价值贡献 = 参与需求的价值评估分 × 参与度权重，用于回答「他的时间是否花在高价值的事情上」。</div>';
+
+  Charts.line('#pfTrend', {
+    height: 220, labels: ['2月', '3月', '4月', '5月', '6月', '7月'], yMax: 100,
+    series: [
+      { name: '综合效能分', data: [80, 82, 85, 86, 89, p.score], color: '#2b5cff', area: true },
+      { name: '交付故事点', data: [32, 36, 38, 40, 44, p.pts || 0], color: '#15a86b', dots: false },
+      { name: '缺陷密度×100', data: [52, 46, 42, 38, 34, (p.bug || 0) * 100], color: '#e5484d', dots: false }
+    ]
+  });
+  document.getElementById('pfAdvice').innerHTML = [
+    ['success', '优势', '交付产出与技术贡献均处于团队 TOP 10%，路由引擎核心链路由其独立完成，方案质量获架构评审认可。'],
+    ['danger', '风险', '负载 110% 且连续 3 周加班超 55 小时；在支付网关产品级贡献率 18% 属健康，但「路由与清结算」<b>模块级贡献率达 52%</b>，属模块单点依赖，需尽快培养备份。'],
+    ['warning', '待提升', '知识与带人维度 68 分低于团队中位（72），本季仅沉淀 1 篇文档、无结对记录。'],
+    ['brand', '发展建议', '① 将 5 点非核心任务转给他人；② 牵头「批处理框架治理」专项以积累架构影响力；③ 带 1 名 P5 同学，作为晋升 P7 的关键行为。']
+  ].map(function (a) {
+    return '<div style="padding:10px 12px;border-radius:9px;background:var(--' + (a[0] === 'brand' ? 'brand-50' : a[0] + '-bg') + ');margin-bottom:8px">' +
+      '<div class="flex items-center gap6 mb4"><span class="tag ' + (a[0] === 'brand' ? 'brand' : a[0]) + '">' + a[1] + '</span></div>' +
+      '<div class="fz12" style="color:var(--ink-700);line-height:1.75">' + a[2] + '</div></div>';
+  }).join('');
+
+  document.getElementById('pfFacts').innerHTML =
+    '<thead><tr><th>类型</th><th style="width:32%">事实</th><th>产品</th><th>业务价值</th><th>投入</th><th>结果</th><th>数据来源</th><th>时间</th></tr></thead><tbody>' +
+    [['需求', 'REQ-2041 智能路由 · 核心链路开发（策略引擎 + 熔断器）', '统一支付网关', '92 分', '28.4h', '按时交付', '工作项 + 提交归集', '07-25'],
+     ['需求', 'REQ-2040 数字人民币受理协议对接', '统一支付网关', '88 分', '46.2h', '进行中 62%', '工作项 + 提交归集', '进行中'],
+     ['缺陷', 'BUG-771 生产对账超时（P0）· 4 小时内给出方案并恢复', '统一支付网关', '—', '6.5h', '已恢复', '缺陷系统', '07-25'],
+     ['评审', 'PR 评审 38 次 · 平均响应 2.1 小时 · 提出有效意见 62 条', '多产品', '—', '12.6h', '拦截缺陷 9 个', 'GitHub', '本季'],
+     ['技术', '渠道适配层接口抽取，减少重复代码 1,860 行', '统一支付网关', '—', '18.2h', '技术债 −12 人日', '代码分析', '07-23'],
+     ['知识', '《智能路由技术方案 V1.2》文档撰写', '统一支付网关', '—', '4.0h', '阅读 186 次', '知识库', '07-22'],
+     ['测试', '配合完成 12k TPS 压测环境搭建与问题定位', '统一支付网关', '—', '8.4h', '发现 2 个瓶颈', '测试管理', '07-20']
+    ].map(function (f) {
+      return '<tr><td><span class="tag ' + ({ '需求': 'brand', '缺陷': 'danger', '评审': 'purple', '技术': 'teal', '知识': 'warning', '测试': '' }[f[0]]) + '">' + f[0] + '</span></td>' +
+        '<td class="t-main">' + f[1] + '</td><td class="dim fz12">' + f[2] + '</td><td class="fz12">' + f[3] + '</td>' +
+        '<td class="fz12"><b>' + f[4] + '</b></td><td class="fz12">' + f[5] + '</td>' +
+        '<td class="muted fz11">' + f[6] + '</td><td class="muted fz11">' + f[7] + '</td></tr>';
+    }).join('') + '</tbody>';
+  UI.hydrateIcons(document.querySelector('[data-pane="p2"]'));
+}
+openProfile('何俊', 1);
+
+/* ================= 产品贡献率 ================= */
+(function () {
+  var colors = ['#f6f8fb', '#eef3ff', '#dbe4ff', '#b9c9ff', '#8ea8ff', '#4d82ff', '#1d47e6'];
+  function cell(v) {
+    if (!v) return '<td class="tc"><span class="muted fz11">—</span></td>';
+    var i = v >= 40 ? 6 : v >= 30 ? 5 : v >= 20 ? 4 : v >= 10 ? 3 : v >= 5 ? 2 : 1;
+    return '<td class="tc"><div class="heat-cell" style="background:' + colors[i] + ';color:' + (i >= 5 ? '#fff' : i >= 3 ? '#1637b4' : 'var(--ink-500)') + '">' + v + '%</div></td>';
+  }
+  document.getElementById('matrix').innerHTML =
+    '<thead><tr><th style="width:18%">成员</th>' + PRODS.map(function (p) { return '<th class="tc">' + p + '</th>'; }).join('') +
+    '<th class="tc">合计投入</th><th class="tc">主责产品</th></tr></thead><tbody>' +
+    PEOPLE.map(function (p) {
+      var mp = mainProd(p);
+      return '<tr onclick="openProfile(\'' + p.n + '\')"><td><div class="row-flex">' + UI.avatar(p.n, 'sm') +
+        '<div><div class="t-main">' + p.n + '</div><div class="muted fz11">' + p.role + '</div></div></div></td>' +
+        p.prod.map(cell).join('') +
+        '<td class="tc dim">' + p.md + ' 人日</td>' +
+        '<td class="tc fz12">' + mp.n.slice(0, 6) + '</td></tr>';
+    }).join('') +
+    '<tr style="background:var(--ink-50)"><td class="strong">上列 12 人合计<div class="muted fz11">其余由团队其他成员贡献</div></td>' +
+    PRODS.map(function (_, i) {
+      var sum = PEOPLE.reduce(function (a, p) { return a + p.prod[i]; }, 0);
+      return '<td class="tc"><b style="color:' + (sum >= 80 ? 'var(--success)' : 'var(--warning)') + '">' + sum + '%</b></td>';
+    }).join('') + '<td class="tc">—</td><td class="tc">—</td></tr></tbody>';
+})();
+
+document.getElementById('prodCards').innerHTML = PRODS.map(function (n, i) {
+  var contrib = PEOPLE.map(function (p) { return { n: p.n, v: p.prod[i], r: p.role }; })
+    .filter(function (x) { return x.v > 0; }).sort(function (a, b) { return b.v - a.v; });
+  var top = contrib[0] || { n: '—', v: 0 };
+  var solo = top.v >= 40;
+  var colors = ['#2b5cff', '#e5484d', '#15a86b', '#7c5cff', '#f59e0b'];
+  return '<div class="card"><div style="height:4px;border-radius:12px 12px 0 0;background:' + colors[i] + '"></div>' +
+    '<div class="card-body">' +
+    '<div class="flex items-center gap8"><b class="fz13">' + n + '</b>' +
+    (solo ? '<span class="tag danger ml-auto">单点依赖</span>' : '<span class="tag success ml-auto">分布健康</span>') + '</div>' +
+    '<div class="muted fz11 mt4">核心贡献者 ' + contrib.length + ' 人 · TOP1 贡献率 ' + top.v + '%</div>' +
+    '<div class="mt12">' + contrib.slice(0, 5).map(function (c, k) {
+      return '<div class="flex items-center gap8" style="padding:5px 0">' +
+        '<span class="muted fz11" style="width:14px">' + (k + 1) + '</span>' + UI.avatar(c.n, 'sm') +
+        '<span class="fz12" style="width:44px">' + c.n + '</span>' +
+        '<div style="flex:1">' + UI.bar(c.v * 2, c.v >= 40 ? 'red' : c.v >= 20 ? '' : 'green', 'thin') + '</div>' +
+        '<b class="fz11" style="width:34px;text-align:right">' + c.v + '%</b></div>';
+    }).join('') + '</div>' +
+    '<div class="muted fz11 mt8" style="padding-top:8px;border-top:1px solid var(--ink-100)">' +
+    (solo ? '建议：为 ' + top.n + ' 配置备份人员并推进结对/文档沉淀' : '贡献分布较均衡，无明显单点风险') + '</div>' +
+    '</div></div>';
+}).join('');
+
+document.getElementById('soloRisk').innerHTML = [
+  ['开放能力平台', '陈立', 52, '网关架构与开放能力设计几乎由其一人承担', '下沉到业务团队并建立模块 Owner 机制，补 1 名后端', 'danger'],
+  ['数据资产中台', '张诚', 46, '指标口径与采集链路知识集中在个人，且其效能正在下滑', '架构组驻场 4 周 + 口径文档化 + 补充 1 人', 'danger'],
+  ['智能风控平台', '郑宇', 44, '规则引擎与模型服务高度集中', '拆分模块负责人，培养 1 名备份', 'danger'],
+  ['统一支付网关（模块级）', '何俊', 52, '产品级贡献率 18% 健康，但路由与清结算模块为单点', '结对开发 + 方案文档化 + 轮岗', 'warning'],
+  ['商户运营中心', '王倩', 34, '前端主力集中，但已有 2 名可承接同事', '保持现状，持续做代码共有', 'warning']
+].map(function (r) {
+  return '<div style="padding:10px 12px;border-radius:9px;background:var(--' + r[5] + '-bg);margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><b class="fz12">' + r[0] + '</b>' +
+    '<span class="tag ' + r[5] + ' ml-auto">' + r[1] + ' 贡献 ' + r[2] + '%</span></div>' +
+    '<div class="fz12 mt4" style="color:var(--ink-700)">' + r[3] + '</div>' +
+    '<div class="muted fz11 mt4">措施：' + r[4] + '</div></div>';
+}).join('');
+Charts.donut('#prodDonut', { size: 170, thickness: 22, center: { value: '2,586', label: '人日/季' }, data: [
+  { name: '统一支付网关', value: 986, color: '#2b5cff' }, { name: '智能风控平台', value: 562, color: '#e5484d' },
+  { name: '商户运营中心', value: 486, color: '#15a86b' }, { name: '数据资产中台', value: 342, color: '#7c5cff' },
+  { name: '开放能力平台', value: 210, color: '#f59e0b' }] });
+
+/* ================= 团队分布与人才识别 ================= */
+(function () {
+  var W = 460, H = 300, pl = 44, pb = 34, pt = 16, pr = 16;
+  var iw = W - pl - pr, ih = H - pt - pb;
+  var xLo = 55, xHi = 100, yLo = 50, yHi = 100;      // 按团队实际区间放大，避免点聚在一角
+  var xMid = 78, yMid = 80;                          // 分界线 = 团队中位数
+  var X = function (v) { return pl + iw * (v - xLo) / (xHi - xLo); };
+  var Y = function (v) { return pt + ih - ih * (v - yLo) / (yHi - yLo); };
+  var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" height="' + H + '">';
+  s += '<rect x="' + X(xMid) + '" y="' + pt + '" width="' + (X(xHi) - X(xMid)) + '" height="' + (Y(yMid) - pt) + '" fill="#e6f7f0" opacity=".75"/>';
+  s += '<rect x="' + pl + '" y="' + pt + '" width="' + (X(xMid) - pl) + '" height="' + (Y(yMid) - pt) + '" fill="#eef3ff" opacity=".85"/>';
+  s += '<rect x="' + X(xMid) + '" y="' + Y(yMid) + '" width="' + (X(xHi) - X(xMid)) + '" height="' + (pt + ih - Y(yMid)) + '" fill="#fef4e2" opacity=".75"/>';
+  s += '<line x1="' + X(xMid) + '" y1="' + pt + '" x2="' + X(xMid) + '" y2="' + (pt + ih) + '" stroke="#c7d0dd" stroke-dasharray="4 3"/>';
+  s += '<line x1="' + pl + '" y1="' + Y(yMid) + '" x2="' + (pl + iw) + '" y2="' + Y(yMid) + '" stroke="#c7d0dd" stroke-dasharray="4 3"/>';
+  s += '<text x="' + (X(xHi) - 6) + '" y="' + (pt + 13) + '" font-size="10.5" fill="#0f8a56" text-anchor="end">骨干（高产出·高质量）</text>';
+  s += '<text x="' + (pl + 6) + '" y="' + (pt + 13) + '" font-size="10.5" fill="#1d47e6">高质量·待提效</text>';
+  s += '<text x="' + (X(xHi) - 6) + '" y="' + (pt + ih - 8) + '" font-size="10.5" fill="#b8760a" text-anchor="end">高产出·待提质</text>';
+  s += '<text x="' + (pl + 6) + '" y="' + (pt + ih - 8) + '" font-size="10.5" fill="#8c9ab1">需要帮助</text>';
+  s += '<text x="' + X(xMid) + '" y="' + (pt + ih + 14) + '" font-size="9.5" fill="#8c9ab1" text-anchor="middle">中位 ' + xMid + '</text>';
+  s += '<text x="' + (pl - 6) + '" y="' + (Y(yMid) + 3) + '" font-size="9.5" fill="#8c9ab1" text-anchor="end">' + yMid + '</text>';
+  s += '<text x="' + (pl + iw / 2) + '" y="' + (H - 4) + '" font-size="10.5" fill="#8c9ab1" text-anchor="middle">交付产出（相对分位）→</text>';
+  s += '<text x="14" y="' + (pt + ih / 2) + '" font-size="10.5" fill="#8c9ab1" transform="rotate(-90 14 ' + (pt + ih / 2) + ')" text-anchor="middle">交付质量（相对分位）→</text>';
+  PEOPLE.forEach(function (p) {
+    var x = X(Math.max(xLo, p.dims[0])), y = Y(Math.max(yLo, p.dims[1]));
+    var c = p.dims[0] >= xMid && p.dims[1] >= yMid ? '#15a86b' : p.dims[1] >= yMid ? '#2b5cff' : p.dims[0] >= xMid ? '#f59e0b' : '#b3bfd0';
+    var r = 5 + p.md / 22;
+    s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + c + '" fill-opacity=".72" stroke="#fff" stroke-width="1.5" style="cursor:pointer">' +
+      '<title>' + p.n + '（' + p.role + '）\n产出 ' + p.dims[0] + ' · 质量 ' + p.dims[1] + ' · 投入 ' + p.md + ' 人日 · 综合 ' + p.score + '</title></circle>';
+    s += '<text x="' + x.toFixed(1) + '" y="' + (y - r - 3).toFixed(1) + '" font-size="9.5" fill="#46556f" text-anchor="middle">' + p.n + '</text>';
+  });
+  s += '</svg><div class="muted fz11 mt4">气泡大小 = 投入人日；虚线为团队中位数，阈值随团队动态变化，不使用固定绝对值。鼠标悬停可看明细。</div>';
+  document.getElementById('quad').innerHTML = s;
+})();
+
+(function () {
+  var teams = [
+    { n: '交易平台组', min: 68, q1: 78, med: 86, q3: 90, max: 92 },
+    { n: '风控算法组', min: 66, q1: 76, med: 84, q3: 89, max: 90 },
+    { n: '前端体验组', min: 64, q1: 74, med: 80, q3: 87, max: 88 },
+    { n: '基础架构组', min: 70, q1: 78, med: 84, q3: 86, max: 88 },
+    { n: '质量保障部', min: 62, q1: 72, med: 82, q3: 85, max: 86 },
+    { n: '数据平台组', min: 58, q1: 66, med: 73, q3: 80, max: 84 }
+  ];
+  var W = 380, H = 300, pl = 88, pr = 18, pt = 14, pb = 26;
+  var iw = W - pl - pr, ih = H - pt - pb;
+  var lo = 55, hi = 95;
+  var x = function (v) { return pl + iw * (v - lo) / (hi - lo); };
+  var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" height="' + H + '">';
+  [60, 70, 80, 90].forEach(function (v) {
+    s += '<line x1="' + x(v) + '" y1="' + pt + '" x2="' + x(v) + '" y2="' + (pt + ih) + '" stroke="#eef2f7"/>' +
+      '<text x="' + x(v) + '" y="' + (H - 8) + '" font-size="10" fill="#8c9ab1" text-anchor="middle">' + v + '</text>';
+  });
+  var rowH = ih / teams.length;
+  teams.forEach(function (t, i) {
+    var cy = pt + rowH * i + rowH / 2;
+    s += '<text x="' + (pl - 8) + '" y="' + (cy + 3.5) + '" font-size="11" fill="#46556f" text-anchor="end">' + t.n + '</text>';
+    s += '<line x1="' + x(t.min) + '" y1="' + cy + '" x2="' + x(t.max) + '" y2="' + cy + '" stroke="#b3bfd0" stroke-width="1.5"/>';
+    s += '<rect x="' + x(t.q1) + '" y="' + (cy - 9) + '" width="' + (x(t.q3) - x(t.q1)) + '" height="18" rx="4" fill="#2b5cff" fill-opacity=".18" stroke="#2b5cff"/>';
+    s += '<line x1="' + x(t.med) + '" y1="' + (cy - 9) + '" x2="' + x(t.med) + '" y2="' + (cy + 9) + '" stroke="#1d47e6" stroke-width="2.5"/>';
+    s += '<text x="' + (x(t.max) + 5) + '" y="' + (cy + 3.5) + '" font-size="10" fill="#8c9ab1">中位 ' + t.med + '</text>';
+  });
+  s += '</svg><div class="muted fz11 mt4">数据平台组中位数明显偏低（73），需排查是能力问题还是任务/环境问题。</div>';
+  document.getElementById('teamBox').innerHTML = s;
+})();
+
+document.getElementById('talentTop').innerHTML = [
+  ['何俊', '骨干', '核心链路独立交付能力强，技术贡献突出', '晋升 P7 候选，需补齐带人经验'],
+  ['陈立', '骨干', '架构影响力与知识贡献双高', '扩大技术影响半径，牵头跨域治理'],
+  ['李思远', '骨干', '协作响应与质量把控优秀', '管理路线候选'],
+  ['林小满', '高潜', '环比 +5.4，稳定性维度团队第一', '给更大范围的稳定性专项']
+].map(function (t) {
+  return '<div class="flex items-start gap8" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    UI.avatar(t[0], 'sm') + '<div style="flex:1"><div class="flex items-center gap6"><b class="fz12">' + t[0] + '</b>' +
+    '<span class="tag ' + (t[1] === '骨干' ? 'success' : 'brand') + '">' + t[1] + '</span></div>' +
+    '<div class="muted fz11 mt4">' + t[2] + '</div>' +
+    '<div class="fz11 mt4" style="color:var(--brand-600)">建议：' + t[3] + '</div></div></div>';
+}).join('');
+document.getElementById('talentHelp').innerHTML = [
+  ['张诚', '缺陷密度 0.68、按时率 74%，效能环比下滑', '结对开发 + 提测前评审，1 个月复评'],
+  ['孙悦', '需求返工率 22%，澄清质量待提升', '参与需求评审辅导，试点 DoR 检查清单'],
+  ['吴敏', '负载 100% 且大量重复回归工作', '推动自动化补齐，释放 20% 时间']
+].map(function (t) {
+  return '<div class="flex items-start gap8" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    UI.avatar(t[0], 'sm') + '<div style="flex:1"><div class="flex items-center gap6"><b class="fz12">' + t[0] + '</b>' +
+    '<span class="tag warning">需支持</span></div>' +
+    '<div class="muted fz11 mt4">' + t[1] + '</div>' +
+    '<div class="fz11 mt4" style="color:var(--brand-600)">帮扶：' + t[2] + '</div></div></div>';
+}).join('');
+document.getElementById('allocAdvice').innerHTML = [
+  ['danger', '交易平台组超载（106%）', '将 REQ-2036 转前端体验组承接，或补 1 名后端'],
+  ['danger', '质量保障部超载（102%）', '自动化补齐 + 回归外包，释放 3 人日/周'],
+  ['warning', '数据平台组效能偏低', '安排架构组 1 人驻场 4 周，建立口径与评审机制'],
+  ['success', '技术架构组有余量（70%）', '可承接「批处理框架治理」专项，缓解漏测根因']
+].map(function (a) {
+  return '<div style="padding:9px 11px;border-radius:9px;background:var(--' + a[0] + '-bg);margin-bottom:8px">' +
+    '<div class="fz12 fw6" style="color:var(--ink-800)">' + a[1] + '</div>' +
+    '<div class="muted fz11 mt4">' + a[2] + '</div></div>';
+}).join('');
+document.getElementById('teamTable').innerHTML =
+  '<thead><tr><th>团队</th><th class="num">人数</th><th class="num">投入人日</th><th class="num">交付需求</th><th class="num">故事点</th>' +
+  '<th class="num">人均周交付</th><th class="num">缺陷密度</th><th class="num">按时率</th><th class="num">负载率</th><th style="width:120px">团队效能中位</th><th>主要产品</th></tr></thead><tbody>' +
+  [['交易平台组', 22, 986, 34, 168, 4.8, 0.38, 92, 106, 86, '统一支付网关'],
+   ['风控算法组', 14, 562, 21, 96, 4.3, 0.31, 96, 95, 84, '智能风控平台'],
+   ['前端体验组', 16, 486, 24, 82, 4.1, 0.52, 90, 88, 80, '商户运营中心'],
+   ['基础架构组', 12, 342, 8, 42, 3.5, 0.28, 91, 78, 84, '多产品支撑'],
+   ['质量保障部', 12, 468, 5, 18, 2.8, 0.14, 93, 102, 82, '全产品质量'],
+   ['数据平台组', 10, 342, 4, 46, 3.2, 0.61, 74, 96, 73, '数据资产中台']
+  ].map(function (t) {
+    return '<tr><td class="t-main">' + t[0] + '</td><td class="num">' + t[1] + '</td><td class="num">' + t[2] + '</td>' +
+      '<td class="num">' + t[3] + '</td><td class="num">' + t[4] + '</td><td class="num">' + t[5] + '</td>' +
+      '<td class="num" style="color:' + (t[6] <= 0.35 ? 'var(--success)' : t[6] <= 0.55 ? 'var(--warning)' : 'var(--danger)') + '">' + t[6] + '</td>' +
+      '<td class="num" style="color:' + (t[7] >= 90 ? 'var(--success)' : 'var(--danger)') + '">' + t[7] + '%</td>' +
+      '<td class="num" style="color:' + (t[8] > 100 ? 'var(--danger)' : '') + '">' + t[8] + '%</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(t[9], t[9] >= 84 ? 'green' : t[9] >= 78 ? '' : 'orange', 'thin') + '</div><b class="fz11">' + t[9] + '</b></div></td>' +
+      '<td class="dim fz12">' + t[10] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* ================= 口径与治理 ================= */
+document.getElementById('defTable').innerHTML =
+  '<thead><tr><th>指标</th><th>定义与计算</th><th>权重</th><th>数据来源（自动）</th><th>防偏差处理</th></tr></thead><tbody>' +
+  [['交付产出', '已验收故事点 + 交付需求数（按复杂度加权）', '30%', '工作项 + 迭代验收', '按角色分别归一化，产品/测试不与研发直接比'],
+   ['交付质量', '缺陷密度、一次通过率、返工率、逃逸缺陷', '25%', '缺陷系统 + 测试管理 + 漏测分析', '按模块复杂度校正，历史遗留缺陷不计入'],
+   ['协作响应', 'PR 评审响应时长与有效意见数、阻塞协助、跨团队支持', '20%', 'GitHub + 工作项 + 看板阻塞记录', '避免"只写代码不协作"被高估'],
+   ['技术贡献', '架构改进、组件复用、技术债偿还、性能优化', '15%', '代码分析 + 技术债台账 + 评审记录', '主管可加权认定，防止难以量化的贡献被忽略'],
+   ['知识与带人', '文档、分享、结对、新人辅导、复盘输出', '10%', '知识库 + 复盘中心 + 带人记录', '鼓励长期价值，避免短期产出导向'],
+   ['交付稳定（修正项）', '承诺达成率、按时交付率、计划偏差', '修正 ±5%', '阶段排期 + 迭代承诺', '识别"高产出但不可预测"的情况'],
+   ['产品贡献率', '有效工时 40% + 交付故事点 30% + 需求业务价值 30%', '—', '智能工时 + 工作项 + 需求价值评估', '按产品总量归一，跨产品可比']
+  ].map(function (d) {
+    return '<tr><td class="t-main">' + d[0] + '</td><td class="fz12" style="color:var(--ink-600)">' + d[1] + '</td>' +
+      '<td><span class="tag brand">' + d[2] + '</span></td><td class="fz12 muted">' + d[3] + '</td>' +
+      '<td class="fz12 muted">' + d[4] + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('govList').innerHTML = [
+  ['不使用代码行数/提交次数直接排名', '代码当量仅作为参考项，且按语言与复杂度加权', 1],
+  ['分角色归一化', '研发/测试/产品/架构分别与同角色同职级比较', 1],
+  ['质量与产出必须同时看', '仅高产出但缺陷密度超阈值不进入高绩效区间', 1],
+  ['异常行为检测', '识别拆分提交、无意义格式化、刷评审等行为并提示', 1],
+  ['禁止单月定论', '至少 3 个月趋势 + 主管校准才可用于人才决策', 1],
+  ['贡献可申诉', '成员可对事实清单提出补充（如未记录的支撑工作）', 1]
+].map(function (g) {
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span style="color:var(--success)">' + icon('shieldCheck', 15) + '</span>' +
+    '<div style="flex:1"><div class="fz12 fw5">' + g[0] + '</div><div class="muted fz11 mt4">' + g[1] + '</div></div>' +
+    '<span class="switch on"></span></div>';
+}).join('');
+document.getElementById('visList').innerHTML = [
+  ['本人', '可见自己的全部指标、事实清单与团队分位（不显示他人明细）'],
+  ['直属主管', '可见团队成员全部明细与建议'],
+  ['二级主管 / 总裁', '可见团队汇总 + 骨干与需帮助名单，个人明细需下钻申请'],
+  ['HRBP', '可见效能等级与人才盘点结论，不可见原始代码数据'],
+  ['其他成员', '仅可见团队级汇总数据']
+].map(function (v) {
+  return '<div style="padding:8px 0;border-bottom:1px solid var(--ink-100)"><div class="fz12 fw6">' + v[0] + '</div>' +
+    '<div class="muted fz11 mt4" style="line-height:1.6">' + v[1] + '</div></div>';
+}).join('');
+document.getElementById('calList').innerHTML = [
+  ['每月', '系统自动出具效能报告，主管审阅并标注特殊情况（如支撑他人、临时抽调）'],
+  ['每季', '团队内校准会：拉齐评价标准，识别骨干与需帮助人员'],
+  ['半年', '结合业务结果与 360 反馈完成人才盘点，形成发展计划'],
+  ['随时', '成员可对事实清单提出补充或申诉，主管 3 个工作日内响应']
+].map(function (c) {
+  return '<div class="flex items-start gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag brand" style="width:44px;justify-content:center">' + c[0] + '</span>' +
+    '<span class="fz12" style="flex:1;color:var(--ink-600);line-height:1.7">' + c[1] + '</span></div>';
+}).join('');
+
+document.getElementById('scopeBtn').onclick = function () {
+  UI.menu(this, [{ label: '研发中心（86 人）' }, { label: '交易平台组（22 人）' }, { label: '风控算法组（14 人）' },
+    { label: '前端体验组（16 人）' }, { label: '基础架构组（12 人）' }, { label: '质量保障部（12 人）' }, { label: '数据平台组（10 人）' }]);
+};
+document.getElementById('timeBtn').onclick = function () {
+  UI.menu(this, [{ label: '本月' }, { label: '2026 Q3' }, { label: '近 6 个月（推荐）' }, { label: '2026 全年' }]);
+};
+var deep = location.hash.match(/who=([^&]+)/);
+if (deep) setTimeout(function () { openProfile(decodeURIComponent(deep[1])); }, 120);
+</script>
+</body>
+</html>

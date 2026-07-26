@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>智能工时 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="worklog" data-crumb="工程效能/智能工时">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">智能工时</div>
+          <div class="page-desc">基于代码提交、PR、流水线与工作项流转自动推算工时，成员一键确认，告别手工填报</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn" id="weekBtn"><span data-icon="calendar"></span>本周（07-20 ~ 07-26）</button>
+          <button class="btn" data-toast="工时报表已导出"><span data-icon="download"></span>导出报表</button>
+          <button class="btn btn-primary" data-toast="本周自动推算工时已全部确认"><span data-icon="check"></span>一键确认本周工时</button>
+        </div>
+      </div>
+
+      <!-- 采集说明 -->
+      <div class="card mb16" style="border-color:var(--brand-200);background:linear-gradient(90deg,var(--brand-50),#fff 45%)">
+        <div class="card-body" style="padding:12px 16px">
+          <div class="flex items-center gap12">
+            <span style="width:34px;height:34px;border-radius:10px;background:var(--brand-500);color:#fff;display:grid;place-items:center" data-icon="sparkles" data-size="17"></span>
+            <div style="flex:1">
+              <div class="fw6 fz13">工时自动采集已开启 · 覆盖 86 名研发人员</div>
+              <div class="muted fz11 mt4">数据来源：Git 提交（时间聚类 + 代码当量） · PR 评审 · CI 触发 · 工作项状态流转 · 会议日历。
+                系统据此生成「推算工时」，成员只需确认或微调；工时按 commit 中的工作项编号自动归集到需求 / 项目。</div>
+            </div>
+            <div class="flex items-center gap16">
+              <div class="tc"><div class="fw6 fz15">92%</div><div class="muted fz11">自动覆盖率</div></div>
+              <div class="tc"><div class="fw6 fz15" style="color:var(--success)">±8%</div><div class="muted fz11">与实际偏差</div></div>
+              <div class="tc"><div class="fw6 fz15">168h</div><div class="muted fz11">本月节省填报</div></div>
+              <a class="btn btn-sm" href="#" onclick="document.querySelector('[data-tab=w4]').click();return false">查看算法</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="wStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="w1"><span data-icon="user" data-size="14"></span>我的工时</div>
+        <div class="tab" data-tab="w2"><span data-icon="users" data-size="14"></span>团队工时</div>
+        <div class="tab" data-tab="w3"><span data-icon="layers" data-size="14"></span>工时归集与分摊</div>
+        <div class="tab" data-tab="w4"><span data-icon="cpu" data-size="14"></span>采集规则与算法</div>
+        <div class="tab" data-tab="w5"><span data-icon="pie" data-size="14"></span>成本核算</div>
+      </div>
+
+      <!-- 我的工时 -->
+      <div class="tab-pane active" data-pane="w1">
+        <div class="grid g-2-1 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="activity"></span>今日工时时间轴（自动推算）</div>
+              <div class="card-sub">何俊 · 2026-07-25 · 推算 8.6 小时</div>
+              <div class="card-head-actions"><span class="tag warning">待确认</span>
+                <button class="btn btn-sm">调整</button>
+                <button class="btn btn-sm btn-primary" data-toast="今日工时已确认（8.6 小时）">确认</button></div></div>
+            <div class="card-body"><div id="timeline"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="pie"></span>本周工时构成</div></div>
+            <div class="card-body"><div id="myDonut"></div>
+              <div class="divider"></div>
+              <div id="myWeek"></div></div>
+          </div>
+        </div>
+        <div class="grid g-2-1">
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="list"></span>本周工时明细</div>
+              <div class="card-sub">系统推算 vs 我的确认</div></div>
+            <div class="card-body flush"><table class="tbl" id="myTable"></table></div>
+            <div class="card-foot flex items-center"><span>推算合计 <b>41.2h</b> · 已确认 <b>32.5h</b> · 待确认 <b style="color:var(--warning)">8.7h</b></span>
+              <button class="btn btn-sm btn-primary ml-auto" data-toast="剩余工时已确认">确认全部</button></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title"><span data-icon="commit"></span>本周提交明细</div>
+              <div class="card-sub">工时推算的原始依据</div></div>
+            <div class="card-body" style="max-height:420px;overflow:auto"><div id="commits"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 团队工时 -->
+      <div class="tab-pane" data-pane="w2">
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>团队工时趋势</div>
+            <div class="card-sub">自动推算 vs 人工确认（小时）</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#2b5cff"></i>系统推算</span><span><i style="background:#15a86b"></i>成员确认</span><span><i style="background:#f59e0b"></i>手工补录</span></div>
+              <div id="teamTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>工时确认状态</div></div>
+            <div class="card-body"><div id="confirmDonut"></div>
+              <div class="divider"></div><div id="confirmList"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="users"></span>成员工时明细（本周）</div>
+            <div class="card-head-actions">
+              <div class="filter"><span data-icon="users"></span>团队：<b>全部</b><span data-icon="down"></span></div>
+              <button class="btn btn-sm" data-toast="已提醒 6 名成员确认工时">提醒未确认</button>
+              <a class="btn btn-sm btn-soft" href="people.html"><span data-icon="award" data-size="13"></span>查看人员效能与贡献</a></div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="teamTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 归集与分摊 -->
+      <div class="tab-pane" data-pane="w3">
+        <div class="card mb16" style="background:var(--ink-50)">
+          <div class="card-body" style="padding:12px 16px">
+            <div class="flex items-center gap10">
+              <span style="color:var(--brand-500)" data-icon="workflow" data-size="18"></span>
+              <div class="fz12" style="color:var(--ink-600);line-height:1.7">
+                <b>归集逻辑：</b>提交信息中的 <code class="code-inline">[REQ-2041]</code> / <code class="code-inline">[STORY-3313]</code> 编号，
+                或分支名 <code class="code-inline">feature/REQ-2041-xxx</code>，用于把这次提交推算出的工时自动归集到对应需求；
+                无编号的提交按分支所属项目分摊；评审与会议工时按参与的工作项按比例分摊。
+              </div>
+              <span class="ml-auto tag success">本周归集率 94.6%</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="bulb"></span>需求维度工时归集</div>
+            <div class="card-sub">自动核算实际投入，用于价值复盘与 ROI</div></div>
+            <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="reqHours"></table></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="kanban"></span>项目维度分摊</div></div>
+            <div class="card-body"><div id="prjHours"></div></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="alert"></span>未归集工时</div>
+            <div class="card-sub">缺少工作项编号的提交</div></div>
+            <div class="card-body" id="unlinked"></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>投入类型分布</div></div>
+            <div class="card-body"><div id="typeDonut"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="trendUp"></span>需求投入 TOP</div></div>
+            <div class="card-body"><div id="topReq"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 规则与算法 -->
+      <div class="tab-pane" data-pane="w4">
+        <div class="grid g-2-1">
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="cpu"></span>工时推算模型</div>
+              <div class="card-sub">可按团队差异化配置</div></div>
+              <div class="card-body">
+                <div class="terminal" style="max-height:none">
+                  <div class="cmd"># 编码工时推算（按天）</div>
+                  <div>编码工时 = <span class="ok">提交时间聚类跨度</span> × 0.8 + <span class="ok">代码当量</span> ÷ 每小时基准当量</div>
+                  <div class="dim">  · 提交聚类窗口：相邻提交间隔 &lt; 90 分钟视为同一编码时段</div>
+                  <div class="dim">  · 单次提交最小计时：25 分钟（避免碎片提交低估）</div>
+                  <div class="dim">  · 每小时基准当量：180 行（按语言与复杂度加权）</div>
+                  <div class="dim">  · 单日编码工时上限：10 小时（超出需人工说明）</div>
+                  <div class="cmd mt8"># 其他工时</div>
+                  <div>评审工时 = <span class="warn">PR 评审次数</span> × 20 分钟 + 评论字数系数</div>
+                  <div>联调排障 = <span class="warn">CI 失败重跑次数</span> × 15 分钟 + 缺陷处理时长</div>
+                  <div>会议工时 = <span class="warn">日历会议时长</span>（自动匹配研发相关会议）</div>
+                  <div class="ok mt8">最终工时 = 编码 + 评审 + 联调 + 会议，按 0.5 小时取整，成员可 ±30% 调整</div>
+                </div>
+                <div class="grid g2 mt16" style="gap:12px" id="modelParams"></div>
+              </div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>推算准确度校准</div>
+              <div class="card-sub">对比成员确认结果持续校准</div></div>
+              <div class="card-body"><div id="accTrend"></div></div></div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="sliders"></span>采集开关</div></div>
+              <div class="card-body" id="switches"></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shield"></span>数据使用原则</div></div>
+              <div class="card-body" id="principles"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 成本核算 -->
+      <div class="tab-pane" data-pane="w5">
+        <div class="grid g4 mb16" id="costStats"></div>
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>研发成本趋势</div>
+            <div class="card-sub">人力成本（万元）与单位故事点成本（元）</div></div>
+            <div class="card-body"><div id="costTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>成本归属</div></div>
+            <div class="card-body"><div id="costDonut"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="award"></span>需求投入产出（自动核算）</div>
+            <div class="card-sub">工时 × 人力单价 = 投入成本，与需求复盘的收益数据自动对照</div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="roiTable"></table></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('wStats').innerHTML = [
+  { l: '本周自动采集', v: '3,286', u: '小时', i: 'timer', c: '#2b5cff', bg: 'var(--brand-50)', f: '86 名研发' },
+  { l: '自动覆盖率', v: 92, u: '%', i: 'cpu', c: '#7c5cff', bg: 'var(--purple-bg)', f: '手工补录仅 8%' },
+  { l: '待确认工时', v: 268, u: '小时', i: 'clock', c: '#f59e0b', bg: 'var(--warning-bg)', f: '涉及 22 人' },
+  { l: '归集到需求', v: '94.6', u: '%', i: 'link', c: '#15a86b', bg: 'var(--success-bg)', f: '按 commit 编号' },
+  { l: '有效编码占比', v: 58, u: '%', i: 'code', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '会议占 14%' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i === 'code' ? 'terminal' : s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+/* 时间轴 */
+var TL = [
+  { t: '08:42 - 10:10', h: 1.5, ty: '编码', c: '#2b5cff', src: 'Git 提交聚类', d: '3 次提交 · +286 行 · feature/smart-router', link: 'STORY-3313 成本与成功率实时计算引擎' },
+  { t: '10:10 - 10:40', h: 0.5, ty: '评审', c: '#7c5cff', src: 'PR 评审', d: '评审 PR #479（12 条评论）', link: 'STORY-3311 路由决策日志埋点' },
+  { t: '10:40 - 12:00', h: 1.3, ty: '编码', c: '#2b5cff', src: 'Git 提交聚类', d: '2 次提交 · +198 行 · 熔断器半开探活', link: 'STORY-3313 成本与成功率实时计算引擎' },
+  { t: '13:30 - 14:30', h: 1.0, ty: '会议', c: '#f59e0b', src: '日历', d: '支付网关 3.0 风险决策会', link: 'PRJ-018 统一支付网关 3.0 重构' },
+  { t: '14:30 - 16:20', h: 1.8, ty: '编码', c: '#2b5cff', src: 'Git 提交聚类', d: '4 次提交 · +412 行 · 通道适配层重构', link: 'STORY-3320 渠道适配层重构' },
+  { t: '16:20 - 17:00', h: 0.7, ty: '联调排障', c: '#e5484d', src: 'CI 失败重跑', d: '流水线 #1286 单元测试失败，重跑 2 次', link: 'STORY-3313 成本与成功率实时计算引擎' },
+  { t: '17:00 - 18:50', h: 1.8, ty: '编码', c: '#2b5cff', src: 'Git 提交聚类', d: '3 次提交 · +324 行 · 缺陷修复 BUG-770', link: 'BUG-770 熔断后备用通道限额校验缺失' }
+];
+document.getElementById('timeline').innerHTML = TL.map(function (s) {
+  return '<div class="flex items-start gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="width:96px;flex:none"><div class="fz12 fw6 mono">' + s.t.split(' - ')[0] + '</div>' +
+    '<div class="muted fz11 mono">' + s.t.split(' - ')[1] + '</div></div>' +
+    '<div style="width:4px;align-self:stretch;border-radius:3px;background:' + s.c + '"></div>' +
+    '<div style="flex:1;min-width:0"><div class="flex items-center gap6">' +
+    '<span class="tag" style="background:' + s.c + '18;color:' + s.c + '">' + s.ty + '</span>' +
+    '<b class="fz12">' + s.h + ' 小时</b>' +
+    '<span class="tag line" style="height:17px">' + s.src + '</span></div>' +
+    '<div class="fz12 mt4" style="color:var(--ink-600)">' + s.d + '</div>' +
+    '<div class="muted fz11 mt4">' + icon('link', 11) + ' 归集至：' + s.link + '</div></div>' +
+    '<button class="btn btn-sm">调整</button></div>';
+}).join('') +
+  '<div class="flex items-center gap8 mt12"><span class="fz12 dim">系统推算合计</span>' +
+  '<b class="fz15" style="color:var(--brand-600)">8.6 小时</b>' +
+  '<span class="muted fz11">（编码 6.4h · 评审 0.5h · 会议 1.0h · 排障 0.7h）</span>' +
+  '<button class="btn btn-sm btn-primary ml-auto" data-toast="今日工时已确认">确认今日工时</button></div>';
+
+Charts.donut('#myDonut', { size: 158, thickness: 20, center: { value: '41.2h', label: '本周推算' }, data: [
+  { name: '编码', value: 24.6, color: '#2b5cff' }, { name: '评审协作', value: 5.4, color: '#7c5cff' },
+  { name: '联调排障', value: 4.2, color: '#e5484d' }, { name: '会议', value: 5.0, color: '#f59e0b' },
+  { name: '其他', value: 2.0, color: '#b3bfd0' }] });
+document.getElementById('myWeek').innerHTML = [['周一', 8.2, 1], ['周二', 8.6, 1], ['周三', 7.8, 1], ['周四', 8.0, 1], ['周五', 8.6, 0], ['周六', 0, 0], ['周日', 0, 0]]
+  .map(function (d) {
+    return '<div class="flex items-center gap8" style="padding:5px 0">' +
+      '<span class="fz12 dim" style="width:34px">' + d[0] + '</span>' +
+      '<div style="flex:1">' + UI.bar(d[1] / 10 * 100, d[1] > 8.5 ? 'orange' : '', 'thin') + '</div>' +
+      '<b class="fz12" style="width:38px;text-align:right">' + d[1] + 'h</b>' +
+      (d[1] ? (d[2] ? '<span class="tag success">已确认</span>' : '<span class="tag warning">待确认</span>') : '<span class="tag">休息</span>') + '</div>';
+  }).join('');
+
+document.getElementById('myTable').innerHTML =
+  '<thead><tr><th>日期</th><th>推算工时</th><th>编码</th><th>评审</th><th>会议</th><th>排障</th><th>确认工时</th><th>状态</th></tr></thead><tbody>' +
+  [['07-20 周一', 8.2, 5.6, 0.8, 1.0, 0.8, 8.0, '已确认', 'success'],
+   ['07-21 周二', 8.6, 6.2, 1.2, 0.5, 0.7, 8.5, '已确认', 'success'],
+   ['07-22 周三', 7.8, 4.8, 1.5, 1.0, 0.5, 8.0, '已确认', 'success'],
+   ['07-23 周四', 8.0, 5.4, 1.4, 0.5, 0.7, 8.0, '已确认', 'success'],
+   ['07-24 周五', 8.6, 6.4, 0.5, 1.0, 0.7, '—', '待确认', 'warning']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td><b>' + r[1] + 'h</b></td>' +
+      '<td class="dim">' + r[2] + 'h</td><td class="dim">' + r[3] + 'h</td><td class="dim">' + r[4] + 'h</td><td class="dim">' + r[5] + 'h</td>' +
+      '<td><b style="color:var(--brand-600)">' + (r[6] === '—' ? '—' : r[6] + 'h') + '</b></td>' +
+      '<td><span class="tag ' + r[8] + '">' + r[7] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('commits').innerHTML = [
+  ['a3f91c2', 'feat(router): 引入策略权重计算引擎 [STORY-3313]', '+486 −92', '今天 18:42', 1],
+  ['9c47d18', 'fix(router): 修复限额校验缺失 [BUG-770]', '+124 −18', '今天 17:26', 1],
+  ['7b20e14', 'feat(router): 通道熔断器与半开探活 [STORY-3313]', '+312 −48', '今天 15:58', 1],
+  ['4f81b62', 'refactor(channel): 适配层接口抽取 [STORY-3320]', '+412 −186', '今天 15:12', 1],
+  ['2e93a07', 'chore: 调整日志级别', '+18 −6', '今天 11:40', 0],
+  ['c81d0aa', 'test: 补充路由策略单元测试 [STORY-3313]', '+228 −14', '昨天 19:20', 1],
+  ['5d1a7bf', 'feat(router): 策略匹配 DSL 解析 [STORY-3313]', '+364 −22', '昨天 16:05', 1],
+  ['e45b993', 'refactor: 抽取渠道适配层接口 [STORY-3320]', '+164 −162', '07-23', 1]
+].map(function (c) {
+  return '<div class="flex items-start gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tico epic">' + icon('commit', 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + c[1] + '</div>' +
+    '<div class="flex items-center gap8 mt4"><span class="mono fz11" style="color:var(--brand-600)">' + c[0] + '</span>' +
+    '<span class="mono fz11 muted">' + c[2] + '</span><span class="muted fz11">' + c[3] + '</span></div></div>' +
+    (c[4] ? '<span class="tag success">已归集</span>' : '<span class="tag warning">未归集</span>') + '</div>';
+}).join('');
+
+/* 团队工时 */
+Charts.bar('#teamTrend', {
+  height: 250, stacked: true, labels: ['W25', 'W26', 'W27', 'W28', 'W29', 'W30'],
+  series: [{ name: '成员确认', data: [2860, 2940, 3020, 3080, 3140, 3018], color: '#15a86b' },
+    { name: '待确认', data: [320, 286, 246, 228, 196, 268], color: '#2b5cff' },
+    { name: '手工补录', data: [420, 386, 342, 306, 284, 262], color: '#f59e0b' }], unit: ' 小时'
+});
+Charts.donut('#confirmDonut', { size: 158, thickness: 20, center: { value: '92%', label: '确认率' }, data: [
+  { name: '已确认', value: 3018, color: '#15a86b' }, { name: '待确认', value: 268, color: '#f59e0b' }] });
+document.getElementById('confirmList').innerHTML = [['交易平台组', 96, 'green'], ['风控算法组', 94, 'green'], ['前端体验组', 89, ''],
+  ['基础架构组', 92, 'green'], ['质量保障部', 78, 'orange'], ['数据平台组', 85, '']]
+  .map(function (r) {
+    return '<div class="mb8"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '%</b></div>' + UI.bar(r[1], r[2], 'thin') + '</div>';
+  }).join('');
+document.getElementById('teamTable').innerHTML =
+  '<thead><tr><th>成员</th><th>团队</th><th>推算工时</th><th>确认工时</th><th>偏差</th><th>编码</th><th>评审</th><th>会议</th>' +
+  '<th class="num">提交数</th><th class="num">代码当量</th><th>确认状态</th></tr></thead><tbody>' +
+  [['何俊', '交易平台组', 41.2, 40.5, -1.7, 24.6, 5.4, 5.0, 32, 4820, '待确认 1 天', 'warning'],
+   ['王倩', '前端体验组', 38.6, 39.0, 1.0, 22.4, 4.8, 6.2, 24, 3960, '已确认', 'success'],
+   ['郑宇', '风控算法组', 39.8, 40.0, 0.5, 25.2, 4.2, 5.4, 28, 3410, '已确认', 'success'],
+   ['李思远', '交易平台组', 36.4, 38.0, 4.4, 12.8, 9.6, 10.2, 12, 2280, '已确认', 'success'],
+   ['林小满', '基础架构组', 34.2, 34.0, -0.6, 16.4, 3.8, 7.2, 18, 1620, '已确认', 'success'],
+   ['陈立', '技术架构组', 32.6, 35.0, 7.4, 10.2, 12.4, 9.8, 9, 1840, '已确认', 'success'],
+   ['吴敏', '质量保障部', 40.4, '—', '—', 8.6, 2.4, 4.2, 14, 1120, '待确认 2 天', 'danger'],
+   ['赵鹏', '质量保障部', 30.8, '—', '—', 3.2, 1.8, 6.4, 4, 380, '待确认 2 天', 'danger']
+  ].map(function (m) {
+    return '<tr><td><div class="row-flex">' + UI.avatar(m[0], 'sm') + '<span class="t-main">' + m[0] + '</span></div></td>' +
+      '<td class="dim fz12">' + m[1] + '</td><td><b>' + m[2] + 'h</b></td>' +
+      '<td>' + (m[3] === '—' ? '<span class="muted">—</span>' : '<b style="color:var(--brand-600)">' + m[3] + 'h</b>') + '</td>' +
+      '<td>' + (m[4] === '—' ? '<span class="muted">—</span>' : '<span class="trend ' + (Math.abs(m[4]) <= 2 ? 'flat' : 'up') + '">' + (m[4] > 0 ? '+' : '') + m[4] + 'h</span>') + '</td>' +
+      '<td class="dim">' + m[5] + 'h</td><td class="dim">' + m[6] + 'h</td><td class="dim">' + m[7] + 'h</td>' +
+      '<td class="num">' + m[8] + '</td><td class="num dim">' + m[9] + '</td>' +
+      '<td><span class="tag ' + m[11] + '">' + m[10] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 归集与分摊 */
+document.getElementById('reqHours').innerHTML =
+  '<thead><tr><th>需求 / 工作项</th><th>所属项目</th><th class="num">预估</th><th class="num">已投入</th><th style="width:110px">偏差</th>' +
+  '<th class="num">参与人</th><th class="num">提交数</th><th class="num">成本</th></tr></thead><tbody>' +
+  [['REQ-2041 支付网关多渠道智能路由', 'PRJ-018', 168, 142.6, -15, 5, 86, '8.0 万'],
+   ['REQ-2040 收银台支持数字人民币', 'PRJ-018', 272, 318.4, 17, 4, 124, '18.0 万'],
+   ['REQ-2035 交易对账自动核销', 'PRJ-018', 232, 186.2, -20, 3, 68, '10.5 万'],
+   ['REQ-2038 风控规则热更新', 'PRJ-021', 208, 224.8, 8, 3, 92, '12.7 万'],
+   ['REQ-2039 商户结算单自助下载', 'PRJ-016', 104, 96.4, -7, 2, 42, '5.4 万'],
+   ['REQ-2032 数据中台指标口径治理', 'PRJ-014', 248, 286.2, 15, 3, 74, '16.1 万'],
+   ['技术债与架构优化（无需求编号）', '多项目', '—', 108.6, '—', 6, 38, '6.1 万']
+  ].map(function (r) {
+    var dev = r[4];
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="id-link">' + r[1] + '</td>' +
+      '<td class="num dim">' + (r[2] === '—' ? '—' : r[2] + 'h') + '</td>' +
+      '<td class="num"><b>' + r[3] + 'h</b></td>' +
+      '<td>' + (dev === '—' ? '<span class="muted">—</span>' :
+        '<span class="tag ' + (dev > 10 ? 'danger' : dev < -10 ? 'success' : '') + '">' + (dev > 0 ? '超出 +' : '节省 ') + dev + '%</span>') + '</td>' +
+      '<td class="num">' + r[5] + '</td><td class="num dim">' + r[6] + '</td><td class="num">' + r[7] + '</td></tr>';
+  }).join('') + '</tbody>';
+Charts.hbar('#prjHours', { unit: ' 人日', data: [
+  { name: 'PRJ-018 支付网关 3.0', value: 268 }, { name: 'PRJ-021 风控引擎 V2', value: 142 },
+  { name: 'PRJ-016 商户中心升级', value: 96 }, { name: 'PRJ-014 数据中台一期', value: 88 },
+  { name: 'PRJ-023 OpenAPI 网关', value: 46 }, { name: '技术债 / 运维', value: 62, color: '#b3bfd0' }] });
+document.getElementById('unlinked').innerHTML =
+  '<div class="flex items-center gap8 mb12"><div><div class="fz20 fw6" style="color:var(--warning)">5.4%</div>' +
+  '<div class="muted fz11">未归集工时占比</div></div>' +
+  '<div style="flex:1" class="tl-box">提示：提交信息未包含工作项编号，已自动按分支所属项目分摊，建议提醒相关成员规范提交。</div></div>' +
+  [['何俊', 3, '2e93a07 chore: 调整日志级别'], ['王倩', 2, 'b19f4c1 style: 样式微调'],
+   ['林小满', 4, '7ac2e90 ops: 调整告警阈值'], ['郑宇', 2, 'd41a8b3 fix: 临时修复']].map(function (u) {
+    return '<div class="flex items-center gap8" style="padding:6px 0;border-bottom:1px solid var(--ink-100)">' +
+      UI.avatar(u[0], 'sm') + '<span class="fz12" style="width:40px">' + u[0] + '</span>' +
+      '<span class="mono fz11 muted ellipsis" style="flex:1">' + u[2] + '</span>' +
+      '<span class="tag warning">' + u[1] + ' 次</span></div>';
+  }).join('') + '<button class="btn btn-sm btn-block mt8" data-toast="已提醒 4 名成员补充工作项编号">批量提醒补充编号</button>';
+Charts.donut('#typeDonut', { size: 140, thickness: 18, center: { value: '3,286', label: '本周小时' }, data: [
+  { name: '需求交付', value: 1962, color: '#2b5cff' }, { name: '缺陷修复', value: 486, color: '#e5484d' },
+  { name: '技术债与架构', value: 342, color: '#7c5cff' }, { name: '评审协作', value: 268, color: '#0fb5ba' },
+  { name: '运维与值班', value: 228, color: '#b3bfd0' }] });
+Charts.hbar('#topReq', { unit: ' 小时', data: [
+  { name: 'REQ-2040 数字人民币', value: 318 }, { name: 'REQ-2032 指标治理', value: 286 },
+  { name: 'REQ-2038 规则热更新', value: 225 }, { name: 'REQ-2035 对账核销', value: 186 },
+  { name: 'REQ-2041 智能路由', value: 143 }] });
+
+/* 规则与算法 */
+document.getElementById('modelParams').innerHTML = [
+  ['提交聚类窗口', '90 分钟'], ['单次提交最小计时', '25 分钟'], ['每小时基准当量', '180 行'],
+  ['单日编码上限', '10 小时'], ['PR 评审单次计时', '20 分钟'], ['成员可调整幅度', '±30%']
+].map(function (p) {
+  return '<div style="background:var(--ink-50);border-radius:8px;padding:9px 11px;display:flex;align-items:center">' +
+    '<span class="fz12 dim" style="flex:1">' + p[0] + '</span><b class="fz12">' + p[1] + '</b>' +
+    '<button class="btn btn-sm" style="margin-left:8px">改</button></div>';
+}).join('');
+Charts.line('#accTrend', {
+  height: 200, yMax: 100, labels: ['3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '推算准确度(%)', data: [72, 78, 84, 89, 92], color: '#15a86b', area: true },
+    { name: '成员调整率(%)', data: [38, 31, 24, 18, 14], color: '#f59e0b' }]
+});
+document.getElementById('switches').innerHTML = [
+  ['Git 提交采集', 'GitHub Webhook 实时接收', 1], ['PR 评审采集', '评审次数与评论量', 1],
+  ['CI 事件采集', '构建失败与重跑', 1], ['工作项流转采集', '状态变更时间差', 1],
+  ['会议日历采集', '仅采集研发相关会议', 1], ['IDE 插件采集', '编辑器活跃时长（可选）', 0],
+  ['夜间/周末提交计入', '需成员确认后计入', 1]
+].map(function (s) {
+  return '<div class="flex items-center gap10" style="padding:9px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<div style="flex:1"><div class="fz12 fw5">' + s[0] + '</div><div class="muted fz11 mt4">' + s[1] + '</div></div>' +
+    '<span class="switch ' + (s[2] ? 'on' : '') + '"></span></div>';
+}).join('');
+document.getElementById('principles').innerHTML = [
+  ['仅用于成本核算与容量规划', '工时数据不作为个人绩效考核的直接依据', 'success'],
+  ['成员拥有最终确认权', '系统推算仅为草稿，成员可调整并说明原因', 'brand'],
+  ['不采集代码内容与击键行为', '只统计提交元数据（时间、行数、关联编号）', 'success'],
+  ['团队级公开、个人级私密', '个人明细仅本人与直属主管可见', 'warning']
+].map(function (p) {
+  return '<div style="padding:9px 11px;border-radius:9px;background:var(--ink-50);margin-bottom:8px">' +
+    '<div class="flex items-center gap6"><span style="color:var(--' + (p[2] === 'success' ? 'success' : p[2] === 'warning' ? 'warning' : 'brand-500') + ')">' + icon('shieldCheck', 14) + '</span>' +
+    '<b class="fz12">' + p[0] + '</b></div><div class="muted fz11 mt4">' + p[1] + '</div></div>';
+}).join('');
+
+/* 成本核算 */
+document.getElementById('costStats').innerHTML = [
+  { l: '本月人力成本', v: '486', u: '万元', i: 'pie', c: '#2b5cff' }, { l: '故事点成本', v: '4,514', u: '元/点', i: 'award', c: '#15a86b' },
+  { l: '需求平均成本', v: '12.6', u: '万元', i: 'bulb', c: '#7c5cff' }, { l: '缺陷成本占比', v: 14.8, u: '%', i: 'bug', c: '#e5484d' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div></div>';
+}).join('');
+Charts.bar('#costTrend', {
+  height: 250, labels: ['2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '人力成本(万)', data: [432, 448, 456, 468, 476, 486], color: '#2b5cff' }],
+  lineSeries: { name: '单位故事点成本(元)', data: [5210, 5060, 4880, 4720, 4620, 4514], color: '#f59e0b' }, lineMax: 6000
+});
+Charts.donut('#costDonut', { size: 170, thickness: 22, center: { value: '486', label: '万元/月' }, data: [
+  { name: '需求交付', value: 290, color: '#2b5cff' }, { name: '缺陷修复', value: 72, color: '#e5484d' },
+  { name: '技术债与架构', value: 51, color: '#7c5cff' }, { name: '评审协作', value: 40, color: '#0fb5ba' },
+  { name: '运维与值班', value: 33, color: '#b3bfd0' }] });
+document.getElementById('roiTable').innerHTML =
+  '<thead><tr><th>需求</th><th>实际投入</th><th>投入成本</th><th>预期年化收益</th><th>实际年化收益</th><th>ROI</th><th>回本周期</th><th>价值结论</th></tr></thead><tbody>' +
+  [['REQ-2031 支付成功率实时大盘', '18.6 人日', '8.4 万', '1,800 万', '2,180 万', '259×', '< 1 天', '超预期', 'success'],
+   ['REQ-2029 反洗钱名单实时同步', '21.2 人日', '9.6 万', '合规避险', '一次通过', '—', '—', '达成', 'success'],
+   ['REQ-2040 收银台数字人民币', '39.8 人日', '18.0 万', '2,400 万', '进行中', '预计 133×', '—', '进行中', 'brand'],
+   ['REQ-2033 商户中心首页重构', '22.4 人日', '10.1 万', '自助率 +15pt', '+8pt', '—', '—', '部分达成', 'warning'],
+   ['REQ-2024 商户经营看板', '31.5 人日', '14.2 万', '日活 +20%', '+6%', '—', '—', '未达成', 'danger']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim">' + r[1] + '</td><td><b>' + r[2] + '</b></td>' +
+      '<td class="dim fz12">' + r[3] + '</td><td class="fz12">' + r[4] + '</td>' +
+      '<td><b style="color:var(--success)">' + r[5] + '</b></td><td class="dim fz12">' + r[6] + '</td>' +
+      '<td><span class="tag ' + r[8] + '">' + r[7] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('weekBtn').onclick = function () {
+  UI.menu(this, [{ label: '本周（07-20 ~ 07-26）' }, { label: '上周（07-13 ~ 07-19）' }, { label: '本月' }, { label: '本迭代 Sprint 26-14' }, { label: '自定义区间' }]);
+};
+</script>
+</body>
+</html>

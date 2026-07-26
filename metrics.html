@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>效能度量 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="metrics" data-crumb="工程效能/效能度量">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">研发效能驾驶舱</div>
+          <div class="page-desc">交付效率 · 交付质量 · 交付能力（DORA） · 组织人效，用数据驱动研发改进</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn" id="scopeBtn"><span data-icon="building"></span>范围：研发中心</button>
+          <button class="btn" id="timeBtn"><span data-icon="calendar"></span>2026 Q3</button>
+          <button class="btn" data-toast="效能月报已生成并推送至知识库"><span data-icon="sparkles"></span>AI 生成效能报告</button>
+          <button class="btn btn-primary" data-toast="已订阅周报，每周一 09:00 推送"><span data-icon="mail"></span>订阅周报</button>
+        </div>
+      </div>
+
+      <!-- 综合评分 -->
+      <div class="card mb16">
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center">
+            <div class="tc">
+              <div id="scoreGauge"></div>
+              <div class="flex items-center justify-center gap6 mt8">
+                <span class="tag success">较上季 +6.2</span><span class="tag brand">行业 TOP 15%</span>
+              </div>
+            </div>
+            <div class="grid g5" id="scoreDims"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="m1"><span data-icon="zap" data-size="14"></span>交付效率</div>
+        <div class="tab" data-tab="m2"><span data-icon="gauge" data-size="14"></span>DORA 指标</div>
+        <div class="tab" data-tab="m3"><span data-icon="shieldCheck" data-size="14"></span>交付质量</div>
+        <div class="tab" data-tab="m4"><span data-icon="users" data-size="14"></span>人效与成本</div>
+        <div class="tab" data-tab="m5"><span data-icon="award" data-size="14"></span>团队对比</div>
+        <div class="tab" data-tab="m6"><span data-icon="file" data-size="14"></span>效能报告</div>
+      </div>
+
+      <!-- 交付效率 -->
+      <div class="tab-pane active" data-pane="m1">
+        <div class="grid g5 mb16" id="effStats"></div>
+        <div class="grid g-2-1 mb16" style="align-items:start">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>需求交付周期分解</div>
+            <div class="card-sub">从提出到上线，识别等待浪费</div></div>
+            <div class="card-body">
+              <div id="leadBreak"></div>
+              <div class="divider"></div>
+              <div class="flex items-center gap16">
+                <div><div class="muted fz11">流动效率</div><div class="fz20 fw6" style="color:var(--warning)">38%</div>
+                  <div class="muted fz11">增值时间 / 总时间</div></div>
+                <div><div class="muted fz11">等待占比</div><div class="fz20 fw6" style="color:var(--danger)">62%</div>
+                  <div class="muted fz11">主要卡在排期与评审</div></div>
+                <div style="flex:1"><div class="tl-box">改进建议：需求评审改为每周固定两次批量评审，可缩短平均等待 1.4 天；排期等待建议引入「就绪需求缓冲池」。</div></div>
+              </div>
+            </div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>周期时间分布</div>
+            <div class="card-sub">P50 / P85 / P95</div></div>
+            <div class="card-body"><div id="cycleDist"></div>
+              <div class="divider"></div><div id="cyclePct"></div></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>吞吐量趋势</div></div>
+            <div class="card-body"><div id="throughput"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>在制品（WIP）</div></div>
+            <div class="card-body"><div id="wip"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>计划达成率</div></div>
+            <div class="card-body"><div id="planRate"></div></div></div>
+        </div>
+      </div>
+
+      <!-- DORA -->
+      <div class="tab-pane" data-pane="m2">
+        <div class="grid g4 mb16" id="doraCards"></div>
+        <div class="grid g2 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>DORA 指标趋势</div>
+            <div class="card-sub">近 7 个月</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#2b5cff"></i>部署频率（次/天）</span><span><i style="background:#15a86b"></i>前置时间（小时）</span><span><i style="background:#e5484d"></i>变更失败率（%）</span></div>
+              <div id="doraTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>行业对标</div>
+            <div class="card-sub">对照 DORA 精英 / 高 / 中 / 低绩效基准</div></div>
+            <div class="card-body"><div class="table-wrap"><table class="tbl" id="benchTable"></table></div></div></div>
+        </div>
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="workflow"></span>各产品线 DORA 表现</div></div>
+            <div class="card-body"><div class="table-wrap"><table class="tbl" id="doraTeam"></table></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="bulb"></span>改进建议</div>
+            <div class="card-sub">基于指标自动生成</div></div>
+            <div class="card-body" id="doraTips"></div></div>
+        </div>
+      </div>
+
+      <!-- 质量 -->
+      <div class="tab-pane" data-pane="m3">
+        <div class="grid g5 mb16" id="qualStats"></div>
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>缺陷密度与逃逸率趋势</div></div>
+            <div class="card-body">
+              <div class="legend mb8"><span><i style="background:#2b5cff"></i>千行缺陷密度</span><span><i style="background:#e5484d"></i>缺陷逃逸率(%)</span><span><i style="background:#15a86b"></i>一次通过率(%)</span></div>
+              <div id="qualTrend"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="alert"></span>线上故障统计</div></div>
+            <div class="card-body"><div id="incident"></div>
+              <div class="divider"></div><div id="incidentList"></div></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>缺陷根因分析</div></div>
+            <div class="card-body"><div id="rootCause"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="layers"></span>缺陷发现阶段</div>
+            <div class="card-sub">越靠左发现成本越低</div></div>
+            <div class="card-body"><div id="findStage"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>质量红线达成</div></div>
+            <div class="card-body"><div id="redline"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 人效 -->
+      <div class="tab-pane" data-pane="m4">
+        <div class="card mb16" style="background:var(--ink-50)">
+          <div class="card-body" style="padding:11px 16px">
+            <div class="flex items-center gap10">
+              <span style="color:var(--brand-500)" data-icon="award" data-size="17"></span>
+              <div class="fz12" style="flex:1;color:var(--ink-600);line-height:1.7">
+                本页为<b>组织与团队维度</b>的人效与成本。需要查看<b>每个人的效能画像与产品贡献率</b>（六维画像、贡献事实清单、成员×产品贡献矩阵、单点依赖风险）请前往「人员效能与贡献」。
+              </div>
+              <a class="btn btn-sm btn-primary" href="people.html">进入人员效能与贡献</a>
+            </div>
+          </div>
+        </div>
+        <div class="grid g5 mb16" id="hrStats"></div>
+        <div class="grid g-2-1 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="chart"></span>研发投入结构与人效</div>
+            <div class="card-sub">按投入类型（人日）</div></div>
+            <div class="card-body"><div id="investChart"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>成本分布</div>
+            <div class="card-sub">2026 Q3 · 合计 1,860 万元</div></div>
+            <div class="card-body"><div id="costDonut"></div></div></div>
+        </div>
+        <div class="grid g3">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="users"></span>团队负载健康度</div></div>
+            <div class="card-body"><div id="loadHealth"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="clock"></span>加班与健康预警</div></div>
+            <div class="card-body"><div id="overtime"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>人效指标</div></div>
+            <div class="card-body"><div id="perCap"></div></div></div>
+        </div>
+      </div>
+
+      <!-- 团队对比 -->
+      <div class="tab-pane" data-pane="m5">
+        <div class="grid g-1-2 mb16">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>团队效能雷达</div>
+            <div class="card-sub">交易平台组 vs 风控算法组</div></div>
+            <div class="card-body"><div id="teamRadar"></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="award"></span>团队效能排行</div>
+            <div class="card-head-actions"><div class="btn-group"><button class="active">综合</button><button>效率</button><button>质量</button></div></div></div>
+            <div class="card-body flush"><table class="tbl" id="teamTable"></table></div></div>
+        </div>
+        <div class="card"><div class="card-head"><div class="card-title"><span data-icon="grid"></span>团队指标明细矩阵</div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="matrixTable"></table></div></div></div>
+      </div>
+
+      <!-- 报告 -->
+      <div class="tab-pane" data-pane="m6">
+        <div style="display:grid;grid-template-columns:1fr 260px;gap:14px;align-items:start">
+          <div class="card"><div class="card-body" style="padding:26px 32px">
+            <div class="prose">
+              <div class="flex items-center gap8 mb12"><span class="tag brand">AI 生成</span><span class="tag">2026 年 7 月</span>
+                <span class="muted fz11 ml-auto">生成于 2026-07-25 09:00 · 数据截至 07-24</span></div>
+              <h1>研发中心 2026 年 7 月效能月报</h1>
+              <blockquote><b>一句话结论：</b>交付吞吐与部署能力持续提升（吞吐 +18%，部署频率 +31%），但<b>需求交付周期仍高于目标 1.6 天</b>，瓶颈集中在评审与排期等待；质量侧缺陷逃逸率改善明显，压测未达标是 V3.0 发布的主要风险。</blockquote>
+              <h2>一、整体表现</h2>
+              <ul>
+                <li>需求交付 <b>96</b> 条（环比 +18%），故事点吞吐 <b>412</b> 点，按时交付率 <b>91%</b>。</li>
+                <li>部署频率提升至 <b>4.2 次/天</b>，变更失败率下降至 <b>3.1%</b>，已进入 DORA 精英区间。</li>
+                <li>缺陷逃逸率 <b>2.4%</b>（环比 −1.8pt），线上 P0 故障 <b>1</b> 起，MTTR <b>26 分钟</b>。</li>
+              </ul>
+              <h2>二、关键瓶颈</h2>
+              <ol>
+                <li><b>需求等待时间过长</b>：评审等待 2.4 天 + 排期等待 3.1 天，合计占交付周期的 40%。</li>
+                <li><b>测试人力缺口</b>：质量保障部负载 100%+，回归排期挤压导致 2 个迭代延期。</li>
+                <li><b>性能能力不足</b>：支付网关 3.0 压测 8.2k TPS，距 12k 目标缺口 32%，已列为 P0 风险。</li>
+              </ol>
+              <h2>三、改进举措（下月）</h2>
+              <table>
+                <thead><tr><th>举措</th><th>负责人</th><th>目标</th><th>完成时间</th></tr></thead>
+                <tbody>
+                  <tr><td>需求评审改为每周两次固定批量评审</td><td>周雅</td><td>评审等待 ≤ 1 天</td><td>08-08</td></tr>
+                  <tr><td>自动化用例补齐核心链路（+200 条）</td><td>赵鹏</td><td>自动化率 ≥ 70%</td><td>08-31</td></tr>
+                  <tr><td>成立性能攻坚小组（3 人）</td><td>李思远</td><td>压测达 12k TPS</td><td>08-15</td></tr>
+                  <tr><td>建立需求就绪度（DoR）门禁</td><td>徐磊</td><td>返工率 −30%</td><td>08-20</td></tr>
+                </tbody>
+              </table>
+              <h2>四、数据附录</h2>
+              <div id="reportChart" class="mt12"></div>
+            </div>
+          </div></div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="list"></span>报告目录</div></div>
+              <div class="card-body" style="padding:8px">
+                <div class="toc"><a class="active">一、整体表现</a><a>二、关键瓶颈</a><a>三、改进举措</a><a>四、数据附录</a></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>历史报告</div></div>
+              <div class="card-body" id="history"></div></div>
+            <div class="card"><div class="card-body">
+              <button class="btn btn-primary btn-block mb8" data-toast="报告已发布至知识库"><span data-icon="send" data-size="13"></span>发布到知识库</button>
+              <button class="btn btn-block" data-toast="已导出 PDF"><span data-icon="download" data-size="13"></span>导出 PDF</button></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+/* 综合评分 */
+Charts.gauge('#scoreGauge', { value: 82.6, max: 100, text: '82.6', label: '研发效能综合指数', color: '#2b5cff', size: 210 });
+document.getElementById('scoreDims').innerHTML = [
+  { n: '交付效率', v: 78, d: '需求周期 13.6 天', c: '#2b5cff', t: '+4.2' },
+  { n: '交付质量', v: 88, d: '逃逸率 2.4%', c: '#15a86b', t: '+6.8' },
+  { n: '交付能力', v: 91, d: 'DORA 精英级', c: '#7c5cff', t: '+9.1' },
+  { n: '组织人效', v: 74, d: '人均 4.6 点/周', c: '#f59e0b', t: '+1.4' },
+  { n: '技术健康', v: 81, d: '覆盖率 73.4%', c: '#0fb5ba', t: '+3.6' }
+].map(function (d) {
+  return '<div style="border:1px solid var(--ink-200);border-radius:10px;padding:12px 14px">' +
+    '<div class="flex items-center"><span class="fz12 dim">' + d.n + '</span>' +
+    '<span class="trend up ml-auto">' + icon('arrowUp', 11) + d.t + '</span></div>' +
+    '<div class="flex items-end gap6 mt8"><b style="font-size:24px;letter-spacing:-.5px;color:' + d.c + '">' + d.v + '</b>' +
+    '<span class="muted fz11" style="margin-bottom:3px">/ 100</span></div>' +
+    '<div class="mt8">' + UI.bar(d.v, '', 'thin') + '</div>' +
+    '<div class="muted fz11 mt4">' + d.d + '</div></div>';
+}).join('');
+
+/* 交付效率 */
+document.getElementById('effStats').innerHTML = [
+  { l: '需求交付周期', v: '13.6', u: '天', t: '−12%', up: 0, good: 1, f: '目标 ≤ 12 天' },
+  { l: '需求吞吐量', v: 96, u: '条/月', t: '+18%', up: 1, good: 1, f: '412 故事点' },
+  { l: '按时交付率', v: 91, u: '%', t: '+3pt', up: 1, good: 1, f: '目标 ≥ 95%' },
+  { l: '需求变更率', v: 14, u: '%', t: '−5pt', up: 0, good: 1, f: '范围蔓延受控' },
+  { l: '在制品数量', v: 46, u: '条', t: '+6', up: 1, good: 0, f: 'WIP 上限 40' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-label">' + s.l + '</span></div>' +
+    '<div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span class="trend ' + (s.good ? 'up' : 'down') + '">' + icon(s.up ? 'arrowUp' : 'arrowDown', 12) + s.t + '</span>' +
+    '<span>' + s.f + '</span></div></div>';
+}).join('');
+(function () {
+  var seg = [['需求评审', 2.4, '#f59e0b'], ['排期等待', 3.1, '#e5484d'], ['开发', 5.2, '#2b5cff'], ['代码评审', 0.6, '#7c5cff'], ['测试', 2.1, '#0fb5ba'], ['发布等待', 0.8, '#b3bfd0'], ['上线', 0.2, '#15a86b']];
+  var total = seg.reduce(function (a, b) { return a + b[1]; }, 0);
+  document.getElementById('leadBreak').innerHTML =
+    '<div class="bar-multi" style="height:26px;border-radius:8px">' + seg.map(function (s) {
+      return '<i style="width:' + (s[1] / total * 100) + '%;background:' + s[2] + '" title="' + s[0] + ' ' + s[1] + ' 天"></i>';
+    }).join('') + '</div>' +
+    '<div class="flex flex-wrap gap12 mt12">' + seg.map(function (s) {
+      return '<span class="flex items-center gap4 fz12"><i style="width:8px;height:8px;border-radius:2px;background:' + s[2] + '"></i>' +
+        '<span class="dim">' + s[0] + '</span><b>' + s[1] + 'd</b></span>';
+    }).join('') + '<span class="ml-auto fz12">合计 <b>' + total.toFixed(1) + ' 天</b></span></div>';
+})();
+Charts.bar('#cycleDist', {
+  height: 200, labels: ['≤5d', '6-10d', '11-15d', '16-20d', '21-30d', '>30d'],
+  series: [{ name: '需求数', data: [14, 32, 26, 15, 7, 2], color: '#2b5cff' }], unit: ' 条'
+});
+document.getElementById('cyclePct').innerHTML = [['P50 中位数', '11.2 天', 'green'], ['P85', '19.4 天', 'orange'], ['P95', '28.6 天', 'red']]
+  .map(function (r) {
+    return '<div class="flex items-center gap8" style="padding:5px 0"><span class="fz12 dim" style="width:80px">' + r[0] + '</span>' +
+      '<b class="fz13" style="color:var(--' + (r[2] === 'green' ? 'success' : r[2] === 'orange' ? 'warning' : 'danger') + ')">' + r[1] + '</b></div>';
+  }).join('');
+Charts.bar('#throughput', {
+  height: 200, labels: ['2月', '3月', '4月', '5月', '6月', '7月'], unit: ' 条',
+  series: [{ name: '需求交付（条）', data: [62, 68, 71, 78, 82, 96], color: '#2b5cff' }],
+  lineSeries: { name: '故事点', data: [268, 292, 310, 342, 368, 412], color: '#15a86b' }, lineMax: 500
+});
+Charts.line('#wip', {
+  height: 200, labels: ['W25', 'W26', 'W27', 'W28', 'W29', 'W30'],
+  series: [{ name: 'WIP', data: [38, 41, 39, 44, 45, 46], color: '#f59e0b', area: true },
+    { name: 'WIP 上限', data: [40, 40, 40, 40, 40, 40], color: '#e5484d', dashed: true, dots: false }]
+});
+Charts.hbar('#planRate', { unit: '%', data: [
+  { name: 'Sprint 26-10', value: 89 }, { name: 'Sprint 26-11', value: 95 }, { name: 'Sprint 26-12', value: 86 },
+  { name: 'Sprint 26-13', value: 102, color: '#15a86b' }, { name: 'Sprint 26-14', value: 67, color: '#e5484d' }], max: 110 });
+
+/* DORA */
+var DORA = [
+  { n: '部署频率', v: '4.2', u: '次/天', lv: '精英', pct: 86, c: '#2b5cff', bench: '精英 ≥ 1 次/天', sp: [2.1, 2.6, 2.9, 3.2, 3.4, 3.8, 4.2] },
+  { n: '变更前置时间', v: '18.4', u: '小时', lv: '高', pct: 71, c: '#15a86b', bench: '精英 < 1 小时', sp: [30, 28, 26, 24, 22, 20, 18.4] },
+  { n: '变更失败率', v: '3.1', u: '%', lv: '精英', pct: 92, c: '#7c5cff', bench: '精英 ≤ 5%', sp: [5.2, 4.8, 4.5, 4.0, 3.6, 3.3, 3.1] },
+  { n: '服务恢复时间', v: '26', u: '分钟', lv: '高', pct: 68, c: '#f59e0b', bench: '精英 < 1 小时', sp: [62, 55, 48, 41, 36, 30, 26] }
+];
+document.getElementById('doraCards').innerHTML = DORA.map(function (d) {
+  return '<div class="card"><div class="card-body">' +
+    '<div class="flex items-center"><span class="fz12 dim">' + d.n + '</span>' +
+    '<span class="tag ' + (d.lv === '精英' ? 'success' : 'brand') + ' ml-auto">' + d.lv + '级</span></div>' +
+    '<div class="flex items-end gap8 mt8"><div style="font-size:28px;font-weight:650;letter-spacing:-.5px;color:var(--ink-900)">' + d.v +
+    '<small style="font-size:12px;color:var(--ink-400);font-weight:500;margin-left:3px">' + d.u + '</small></div>' +
+    '<div class="ml-auto">' + Charts.spark(d.sp, { color: d.c, width: 90, height: 32 }) + '</div></div>' +
+    '<div class="mt12">' + UI.bar(d.pct, '', 'thin') + '</div>' +
+    '<div class="flex mt4"><span class="muted fz11">' + d.bench + '</span><span class="muted fz11 ml-auto">分位 ' + d.pct + '%</span></div>' +
+    '</div></div>';
+}).join('');
+Charts.line('#doraTrend', {
+  height: 250, labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '部署频率', data: [2.1, 2.6, 2.9, 3.2, 3.4, 3.8, 4.2], color: '#2b5cff', area: true },
+    { name: '前置时间(h)', data: [30, 28, 26, 24, 22, 20, 18.4], color: '#15a86b' },
+    { name: '变更失败率(%)', data: [5.2, 4.8, 4.5, 4.0, 3.6, 3.3, 3.1], color: '#e5484d' }]
+});
+document.getElementById('benchTable').innerHTML =
+  '<thead><tr><th>指标</th><th>我们</th><th>精英</th><th>高</th><th>中</th><th>评级</th></tr></thead><tbody>' +
+  [['部署频率', '4.2 次/天', '按需多次/天', '1 次/周~1 次/月', '1 月~6 月', '精英'],
+   ['变更前置时间', '18.4 小时', '< 1 小时', '1 天~1 周', '1 周~1 月', '高'],
+   ['变更失败率', '3.1%', '0~15%', '16~30%', '16~30%', '精英'],
+   ['服务恢复时间', '26 分钟', '< 1 小时', '< 1 天', '1 天~1 周', '高']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td><b>' + r[1] + '</b></td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td class="dim fz12">' + r[3] + '</td><td class="dim fz12">' + r[4] + '</td>' +
+      '<td><span class="tag ' + (r[5] === '精英' ? 'success' : 'brand') + '">' + r[5] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('doraTeam').innerHTML =
+  '<thead><tr><th>产品线 / 团队</th><th>部署频率</th><th>前置时间</th><th>变更失败率</th><th>恢复时间</th><th>综合评级</th><th style="width:120px">趋势</th></tr></thead><tbody>' +
+  [['统一支付网关', '6.8 次/天', '12.2 小时', '2.4%', '18 分钟', '精英', [3, 4, 5, 5.6, 6.2, 6.8]],
+   ['智能风控平台', '3.4 次/天', '16.8 小时', '3.6%', '22 分钟', '精英', [2, 2.4, 2.8, 3.0, 3.2, 3.4]],
+   ['商户运营中心', '4.1 次/天', '20.4 小时', '3.2%', '31 分钟', '高', [2.8, 3.0, 3.4, 3.6, 3.9, 4.1]],
+   ['数据资产中台', '1.8 次/天', '32.6 小时', '4.8%', '46 分钟', '高', [0.8, 1.0, 1.2, 1.4, 1.6, 1.8]],
+   ['开放能力平台', '0.9 次/天', '46.2 小时', '6.2%', '58 分钟', '中', [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]]
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td><td>' + r[4] + '</td>' +
+      '<td><span class="tag ' + (r[5] === '精英' ? 'success' : r[5] === '高' ? 'brand' : 'warning') + '">' + r[5] + '</span></td>' +
+      '<td>' + Charts.spark(r[6], { width: 100, height: 26 }) + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('doraTips').innerHTML = [
+  ['前置时间', '开放能力平台前置时间 46.2 小时，主要卡在人工审批与环境排队，建议接入自助环境与自动审批规则。', 'warning'],
+  ['变更失败率', '数据中台失败率 4.8% 偏高，建议在流水线增加数据回归校验与灰度发布。', 'warning'],
+  ['部署频率', '支付网关已实现按需部署，可将其流水线模板沉淀为中心标准模板推广。', 'success'],
+  ['恢复时间', '建议将故障自愈脚本覆盖率从 72% 提升至 85%，可将 MTTR 再降低约 8 分钟。', 'brand']
+].map(function (t) {
+  return '<div style="padding:10px 12px;border-radius:9px;background:var(--ink-50);margin-bottom:8px">' +
+    '<div class="flex items-center gap6 mb4"><span class="tag ' + t[2] + '">' + t[0] + '</span></div>' +
+    '<div class="fz12" style="color:var(--ink-600);line-height:1.7">' + t[1] + '</div></div>';
+}).join('');
+
+/* 质量 */
+document.getElementById('qualStats').innerHTML = [
+  { l: '缺陷密度', v: '0.42', u: '个/千行', t: '−0.11', f: '行业均值 0.6' },
+  { l: '缺陷逃逸率', v: '2.4', u: '%', t: '−1.8pt', f: '目标 ≤ 2%' },
+  { l: '一次通过率', v: '86', u: '%', t: '+5pt', f: '提测质量提升' },
+  { l: '线上故障', v: 3, u: '起', t: '−2', f: 'P0 1 起' },
+  { l: '平均 MTTR', v: 26, u: '分钟', t: '−8', f: '目标 ≤ 30 分钟' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-label">' + s.l + '</span></div>' +
+    '<div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span class="trend up">' + icon('trendUp', 12) + s.t + '</span><span>' + s.f + '</span></div></div>';
+}).join('');
+Charts.line('#qualTrend', {
+  height: 250, labels: ['2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '缺陷密度', data: [0.68, 0.62, 0.58, 0.51, 0.46, 0.42], color: '#2b5cff' },
+    { name: '逃逸率(%)', data: [6.2, 5.4, 4.8, 3.9, 3.1, 2.4], color: '#e5484d', area: true },
+    { name: '一次通过率(%)', data: [72, 74, 78, 81, 84, 86], color: '#15a86b', dots: false }], yMax: 90
+});
+Charts.donut('#incident', { size: 150, thickness: 19, center: { value: '3', label: '本月故障' }, data: [
+  { name: 'P0 致命', value: 1, color: '#b3182c' }, { name: 'P1 严重', value: 1, color: '#e5484d' }, { name: 'P2 一般', value: 1, color: '#f59e0b' }] });
+document.getElementById('incidentList').innerHTML = [
+  ['INC-0725', '对账任务超时致 128 商户账单延迟', 'P0', '2h18m', '批次过大'],
+  ['INC-0712', '风控模型服务内存溢出', 'P1', '42m', '内存泄漏'],
+  ['INC-0703', '商户后台导出接口偶发 502', 'P2', '25m', '网关超时配置']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:6px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag ' + (r[2] === 'P0' ? 'danger' : r[2] === 'P1' ? 'warning' : '') + '">' + r[2] + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + r[1] + '</div><div class="muted fz11">' + r[0] + ' · 根因：' + r[4] + '</div></div>' +
+    '<b class="fz12">' + r[3] + '</b></div>';
+}).join('');
+Charts.donut('#rootCause', { size: 140, thickness: 18, center: { value: '246', label: '本月缺陷' }, data: [
+  { name: '需求理解偏差', value: 62, color: '#f59e0b' }, { name: '编码缺陷', value: 88, color: '#2b5cff' },
+  { name: '设计缺陷', value: 41, color: '#7c5cff' }, { name: '环境/配置', value: 34, color: '#0fb5ba' },
+  { name: '第三方依赖', value: 21, color: '#b3bfd0' }] });
+Charts.hbar('#findStage', { unit: ' 个', data: [
+  { name: '需求评审', value: 18, color: '#15a86b' }, { name: '代码评审', value: 64, color: '#15a86b' },
+  { name: '单元测试', value: 52, color: '#2b5cff' }, { name: '集成/系统测试', value: 86, color: '#f59e0b' },
+  { name: 'UAT 验收', value: 20, color: '#e5484d' }, { name: '生产逃逸', value: 6, color: '#b3182c' }] });
+document.getElementById('redline').innerHTML = [
+  ['P0 故障 ≤ 1 起/月', 1, '1 起'], ['缺陷逃逸率 ≤ 2%', 0, '2.4%'], ['单元测试覆盖率 ≥ 70%', 1, '73.4%'],
+  ['高危漏洞 = 0', 1, '0'], ['MTTR ≤ 30 分钟', 1, '26 分钟'], ['自动化率 ≥ 60%', 1, '64.2%']
+].map(function (r) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span style="color:' + (r[1] ? 'var(--success)' : 'var(--danger)') + '">' + icon(r[1] ? 'circleCheck' : 'alert', 15) + '</span>' +
+    '<span class="fz12" style="flex:1">' + r[0] + '</span><b class="fz12" style="color:' + (r[1] ? 'var(--success)' : 'var(--danger)') + '">' + r[2] + '</b></div>';
+}).join('');
+
+/* 人效 */
+document.getElementById('hrStats').innerHTML = [
+  { l: '研发人数', v: 86, u: '人', f: '在编 78 · 外包 8' },
+  { l: '人均交付', v: '4.6', u: '点/周', f: '较上季 +0.4' },
+  { l: '有效投入率', v: 71, u: '%', f: '需求交付占比' },
+  { l: '人均成本', v: '21.6', u: '万/季', f: '含外包与云资源' },
+  { l: '故事点成本', v: '4,514', u: '元/点', f: '较上季 −7.2%' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-label">' + s.l + '</span></div>' +
+    '<div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+Charts.bar('#investChart', {
+  height: 260, stacked: true, labels: ['2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '需求交付', data: [420, 448, 462, 486, 502, 512], color: '#2b5cff' },
+    { name: '缺陷修复', data: [186, 172, 168, 162, 160, 158], color: '#e5484d' },
+    { name: '技术债与架构', data: [82, 88, 94, 102, 106, 108], color: '#7c5cff' },
+    { name: '运维与值班', data: [96, 92, 90, 88, 86, 84], color: '#b3bfd0' }], unit: ' 人日'
+});
+Charts.donut('#costDonut', { size: 170, thickness: 22, center: { value: '1,860', label: '万元' }, data: [
+  { name: '人力成本', value: 1420, color: '#2b5cff' }, { name: '云资源', value: 246, color: '#7c5cff' },
+  { name: '外包服务', value: 118, color: '#f59e0b' }, { name: '工具与license', value: 76, color: '#0fb5ba' }] });
+document.getElementById('loadHealth').innerHTML = [
+  ['交易平台组', 106, 'red'], ['风控算法组', 95, 'orange'], ['前端体验组', 88, ''], ['基础架构组', 78, 'green'], ['质量保障部', 102, 'red'], ['产品部', 74, 'green']
+].map(function (r) {
+  return '<div class="mb12"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span>' +
+    '<b class="ml-auto" style="color:var(--' + (r[2] === 'red' ? 'danger' : r[2] === 'orange' ? 'warning' : 'ink-800') + ')">' + r[1] + '%</b></div>' +
+    UI.bar(Math.min(r[1], 100), r[2]) + '</div>';
+}).join('') + '<div class="tl-box mt8">交易平台组与质量保障部持续超载，建议 8 月补充 2 名后端 + 3 名测试，或将部分回归外包。</div>';
+document.getElementById('overtime').innerHTML =
+  '<div class="flex items-center gap12 mb12"><div><div class="muted fz11">人均周工时</div>' +
+  '<div class="fz20 fw6" style="color:var(--warning)">48.6h</div></div>' +
+  '<div><div class="muted fz11">连续加班 ≥ 2 周</div><div class="fz20 fw6" style="color:var(--danger)">9 人</div></div></div>' +
+  [['何俊', 62, 'red'], ['吴敏', 58, 'red'], ['王倩', 54, 'orange'], ['郑宇', 52, 'orange'], ['李思远', 50, 'orange']]
+    .map(function (r) {
+      return '<div class="flex items-center gap8" style="padding:5px 0">' + UI.avatar(r[0], 'sm') +
+        '<span class="fz12" style="width:48px">' + r[0] + '</span>' +
+        '<div style="flex:1">' + UI.bar(r[1] / 70 * 100, r[2], 'thin') + '</div><b class="fz11">' + r[1] + 'h/周</b></div>';
+    }).join('');
+document.getElementById('perCap').innerHTML = [
+  ['人均故事点', '4.6 点/周', 78], ['人均代码当量', '1,240 行/周', 82], ['人均缺陷率', '0.42 个/千行', 88],
+  ['评审响应时长', '2.6 小时', 74], ['知识贡献', '3.2 篇/人/季', 66]
+].map(function (r) {
+  return '<div class="mb12"><div class="flex fz12 mb4"><span class="dim">' + r[0] + '</span><b class="ml-auto">' + r[1] + '</b></div>' +
+    UI.bar(r[2], r[2] >= 80 ? 'green' : '', 'thin') + '</div>';
+}).join('');
+
+/* 团队对比 */
+Charts.radar('#teamRadar', {
+  size: 280, axes: ['交付速度', '交付质量', '响应能力', '自动化', '协作效率', '知识沉淀'],
+  series: [{ name: '交易平台组', data: [88, 82, 92, 78, 74, 68], color: '#2b5cff' },
+    { name: '风控算法组', data: [72, 91, 76, 86, 82, 84], color: '#e5484d' }]
+});
+document.getElementById('teamTable').innerHTML =
+  '<thead><tr><th>排名</th><th>团队</th><th>综合分</th><th>交付效率</th><th>交付质量</th><th>DORA</th><th>人效</th><th style="width:110px">趋势</th></tr></thead><tbody>' +
+  [[1, '交易平台组', 87.4, 88, 82, 94, 85, [78, 80, 82, 84, 86, 87.4]],
+   [2, '风控算法组', 84.2, 72, 91, 88, 86, [80, 81, 82, 83, 84, 84.2]],
+   [3, '前端体验组', 79.6, 82, 76, 81, 79, [74, 75, 77, 78, 79, 79.6]],
+   [4, '基础架构组', 78.8, 68, 88, 84, 76, [72, 74, 76, 77, 78, 78.8]],
+   [5, '质量保障部', 74.2, 71, 86, 62, 78, [70, 71, 72, 73, 74, 74.2]],
+   [6, '数据平台组', 68.4, 62, 74, 68, 70, [64, 65, 66, 67, 68, 68.4]]
+  ].map(function (r) {
+    var medal = r[0] <= 3 ? ['🥇', '🥈', '🥉'][r[0] - 1] : r[0];
+    return '<tr><td class="tc fz15">' + medal + '</td><td class="t-main">' + r[1] + '</td>' +
+      '<td><b style="font-size:14px;color:var(--brand-600)">' + r[2] + '</b></td>' +
+      '<td>' + r[3] + '</td><td>' + r[4] + '</td><td>' + r[5] + '</td><td>' + r[6] + '</td>' +
+      '<td>' + Charts.spark(r[7], { width: 92, height: 26 }) + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('matrixTable').innerHTML =
+  '<thead><tr><th>团队</th><th class="num">人数</th><th class="num">需求交付</th><th class="num">故事点</th><th class="num">交付周期</th>' +
+  '<th class="num">缺陷密度</th><th class="num">逃逸率</th><th class="num">覆盖率</th><th class="num">部署频率</th><th class="num">负载率</th></tr></thead><tbody>' +
+  [['交易平台组', 22, 34, 168, '12.4 天', 0.38, '1.8%', '78%', '6.8/天', '106%'],
+   ['风控算法组', 14, 21, 96, '14.2 天', 0.31, '1.4%', '86%', '3.4/天', '95%'],
+   ['前端体验组', 16, 24, 82, '11.8 天', 0.52, '3.1%', '64%', '4.1/天', '88%'],
+   ['基础架构组', 12, 8, 42, '16.6 天', 0.28, '1.2%', '82%', '2.6/天', '78%'],
+   ['质量保障部', 12, 5, 18, '—', '—', '—', '—', '—', '102%'],
+   ['数据平台组', 10, 4, 46, '18.4 天', 0.61, '4.2%', '62%', '1.8/天', '84%']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td>' + r.slice(1).map(function (v, i) {
+      var color = '';
+      if (i === 8) color = parseInt(v) > 100 ? 'color:var(--danger);font-weight:600' : '';
+      return '<td class="num" style="' + color + '">' + v + '</td>';
+    }).join('') + '</tr>';
+  }).join('') + '</tbody>';
+
+/* 报告图 */
+Charts.bar('#reportChart', {
+  height: 240, labels: ['2月', '3月', '4月', '5月', '6月', '7月'],
+  series: [{ name: '需求交付', data: [62, 68, 71, 78, 82, 96], color: '#2b5cff' },
+    { name: '缺陷数', data: [186, 172, 168, 162, 160, 158], color: '#e5484d' }],
+  lineSeries: { name: '交付周期(天)', data: [18.2, 17.4, 16.1, 15.2, 14.4, 13.6], color: '#f59e0b' }, lineMax: 25
+});
+document.getElementById('history').innerHTML = [
+  ['2026 年 6 月效能月报', '周雅', '07-02'], ['2026 Q2 效能季报', '徐磊', '07-05'],
+  ['2026 年 5 月效能月报', '徐磊', '06-03'], ['研发效能提升专项复盘', '陈立', '05-20']
+].map(function (h) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100);cursor:pointer">' +
+    '<span class="tico doc">' + icon('file', 11) + '</span>' +
+    '<div style="flex:1;min-width:0"><div class="fz12 ellipsis">' + h[0] + '</div><div class="muted fz11">' + h[1] + ' · ' + h[2] + '</div></div></div>';
+}).join('');
+
+document.getElementById('scopeBtn').onclick = function () {
+  UI.menu(this, [{ label: '研发中心（全部）' }, { label: '交易平台组' }, { label: '风控算法组' }, { label: '前端体验组' }, { label: '基础架构组' }, { label: '质量保障部' }]);
+};
+document.getElementById('timeBtn').onclick = function () {
+  UI.menu(this, [{ label: '本周' }, { label: '本月' }, { label: '2026 Q3' }, { label: '2026 全年' }, { label: '自定义区间' }]);
+};
+</script>
+</body>
+</html>

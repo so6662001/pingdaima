@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>登录 · DevFlow 研发管理平台</title>
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  body { background: #0d1424; }
+  .login-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.15fr 1fr; }
+  .login-left {
+    position: relative; overflow: hidden; padding: 54px 60px; color: #fff;
+    background: radial-gradient(1200px 600px at 10% 0%, #23306b 0%, #131c33 45%, #0d1424 100%);
+    display: flex; flex-direction: column;
+  }
+  .login-left::after {
+    content: ''; position: absolute; right: -120px; bottom: -160px; width: 520px; height: 520px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(43,92,255,.36), transparent 65%);
+  }
+  .glass {
+    background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 14px; padding: 16px 18px; backdrop-filter: blur(6px);
+  }
+  .login-right { background: #fff; display: grid; place-items: center; padding: 40px; }
+  .login-card { width: 380px; max-width: 100%; }
+  @media (max-width: 1000px) { .login-wrap { grid-template-columns: 1fr; } .login-left { display: none; } }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-left">
+    <div class="flex items-center gap10">
+      <div class="brand-mark" style="width:34px;height:34px;font-size:15px">DF</div>
+      <div><div style="font-size:17px;font-weight:600">DevFlow</div>
+        <div style="font-size:11px;color:#8b98b2;letter-spacing:1.5px">研发管理平台</div></div>
+    </div>
+    <div style="margin-top:auto;position:relative;z-index:1">
+      <h1 style="font-size:34px;font-weight:650;line-height:1.35;letter-spacing:-.5px">一站式研发管理<br>让交付过程<span style="color:#7d9bff">可见、可控、可度量</span></h1>
+      <p style="color:#9aa8c4;font-size:14px;line-height:1.9;margin-top:16px;max-width:520px">
+        需求 · 产品 · 项目 · 测试 · 代码 · 效能 · 知识库，七大模块打通研发全生命周期，
+        深度集成 GitHub 与 CI/CD，用数据驱动研发组织持续改进。</p>
+      <div class="grid g3 mt20" style="gap:12px;max-width:560px" id="feats"></div>
+      <div class="glass mt20" style="max-width:560px">
+        <div class="flex items-center gap12">
+          <div><div style="font-size:22px;font-weight:650">4.2<span style="font-size:12px;color:#8b98b2">次/天</span></div>
+            <div style="font-size:11px;color:#8b98b2">部署频率</div></div>
+          <div><div style="font-size:22px;font-weight:650">13.6<span style="font-size:12px;color:#8b98b2">天</span></div>
+            <div style="font-size:11px;color:#8b98b2">需求交付周期</div></div>
+          <div><div style="font-size:22px;font-weight:650">2.4<span style="font-size:12px;color:#8b98b2">%</span></div>
+            <div style="font-size:11px;color:#8b98b2">缺陷逃逸率</div></div>
+          <div style="margin-left:auto;font-size:11px;color:#8b98b2;text-align:right">星链数科研发中心<br>2026 年 7 月实际数据</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:32px;font-size:11px;color:#5f6d8a;position:relative;z-index:1">© 2026 星链数科 · 研发中心 · DevFlow v4.2</div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-card">
+      <h2 style="font-size:22px;font-weight:650;color:var(--ink-900)">欢迎回来</h2>
+      <p class="muted fz13 mt4">请使用企业账号登录 DevFlow 研发管理平台</p>
+
+      <div class="btn-group mt20" style="width:100%">
+        <button class="active" style="flex:1">账号登录</button>
+        <button style="flex:1">扫码登录</button>
+      </div>
+
+      <div class="field mt20"><label>企业邮箱 / 工号</label>
+        <input class="input" style="height:38px" value="shenzhiyuan@xinglian.com"></div>
+      <div class="field"><label>密码</label>
+        <div style="position:relative"><input class="input" style="height:38px" type="password" value="devflow2026">
+          <span class="icon-btn" style="position:absolute;right:3px;top:3px" onclick="var i=this.previousElementSibling;i.type=i.type==='password'?'text':'password'">
+            <span data-icon="eye" data-size="15"></span></span></div></div>
+      <div class="flex items-center gap8 mb16">
+        <span class="checkbox checked"></span><span class="fz12 dim">7 天内自动登录</span>
+        <a class="fz12 ml-auto" style="color:var(--brand-600)">忘记密码？</a>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" onclick="location.href='index.html'">登录</button>
+
+      <div class="flex items-center gap12 mt20 mb16">
+        <div style="flex:1;height:1px;background:var(--ink-200)"></div>
+        <span class="muted fz11">企业统一身份</span>
+        <div style="flex:1;height:1px;background:var(--ink-200)"></div>
+      </div>
+      <div class="grid g3" style="gap:8px" id="sso"></div>
+      <div class="muted fz11 mt20 tc">登录即表示同意《DevFlow 使用规范》与《数据安全承诺》</div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+document.getElementById('feats').innerHTML = [
+  ['bulb', '需求全流程', '价值评估到交付闭环'], ['kanban', '敏捷项目', '迭代 / 看板 / 甘特'],
+  ['branch', 'GitHub 集成', '代码 · PR · 流水线'], ['flask', '测试管理', '用例 · 执行 · 缺陷'],
+  ['chart', '效能度量', 'DORA 与交付效率'], ['book', '知识沉淀', '规范 · 方案 · 复盘']
+].map(function (f) {
+  return '<div class="glass" style="padding:12px 14px"><div style="color:#7d9bff">' + icon(f[0], 17) + '</div>' +
+    '<div style="font-size:12.5px;font-weight:600;margin-top:7px">' + f[1] + '</div>' +
+    '<div style="font-size:11px;color:#8b98b2;margin-top:3px">' + f[2] + '</div></div>';
+}).join('');
+document.getElementById('sso').innerHTML = [['企业微信', 'comment'], ['钉钉', 'users'], ['LDAP', 'key']]
+  .map(function (s) {
+    return '<button class="btn" onclick="location.href=\'index.html\'">' + icon(s[1], 15) + s[0] + '</button>';
+  }).join('');
+</script>
+</body>
+</html>

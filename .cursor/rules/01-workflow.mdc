@@ -1,0 +1,52 @@
+---
+description: 开发工作流：任务领取、实现闭环、自检、提交规范、遇到歧义如何处理。
+alwaysApply: true
+---
+
+# 开发工作流
+
+## 任务循环
+
+```
+读 docs/dev/TASKS.md 找第一个未勾选任务
+  → 读该任务在 docs/dev/BUILD-PLAN.md 中的完整定义（输入 / 产出 / 验收）
+  → 读任务引用的 PRD 章节与原型页面
+  → 实现
+  → 自检：make verify（lint + codegen 校验 + 单测 + check-prd）+ 任务指定的校验
+  → 勾选 TASKS.md 并写 commit 短 SHA
+  → git add -A && git commit（单任务单 commit）
+  → 下一个任务
+```
+
+**不要在一个 commit 里塞多个任务**。也不要做完一批才提交。
+
+## 每批次结束
+
+跑该批次在 BUILD-PLAN 里列出的全部验收项，输出一份摘要：完成的任务号、验证命令的实际输出、未解决的问题。然后继续下一批次。
+
+## 遇到歧义
+
+不要停下来问用户。按以下顺序处理：
+
+1. 回到 PRD 找答案（多数"没规定"其实是没找到，先搜 `docs/`）
+2. 仍无答案 → 按 PRD 的设计原则做最小合理决策
+3. 把问题、你的决策、理由追加到 `docs/dev/OPEN-QUESTIONS.md`
+4. 代码里标 `// TODO(open-question: Q<n>)`
+5. 继续下一步
+
+## Commit 规范
+
+首行：`<type>(<scope>): <任务号> <一句话>`
+
+- type：`feat` / `fix` / `refactor` / `test` / `docs` / `chore`
+- scope：`web` / `api` / `contracts` / `ui` / `db` / `e2e`
+- 示例：`feat(api): T-0304 优先级模型五种算法与得分快照`
+
+正文写清楚：对应的 US 编号、关键实现决策、验证结论（哪些命令跑过、结果如何）。
+
+## 禁止的行为
+
+- 用 `git push --force` 或 `git commit --amend`
+- 修改 `docs/PRD.md` 与 `docs/prd/*.md` 的业务结论（发现文档错误时，先在 OPEN-QUESTIONS 记录，不要擅自改结论）
+- 跳过失败的测试或用 `.skip` 掩盖问题
+- 声称"因为环境问题无法验证"而不尝试修复环境

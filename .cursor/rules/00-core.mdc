@@ -1,0 +1,48 @@
+---
+description: DevFlow 项目核心约束：事实来源优先级、铁律、禁止事项。任何时候都适用。
+alwaysApply: true
+---
+
+# 核心约束
+
+本仓库是 **DevFlow 研发管理平台**：已有完整 PRD（`docs/`）与 24 页高保真 HTML 原型（仓库根目录），现在要把它们实现为真实系统。
+
+## 事实来源优先级
+
+1. `docs/PRD.md` + `docs/prd/*.md` —— 业务逻辑、状态机、字段、算法、指标口径、权限的唯一来源
+2. 根目录 `*.html` 原型 —— 界面结构、样式、交互、文案的唯一来源
+3. `docs/dev/*.md` —— 技术选型、任务拆分、还原清单
+4. 你的经验 —— 只用于填补前三者未规定的技术细节
+
+界面以原型为准，逻辑以 PRD 为准；两者矛盾时以 PRD 为准并记录到 `docs/dev/OPEN-QUESTIONS.md`。
+
+## 绝对禁止
+
+- 臆造 PRD 中不存在的状态名、字段名、枚举值、算法参数、指标公式
+- 简化或"约等于"实现原型界面
+- 重写 `assets/css/app.css`，或改用 Tailwind / CSS-in-JS 重新实现设计系统
+- 用第三方图表库（ECharts / Chart.js）替换原型自研的 SVG 图表引擎
+- 用第三方图标库替换 `assets/js/icons.js` 的内联 SVG 图标
+- 引入 Element Plus / Ant Design Vue 等组件库（会破坏 100% 还原）
+- 手改 `generated/` 目录下的生成代码
+- 修改或删除根目录的 `*.html` 原型文件（它们是验收基线，只读）
+- 在业务代码里直接更新 status 字段绕过状态机引擎
+- 把算法参数（阈值、系数、窗口）硬编码在 Java 或 TS 代码里（必须来自 `contracts` 生成物）
+- 留下 `// TODO 实现`、`return []`、假数据直通前端这类占位实现
+- 未实际运行验证就声称任务完成
+
+## 技术栈（已定）
+
+后端 **Java 21 + Spring Boot 3 + Spring Data JPA + MySQL 8**，前端 **Vue 3 + TypeScript + Vite**，
+缓存 Redis、消息 RocketMQ、定时 XXL-Job、迁移 Flyway、端到端 Playwright。详见 `docs/dev/TECH-STACK.md`，不要自行更换。
+
+跨语言的领域规则（状态机 / 算法参数 / 枚举 / 指标口径）统一定义在 `contracts/*.yaml`，由 `make codegen`
+生成 Java 与 TS 两份代码，见 `.cursor/rules/13-contracts.mdc`。
+
+## 编码通则
+
+- Java：Spotless + Checkstyle 强制，构造器注入，领域层不依赖 Spring 与 JPA（实体放 infra，用 MapStruct 与领域模型互转）
+- TypeScript：严格模式，禁止 `any`（第三方类型缺失时用 `unknown` + 类型守卫）
+- 领域概念的英文标识两端保持一致：需求 `requirement`、工作项 `workItem`/`WorkItem`、工单 `ticket`、迭代 `sprint`、漏测 `escapeAnalysis`
+- 面向用户的文案一律用原型里的原文，不要自己改写
+- 任何引用 PRD 规则的代码处，加注解 `@prd docs/prd/<文件>.md#<锚点>`，`make check-prd` 会校验其有效性

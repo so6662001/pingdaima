@@ -1,0 +1,71 @@
+---
+description: PRD 一致性硬约束：状态机、算法、指标、权限必须与 docs/prd 完全一致，并可被脚本校验。
+alwaysApply: true
+---
+
+# PRD 一致性
+
+## 集中定义，禁止散落
+
+后端是 Java、前端是 TS，因此以下四类内容**只能在语言中立的 YAML 契约里定义一次**，由 `make codegen`
+生成 Java 与 TS 两份代码（详见 `.cursor/rules/13-contracts.mdc`）：
+
+| 内容 | 契约文件 | PRD 出处 |
+| --- | --- | --- |
+| 状态与状态机（8 类对象） | `contracts/domain/state-machines/*.yaml` | `docs/prd/state-machines.md` |
+| 算法与参数（优先级、工时、漏测、容量、WIP） | `contracts/domain/algorithms.yaml` | `docs/PRD.md` 第 5.2 ~ 5.6 节 |
+| 指标口径（7 组） | `contracts/domain/metrics.yaml` | `docs/prd/metrics.md` |
+| 枚举字典 | `contracts/domain/enums.yaml` | `docs/prd/data-model.md` 第四章 |
+
+Java 从 `com.starlink.devflow.domain.generated` 引用，前端从 `@/generated` 引用。
+两边都不许另写一份，也不许硬编码阈值。
+
+## @prd 注解
+
+每个实现 PRD 规则的函数、常量、状态机定义，都要带注解：
+
+```java
+/**
+ * 优先级得分（默认算法：加权价值 ÷ 工作量系数）
+ * @prd docs/PRD.md#52-关键规则优先级模型
+ */
+public BigDecimal score(Requirement req) {
+    var w = AlgorithmParams.PRIORITY_WEIGHTS; // 来自 contracts 生成物，不要写死
+    ...
+}
+```
+
+`make check-prd` 会扫描 `.java` / `.ts` / `.vue` / `.yaml` / `.sql` 中的 `@prd` 注解，
+校验目标文件与锚点真实存在，CI 必须通过。
+
+## 状态机
+
+- 每类对象的状态、归类（初始/进行/等待/终态）、转换表（触发 + 守卫 + 动作）必须与 `docs/prd/state-machines.md` 的表格逐行对应
+- 转换表由 `contracts/domain/state-machines/*.yaml` 生成，不要写成一堆 if-else
+- 所有状态变更走统一的 `StateMachineEngine.transition()`，守卫失败抛业务异常并返回**具体未满足项**（不许返回"操作失败"）
+- 每条合法转换与每条被禁止的非法转换都要有单测
+
+## 算法
+
+实现下列算法时，参数必须逐一对照 PRD，不许取近似值：
+
+| 算法 | 关键参数 | PRD 出处 |
+| --- | --- | --- |
+| 优先级评分 | 六因素权重 30/20/15/15/10/10、工作量系数 `1 + 人日/20`、得分 `加权价值 × 2 ÷ 系数`；五种算法可切换；合规强制置顶 | 5.2 |
+| 阶段延期判定 | 实际晚于计划 ≥ 1 天 | 5.3 |
+| 工时推算 | 聚类窗口 90 分钟、最小计时 25 分钟、基准当量 180 行/时、编码系数 0.8、单日上限 10 小时、评审 20 分钟/次、CI 重跑 15 分钟/次、取整 0.5 小时、可调 ±30% | 5.4 |
+| 漏测判定 | 六类判定规则与责任环节映射；相似度阈值 0.72；工单聚类 0.78 | 5.5 |
+| WIP 与看板 | 列上限、跨项目按「项目+列」判定、加急泳道不受限但 24 小时闭环 | 5.6 |
+| 容量 | `基线 − 请假/公休 − 会议协作 − 运维值班 − 缓冲`，>100% 告警 | `docs/prd/flows.md#23-迭代规划与任务认领` |
+
+## 指标
+
+- 每个指标一个纯函数，输入明确、可单测
+- 指标查询走 `metric_snapshot` 预聚合表，不许直接扫明细表
+- 指标编码来自 `contracts/domain/metrics.yaml`，前后端用同一套编码
+- 口径变更不回刷历史快照
+- 个人级指标在查询层二次校验权限
+
+## 权限
+
+按 `docs/PRD.md#22-角色与权限模型` 的矩阵实现 RBAC + 数据范围双层。**越权一律返回 404，不返回 403**（不泄露资源存在性）。个人工时与效能明细仅本人与直属主管可见。

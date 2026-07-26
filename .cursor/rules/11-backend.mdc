@@ -1,0 +1,134 @@
+---
+description: 后端实现规范（Java 21 + Spring Boot 3 + Spring Data JPA + MySQL 8 + RocketMQ + XXL-Job），分层、状态机、事件、集成与权限。
+globs: backend/**
+alwaysApply: false
+---
+
+# 后端实现规范（Java）
+
+## 技术栈（已定，不要替换）
+
+Java 21 + Spring Boot 3.3 + **Spring Data JPA（Hibernate 6.4）** + MySQL 8.0 + Flyway + Redis 7(Redisson) + **RocketMQ 5.x** + **XXL-Job 2.4** + springdoc-openapi。Maven 多模块。
+
+## 模块与依赖方向
+
+```
+devflow-app     Controller、装配、启动类
+   ↓
+devflow-domain  领域模型、状态机引擎、算法、指标计算   ← 不依赖 Spring / JPA
+   ↓
+devflow-common  通用工具、异常、统一返回
+
+devflow-infra   实现 domain 定义的端口接口（Mapper、Redis、MQ、GitHub、企业微信）
+```
+
+**领域层保持纯净**：算法与状态机必须能脱离 Spring 容器单测。外部依赖以接口（端口）声明在 domain，实现放 infra。**JPA 实体放在 `infra/entity`，不要让 `@Entity` 注解污染领域模型**，两者用 MapStruct 互转。
+
+## 包结构
+
+```
+com.starlink.devflow
+  common/          Result、ErrorCode、BizException、工具
+  domain/
+    model/         领域对象
+    statemachine/  StateMachineEngine、Transition、Guard、Action
+    algorithm/     PriorityScoring、WorklogEstimation、EscapeAnalysis、Capacity
+    metrics/       各指标计算器
+    generated/     由 contracts 生成（枚举、转换表、算法参数）DO NOT EDIT
+    port/          仓储与外部服务接口
+  infra/
+    entity/        JPA 实体（@Entity），只在 infra 内可见
+    jpa/           Spring Data Repository 接口
+    query/         JdbcClient 原生 SQL 查询（列表筛选与度量聚合，直接投影 DTO）
+    repository/    port 的实现（entity ↔ domain 用 MapStruct 转换）
+    integration/   github、wecom、calendar
+    mq/            RocketMQ 生产者、消费者、幂等、DLQ、outbox
+    job/           XXL-Job JobHandler
+  app/
+    controller/    按领域分包
+    dto/           请求响应对象（不要把实体直接暴露）
+    config/        Security、JPA、RocketMQ、XxlJob、Jackson、OpenAPI
+```
+
+领域划分对齐 PRD 模块：`ticket`、`customer`、`requirement`、`product`、`project`、`sprint`、`workitem`、`board`、`test`、`devops`、`worklog`、`people`、`metrics`、`retro`、`notify`、`portal`、`settings`。
+
+## 状态机
+
+所有状态变更必须走 `StateMachineEngine.transition(TransitionCommand)`，**禁止在任何 Service/Mapper 里直接 update status 字段**：
+
+1. 从 `domain/generated` 的转换表查 `from → to` 是否合法，否则抛 `IllegalTransitionException`
+2. 逐条执行守卫，失败时抛出**包含全部未满足项**的 `GuardViolationException`（前端要展示具体缺什么）
+3. 同一事务内更新状态、写 `state_transition_log`（含在上一状态的停留时长）
+4. 事务提交后（`@TransactionalEventListener(AFTER_COMMIT)`）发领域事件，触发通知、自动流转、指标更新
+
+管理员强制流转必须传 `reason`，写审计日志并在时间线标记。
+
+## 数据访问（Spring Data JPA + MySQL）
+
+**表结构由 Flyway 独占**：`backend/db/migration/V<n>__<desc>.sql`。`spring.jpa.hibernate.ddl-auto=validate`，
+**绝不允许 `update` / `create`**——实体与表不一致时启动即失败，这是防止"实体偷偷改表"的闸门。
+
+**读写分工**（这是用 JPA 做这类系统的关键，不遵守必然出性能问题）：
+
+| 场景 | 做法 |
+| --- | --- |
+| 写 / 聚合内一致性 | JPA 实体 + Repository，享受脏检查与乐观锁 |
+| 简单查询 | Repository 方法 + `@EntityGraph` 一次取全关联 |
+| 需求池筛选、看板范围过滤、度量聚合、报表 | **`JdbcClient` 写原生 SQL 直接投影成 DTO**，不经过实体 |
+
+这些复杂查询的字段组合与聚合方式多变，用 Criteria / Specification 拼会既难读又容易 N+1；投影 DTO 还能避免把整个实体图捞进内存。
+
+必须遵守：
+
+- `spring.jpa.open-in-view=false`（禁止在视图层触发懒加载）
+- 所有关联默认 `LAZY`，需要时用 `@EntityGraph` 或 fetch join，**禁止 `EAGER`**
+- 枚举一律 `@Enumerated(EnumType.STRING)`，**禁止 ORDINAL**（加枚举值就会错位）
+- JSON 字段用 `@JdbcTypeCode(SqlTypes.JSON)`（Hibernate 6 原生支持，不需要自定义 TypeHandler）
+- 软删除用 `@SQLDelete` + `@SQLRestriction("is_deleted = 0")`
+- 并发编辑（看板拖拽、需求评分）实体加 `@Version` 乐观锁，冲突时返回明确错误码让前端回滚
+- 分页一律 `Pageable` / `Page`，**禁止无界 `findAll()`**
+- 批量写配 `hibernate.jdbc.batch_size=50` + `order_inserts` + `order_updates`
+- 时区配 `hibernate.jdbc.time_zone=UTC`，字段 `DATETIME(3)`，金额 `DECIMAL(18,4)`
+- 不建物理外键，关系在应用层维护；唯一约束与索引严格按 `docs/prd/data-model.md` 建
+- 数据范围过滤用可组合的 `DataScopeSpecs`（JPA 侧）与统一的 SQL 片段拼装器（原生 SQL 侧），**两侧都要接**，不要只在一边做
+- 度量查询只读 `metric_snapshot`，不扫明细表
+- 打开 `spring.jpa.properties.hibernate.generate_statistics` 在测试环境跑 N+1 检测，关键查询写断言 SQL 条数的测试
+
+## 事件与集成（RocketMQ）
+
+- GitHub Webhook：校验签名 → 事件 ID 去重（Redis SETNX，保留 7 天）→ 落库 → 投递 `devflow-webhook` → **3 秒内返回 200**，业务异步处理
+- **领域事件必须可靠投递**：事件与业务数据在**同一事务**写入 `outbox_event` 表，由 `outboxRelayJob` 扫描投递后标记已发送。禁止"事务提交后直接 send"——发送失败会导致自动化静默失效，且极难排查
+- **同一实体的事件必须顺序消费**：`devflow-domain-event` 用 `MessageQueueSelector` 按实体 ID 取模选队列，消费端 `consumeMode = ORDERLY`，否则会出现状态倒挂（先消费"合并 PR"再消费"创建 PR"）
+- 消费幂等：以事件 ID 为幂等键，重复投递不产生重复流转与重复推送
+- 重试用 RocketMQ 消费重试（`maxReconsumeTimes = 6`），超出自动进 `%DLQ%<consumerGroup>`；**DLQ 必须接告警并提供人工重投入口**
+- Topic 与消费组按 `docs/dev/TECH-STACK.md#消息主题设计rocketmq` 的表设计，不要随手新建 topic
+- 外部系统（GitHub / 企业微信）不可用时必须降级：核心功能不受影响，自动化暂停并在界面提示
+
+## 定时任务（XXL-Job）
+
+- Handler 用 `@XxlJob("handlerName")`，**cron 在控制台配置，不要写死在代码里**
+- 任务清单登记在 `docs/dev/TECH-STACK.md#定时任务清单xxl-job`，新增任务必须同步登记
+- Handler 只做编排与分片，业务逻辑在 service；日志用 `XxlJobHelper.log`，失败用 `XxlJobHelper.handleFail(msg)`
+- **必须幂等**：重复执行不产生重复推送与重复数据
+- 大范围扫描（SLA、阶段延期、指标预聚合）必须分片：`XxlJobHelper.getShardIndex()` / `getShardTotal()` 按 ID 取模，避免单实例扫全表
+- 每个任务都有配置开关可按团队启停（PRD 10.1 的灰度要求）
+
+## API 约定
+
+- RESTful，路径 `/api/v1/<资源>`，统一返回 `Result<T>{ data, meta }`
+- 错误返回 `{ error: { code, message, details } }`，`code` 用领域错误码（如 `REQ_DOR_NOT_MET`），`details` 给出未满足项清单
+- 越权返回 **404**（不返回 403，不泄露资源存在性）
+- 写接口支持幂等键请求头 `Idempotency-Key`
+- 参数校验用 Bean Validation，全局异常处理器统一转换
+- Controller 用 springdoc 注解写全，`contracts/openapi.yaml` 由构建产出并提交，前端据此生成类型
+
+## 权限
+
+按 `docs/PRD.md#22-角色与权限模型` 实现 RBAC + 数据范围双层：方法级 `@PreAuthorize` 控操作，查询层统一注入数据范围条件控可见性。敏感字段（商户信息、金额）在 service 层脱敏，不要指望前端。
+
+## 编码风格
+
+- Spotless + Checkstyle 强制；不允许提交带 warning 的代码
+- 用构造器注入，不用 `@Autowired` 字段注入
+- 不用 `Optional` 作为方法参数；集合返回空集合不返回 null
+- 领域异常继承 `BizException`，携带错误码与 details

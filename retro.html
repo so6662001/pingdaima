@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>复盘中心 · DevFlow</title>
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-nav="retro" data-crumb="组织协同/复盘中心">
+<div class="app">
+  <div class="main">
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <div class="page-title">复盘中心</div>
+          <div class="page-desc">迭代回顾 · 需求价值复盘 · 故障复盘 · 改进项闭环跟踪，让每次交付都沉淀经验</div>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn"><span data-icon="calendar"></span>2026 Q3</button>
+          <button class="btn" data-toast="复盘知识卡片已同步至知识库"><span data-icon="book"></span>沉淀到知识库</button>
+          <button class="btn btn-primary" data-modal="mNewRetro"><span data-icon="plus"></span>发起复盘</button>
+        </div>
+      </div>
+
+      <div class="grid g5 mb16" id="rStats"></div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="r1"><span data-icon="list" data-size="14"></span>复盘列表 <span class="cnt">28</span></div>
+        <div class="tab" data-tab="r2"><span data-icon="refresh" data-size="14"></span>迭代回顾</div>
+        <div class="tab" data-tab="r3"><span data-icon="bulb" data-size="14"></span>需求价值复盘</div>
+        <div class="tab" data-tab="r4"><span data-icon="alert" data-size="14"></span>故障复盘</div>
+        <div class="tab" data-tab="r5"><span data-icon="target" data-size="14"></span>改进项跟踪 <span class="cnt">36</span></div>
+      </div>
+
+      <!-- 复盘列表 -->
+      <div class="tab-pane active" data-pane="r1">
+        <div class="toolbar">
+          <div class="search-box"><span data-icon="search" data-size="14"></span><input placeholder="搜索复盘主题 / 对象"></div>
+          <div class="filter on"><span data-icon="tag"></span>类型：<b>全部</b><span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="users"></span>团队<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="warn"></span>仅看改进项未闭环</div>
+          <span class="ml-auto fz12 muted">本季复盘 <b>28</b> 次 · 改进项 <b>36</b> 项 · 闭环率 <b style="color:var(--warning)">72%</b></span>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="table-wrap"><table class="tbl" id="retroTable"></table></div></div></div>
+      </div>
+
+      <!-- 迭代回顾 -->
+      <div class="tab-pane" data-pane="r2">
+        <div class="card mb16">
+          <div class="card-body" style="padding:14px 18px">
+            <div class="flex items-center gap10">
+              <span class="tico task" style="width:32px;height:32px"><span data-icon="refresh" data-size="15"></span></span>
+              <div>
+                <div class="flex items-center gap8"><b style="font-size:15px">Sprint 26-14 迭代回顾</b>
+                  <span class="tag brand">进行中</span><span class="tag">交易平台组</span></div>
+                <div class="muted fz12 mt4">2026-07-28 10:00 · 主持 徐磊 · 参与 7 人 · 已收集 18 条反馈 · 匿名投票开启</div>
+              </div>
+              <div class="ml-auto flex items-center gap12">
+                <div class="tc"><div class="fw6 fz15">28 / 42</div><div class="muted fz11">完成 / 承诺（点）</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--danger)">67%</div><div class="muted fz11">达成率</div></div>
+                <div class="tc"><div class="fw6 fz15" style="color:var(--warning)">6 点</div><div class="muted fz11">范围变更</div></div>
+                <button class="btn btn-sm" data-toast="已添加卡片">添加卡片</button>
+                <button class="btn btn-sm btn-primary" data-toast="回顾结论已生成，改进项已分派">结束回顾</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid g4 mb16" id="retroBoard"></div>
+        <div class="grid g-2-1">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="target"></span>本次回顾产出的改进项</div>
+            <div class="card-sub">自动生成任务并纳入下个迭代</div></div>
+            <div class="card-body flush"><table class="tbl" id="retroActions"></table></div></div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="activity"></span>迭代数据回顾</div></div>
+              <div class="card-body"><div id="sprintFacts"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="thumb"></span>团队情绪指数</div>
+              <div class="card-sub">匿名评分，反映团队状态</div></div>
+              <div class="card-body"><div id="mood"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 需求价值复盘 -->
+      <div class="tab-pane" data-pane="r3">
+        <div class="card mb16">
+          <div class="card-head"><div class="card-title"><span data-icon="bulb"></span>REQ-2031 支付成功率实时大盘与自动告警</div>
+            <div class="card-sub">上线 30 天后价值复盘 · 复盘人 周雅 / 林小满</div>
+            <div class="card-head-actions"><span class="tag success">价值达成：超预期</span>
+              <button class="btn btn-sm" data-toast="复盘报告已发布至知识库"><span data-icon="send" data-size="13"></span>发布复盘报告</button></div></div>
+          <div class="card-body">
+            <div class="grid g4 mb16" id="reqFacts"></div>
+            <div class="grid g-2-1">
+              <div>
+                <div class="fz13 fw6 mb8">预期收益 vs 实际达成</div>
+                <div class="table-wrap"><table class="tbl" id="benefitTable"></table></div>
+                <div class="fz13 fw6 mt20 mb8">复盘结论</div>
+                <div class="tl-box" style="line-height:1.85">
+                  <b>做得好：</b>需求定义阶段就明确了可量化的收益指标（成功率、告警时效），上线后可直接对照验证；SRE 提前介入使监控埋点一次到位。<br>
+                  <b>不足：</b>需求预估 12 人日，实际投入 18.6 人日，超出 55%，主要因为告警规则的业务口径反复调整了 3 轮；
+                  上线后 2 周才完成客户回访，价值验证滞后。<br>
+                  <b>结论：</b>该需求价值超出预期（成功率提升 1.8pt，高于目标 1.5pt），建议将「实时大盘」方案复制到风控与清结算域。
+                </div>
+              </div>
+              <div>
+                <div class="fz13 fw6 mb8">投入产出（ROI）</div>
+                <div id="roiBox"></div>
+                <div class="fz13 fw6 mt20 mb8">经验沉淀</div>
+                <div id="lessons"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title"><span data-icon="list"></span>需求价值复盘清单</div>
+            <div class="card-sub">上线满 30 天的需求自动进入复盘队列</div></div>
+          <div class="card-body flush"><div class="table-wrap"><table class="tbl" id="valueTable"></table></div></div>
+        </div>
+      </div>
+
+      <!-- 故障复盘 -->
+      <div class="tab-pane" data-pane="r4">
+        <div class="grid g-2-1 mb16">
+          <div class="card">
+            <div class="card-head"><div class="card-title" style="color:var(--danger)"><span data-icon="alert"></span>INC-0725 生产对账任务超时（P0）</div>
+              <div class="card-sub">影响 128 家商户 · 持续 2h18m · 复盘负责人 何俊</div>
+              <div class="card-head-actions"><span class="tag danger">P0</span><span class="tag warning">复盘中</span></div></div>
+            <div class="card-body">
+              <div class="fz13 fw6 mb8">时间线（5W1H）</div>
+              <div class="timeline" id="incTimeline"></div>
+              <div class="fz13 fw6 mt20 mb8">根因分析（5 Why）</div>
+              <div id="fiveWhy"></div>
+            </div>
+          </div>
+          <div class="grid" style="gap:14px;align-content:start">
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="timer"></span>响应时效</div></div>
+              <div class="card-body"><div id="incTiming"></div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title"><span data-icon="shield"></span>改进措施</div></div>
+              <div class="card-body" id="incActions"></div></div>
+          </div>
+        </div>
+        <div class="grid g2">
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="history"></span>故障复盘记录</div></div>
+            <div class="card-body flush"><table class="tbl" id="incTable"></table></div></div>
+          <div class="card"><div class="card-head"><div class="card-title"><span data-icon="pie"></span>故障根因分布</div>
+            <div class="card-sub">近 12 个月</div></div>
+            <div class="card-body"><div id="incRoot"></div>
+              <div class="tl-box mt12">「容量与批处理」类根因连续两季度居首，已立项「批处理框架统一治理」专项。</div></div></div>
+        </div>
+      </div>
+
+      <!-- 改进项跟踪 -->
+      <div class="tab-pane" data-pane="r5">
+        <div class="grid g4 mb16" id="actStats"></div>
+        <div class="toolbar">
+          <div class="btn-group"><button class="active">全部</button><button>进行中</button><button>已闭环</button><button>已逾期</button></div>
+          <div class="filter"><span data-icon="tag"></span>来源类型<span data-icon="down"></span></div>
+          <div class="filter"><span data-icon="user"></span>责任人<span data-icon="down"></span></div>
+          <div class="filter on"><span data-icon="refresh"></span>仅看重复出现问题 <b>4</b></div>
+          <span class="ml-auto fz12 muted">闭环率 <b style="color:var(--warning)">72%</b> · 平均闭环时长 <b>11.4 天</b></span>
+        </div>
+        <div class="card"><div class="card-body flush"><div class="table-wrap"><table class="tbl" id="actionTable"></table></div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mNewRetro">
+  <div class="modal-head"><span data-icon="history"></span><span class="modal-title">发起复盘</span><button class="icon-btn ml-auto" data-close><span data-icon="x" data-size="16"></span></button></div>
+  <div class="modal-body">
+    <div class="field"><label>复盘类型</label>
+      <div class="grid g4" style="gap:8px" id="retroTypes"></div></div>
+    <div class="field"><label>复盘对象</label><select class="select"><option>Sprint 26-14（交易平台组）</option><option>REQ-2031 支付成功率实时大盘</option><option>INC-0725 对账任务超时</option><option>PRJ-014 数据资产中台一期</option></select></div>
+    <div class="form-row">
+      <div class="field"><label>复盘时间</label><input class="input" value="2026-07-28 10:00"></div>
+      <div class="field"><label>主持人</label><select class="select"><option>徐磊</option><option>周雅</option><option>陈立</option></select></div>
+    </div>
+    <div class="field"><label>复盘模板</label>
+      <div class="pills"><span class="pill active">四象限（做得好/待改进/困惑/行动）</span><span class="pill">Start-Stop-Continue</span><span class="pill">5 Why 根因</span><span class="pill">价值达成对照</span></div></div>
+    <div class="flex items-center gap8"><span class="switch on"></span><span class="fz12 dim">开启匿名反馈与投票</span></div>
+    <div class="flex items-center gap8 mt8"><span class="switch on"></span><span class="fz12 dim">改进项自动生成任务并纳入下个迭代</span></div>
+  </div>
+  <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" data-close onclick="setTimeout(function(){location.href='retro-detail.html'},400)" data-toast="复盘已创建，正在打开复盘详情…">创建复盘</button></div>
+</div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+document.getElementById('rStats').innerHTML = [
+  { l: '本季复盘', v: 28, u: '次', i: 'history', c: '#2b5cff', bg: 'var(--brand-50)', f: '迭代 18 · 需求 6 · 故障 4' },
+  { l: '产出改进项', v: 36, u: '项', i: 'target', c: '#7c5cff', bg: 'var(--purple-bg)', f: '本季新增 22 项' },
+  { l: '改进项闭环率', v: 72, u: '%', i: 'circleCheck', c: '#f59e0b', bg: 'var(--warning-bg)', f: '目标 ≥ 85%' },
+  { l: '平均闭环时长', v: '11.4', u: '天', i: 'timer', c: '#0fb5ba', bg: 'var(--teal-bg)', f: '环比 −2.6 天' },
+  { l: '重复出现问题', v: 4, u: '项', i: 'refresh', c: '#e5484d', bg: 'var(--danger-bg)', f: '需管理层介入' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.bg + ';color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>' + s.u + '</small></div>' +
+    '<div class="stat-foot"><span>' + s.f + '</span></div></div>';
+}).join('');
+
+var TYTAG = { '迭代回顾': 'brand', '需求复盘': 'purple', '故障复盘': 'danger', '项目复盘': 'teal' };
+document.getElementById('retroTable').innerHTML =
+  '<thead><tr><th>复盘主题</th><th>类型</th><th>对象</th><th>主持人</th><th>参与</th><th class="num">改进项</th>' +
+  '<th style="width:110px">闭环率</th><th>结论</th><th>时间</th></tr></thead><tbody>' +
+  [['Sprint 26-14 迭代回顾', '迭代回顾', '交易平台组', '徐磊', 7, 5, 20, '承诺达成率下滑，需控制范围变更', '07-28', 'warning'],
+   ['REQ-2031 支付成功率大盘价值复盘', '需求复盘', '统一支付网关', '周雅', 5, 3, 100, '价值超预期，方案可复制', '07-22', 'success'],
+   ['INC-0725 对账任务超时故障复盘', '故障复盘', '清结算服务', '何俊', 6, 4, 25, '批处理缺少分片与重试机制', '07-25', 'danger'],
+   ['Sprint 26-13 迭代回顾', '迭代回顾', '交易平台组', '徐磊', 7, 4, 100, '需求就绪度改善明显', '07-13', 'success'],
+   ['PRJ-012 反洗钱合规改造项目复盘', '项目复盘', '智能风控平台', '郑宇', 9, 6, 83, '合规类项目应提前锁定口径', '07-20', 'success'],
+   ['REQ-2033 商户中心首页重构复盘', '需求复盘', '商户运营中心', '孙悦', 4, 3, 67, '价值部分达成，需补充用户培训', '07-15', 'warning'],
+   ['INC-0712 风控模型内存溢出复盘', '故障复盘', '风控模型服务', '郑宇', 5, 3, 100, '压测未覆盖长时运行场景', '07-14', 'success'],
+   ['Sprint 26-12 迭代回顾', '迭代回顾', '前端体验组', '王倩', 4, 2, 100, '结对评审提升了一次通过率', '06-29', 'success']
+  ].map(function (r) {
+    return '<tr onclick="location.href=\'' + (r[1] === '故障复盘' ? 'retro.html#tab=r4' : r[1] === '需求复盘' ? 'retro.html#tab=r3' : 'retro-detail.html') + '\'">' +
+      '<td><div class="row-flex"><span class="tico ' + (r[1] === '故障复盘' ? 'bug' : r[1] === '需求复盘' ? 'req' : 'task') + '">' + icon('history', 11) + '</span>' +
+      '<span class="t-main">' + r[0] + '</span></div></td>' +
+      '<td><span class="tag ' + TYTAG[r[1]] + '">' + r[1] + '</span></td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(r[3], 'sm') + '<span class="fz12">' + r[3] + '</span></div></td>' +
+      '<td class="dim">' + r[4] + ' 人</td><td class="num">' + r[5] + '</td>' +
+      '<td><div class="row-flex"><div style="flex:1">' + UI.bar(r[6], r[6] === 100 ? 'green' : r[6] < 50 ? 'red' : 'orange', 'thin') + '</div><span class="fz11">' + r[6] + '%</span></div></td>' +
+      '<td class="fz12 muted ellipsis" style="max-width:220px">' + r[7] + '</td>' +
+      '<td class="muted fz11">' + r[8] + '</td></tr>';
+  }).join('') + '</tbody>';
+
+/* 迭代回顾看板 */
+var COLS = [
+  { n: '做得好 Keep', c: '#15a86b', i: 'thumb', items: [
+    ['需求就绪度门禁执行到位，本迭代无「边做边想」的返工', 8, '何俊'],
+    ['PR 评审响应快（平均 2.6 小时），没有卡住合并', 6, '王倩'],
+    ['SRE 提前介入压测方案，避免了临上线才发现问题', 5, '林小满'],
+    ['站会异步化后，会议时间从 25 分钟降到 12 分钟', 4, '徐磊']
+  ] },
+  { n: '待改进 Problem', c: '#e5484d', i: 'warn', items: [
+    ['迭代中插入 6 点紧急需求，导致承诺未达成', 9, '李思远'],
+    ['压测环境资源不足阻塞 2 天，依赖协调太慢', 7, '林小满'],
+    ['熔断器单测在 CI 环境不稳定，反复重跑', 6, '吴敏'],
+    ['13 点以上的大故事估算偏差大，应更早拆分', 5, '陈立']
+  ] },
+  { n: '困惑 Puzzle', c: '#f59e0b', i: 'help', items: [
+    ['插入需求的准入标准是什么？谁有权拍板？', 6, '匿名'],
+    ['技术债任务是否应占固定比例的迭代容量？', 4, '匿名'],
+    ['跨团队依赖没有 SLA，延期没有约束', 5, '郑宇']
+  ] },
+  { n: '行动项 Action', c: '#2b5cff', i: 'target', items: [
+    ['建立插入需求准入规则：P0 才可插入，需产品总监审批', 9, '周雅'],
+    ['跨团队依赖登记 SLA，超期自动升级', 7, '徐磊'],
+    ['CI 熔断器测试改为可注入 Clock，消除时间敏感', 6, '何俊'],
+    ['13 点以上故事强制拆分后才可进入迭代', 5, '陈立']
+  ] }
+];
+document.getElementById('retroBoard').innerHTML = COLS.map(function (c) {
+  return '<div class="card"><div class="card-head" style="padding:10px 14px">' +
+    '<div class="card-title fz13" style="color:' + c.c + '">' + icon(c.i, 14) + c.n + '</div>' +
+    '<span class="ml-auto tag">' + c.items.length + '</span></div>' +
+    '<div class="card-body" style="padding:10px 12px">' + c.items.map(function (it) {
+      return '<div style="background:var(--ink-50);border-left:3px solid ' + c.c + ';border-radius:0 8px 8px 0;padding:9px 11px;margin-bottom:8px">' +
+        '<div class="fz12" style="color:var(--ink-700);line-height:1.65">' + it[0] + '</div>' +
+        '<div class="flex items-center gap6 mt8">' + UI.avatar(it[2], 'sm') +
+        '<span class="muted fz11">' + it[2] + '</span>' +
+        '<span class="ml-auto pointer" style="color:var(--brand-600);font-size:11px">' + icon('thumb', 12) + ' ' + it[1] + '</span></div></div>';
+    }).join('') +
+    '<div class="pointer fz12 muted tc" style="padding:6px;border:1.5px dashed var(--ink-200);border-radius:8px">+ 添加卡片</div></div></div>';
+}).join('');
+
+document.getElementById('retroActions').innerHTML =
+  '<thead><tr><th>改进项</th><th>类型</th><th>责任人</th><th>截止</th><th>生成任务</th><th>状态</th></tr></thead><tbody>' +
+  [['建立插入需求准入规则（P0 才可插入，需产品总监审批）', '流程', '周雅', '08-08', 'TASK-5560', '进行中', 'brand'],
+   ['跨团队依赖登记 SLA，超期自动升级至管理层', '协作', '徐磊', '08-10', 'TASK-5561', '进行中', 'brand'],
+   ['CI 熔断器测试改为可注入 Clock，消除时间敏感', '工程', '何俊', '08-01', 'TASK-5562', '已完成', 'success'],
+   ['13 点以上故事强制拆分后才可进入迭代', '流程', '陈立', '08-05', 'TASK-5563', '未开始', ''],
+   ['压测环境资源池化，支持自助申请', '基础设施', '林小满', '08-20', 'TASK-5564', '未开始', '']
+  ].map(function (a) {
+    return '<tr><td class="t-main">' + a[0] + '</td><td class="dim fz12">' + a[1] + '</td>' +
+      '<td><div class="row-flex">' + UI.avatar(a[2], 'sm') + '<span class="fz12">' + a[2] + '</span></div></td>' +
+      '<td class="fz12">' + a[3] + '</td><td class="id-link">' + a[4] + '</td>' +
+      '<td><span class="tag ' + a[6] + '">' + a[5] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('sprintFacts').innerHTML = [
+  ['承诺 / 完成', '42 / 28 点', 'red'], ['范围变更', '+6 点（14%）', 'orange'], ['插入需求', '2 条（P0 1 条）', 'orange'],
+  ['缺陷注入', '1.6 个 / 10 点', 'green'], ['阻塞总时长', '3.2 天', 'orange'], ['加班工时', '人均 8.4 小时', 'orange']
+].map(function (f) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="fz12 dim" style="flex:1">' + f[0] + '</span>' +
+    '<b class="fz12" style="color:var(--' + (f[2] === 'red' ? 'danger' : f[2] === 'orange' ? 'warning' : 'success') + ')">' + f[1] + '</b></div>';
+}).join('');
+Charts.line('#mood', {
+  height: 190, yMax: 5, ySteps: 5, padLeft: 24, labels: ['26-09', '26-10', '26-11', '26-12', '26-13', '26-14'],
+  series: [{ name: '团队情绪', data: [3.8, 4.0, 3.6, 4.2, 4.1, 3.4], color: '#7c5cff', area: true }]
+});
+
+/* 需求价值复盘 */
+document.getElementById('reqFacts').innerHTML = [
+  ['上线时间', '2026-07-18', '已运行 7 天', ''], ['预估投入', '12 人日', '实际 18.6 人日', 'orange'],
+  ['价值达成', '超预期', '成功率 +1.8pt（目标 +1.5pt）', 'green'], ['客户回访', '5 / 5 星', '2 家客户，均为战略客户', 'green']
+].map(function (k) {
+  return '<div style="background:var(--ink-50);border-radius:9px;padding:11px 13px"><div class="muted fz11">' + k[0] + '</div>' +
+    '<div class="fw6 mt4" style="font-size:15px;color:' + (k[3] === 'orange' ? 'var(--warning)' : k[3] === 'green' ? 'var(--success)' : 'var(--ink-900)') + '">' + k[1] + '</div>' +
+    '<div class="muted fz11 mt4">' + k[2] + '</div></div>';
+}).join('');
+document.getElementById('benefitTable').innerHTML =
+  '<thead><tr><th>收益指标</th><th>基线</th><th>目标</th><th>实际</th><th>达成</th><th>数据来源</th></tr></thead><tbody>' +
+  [['支付成功率', '97.4%', '98.9%', '99.2%', '超预期', 'success', '交易监控大盘'],
+   ['通道异常发现时长', '32 分钟', '≤ 5 分钟', '3.2 分钟', '超预期', 'success', '告警系统'],
+   ['大促单通道故障影响面', '100%', '≤ 30%', '26%', '达成', 'success', '故障复盘'],
+   ['运营人工巡检工时', '每日 2h', '每日 0.5h', '每日 0.8h', '部分达成', 'warning', '工时系统'],
+   ['客诉量（通道类）', '月 86 起', '月 ≤ 40 起', '月 31 起', '超预期', 'success', '工单系统']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim">' + r[1] + '</td><td class="dim">' + r[2] + '</td>' +
+      '<td><b>' + r[3] + '</b></td><td><span class="tag ' + r[5] + '">' + r[4] + '</span></td>' +
+      '<td class="muted fz11">' + r[6] + '</td></tr>';
+  }).join('') + '</tbody>';
+document.getElementById('roiBox').innerHTML =
+  '<div class="grid g2" style="gap:10px">' +
+  '<div style="background:var(--danger-bg);border-radius:9px;padding:11px 13px"><div class="muted fz11">投入成本</div>' +
+  '<div class="fw6 fz17" style="color:var(--danger)">¥ 8.4 万</div><div class="muted fz11 mt4">18.6 人日 × 4,514 元</div></div>' +
+  '<div style="background:var(--success-bg);border-radius:9px;padding:11px 13px"><div class="muted fz11">年化收益</div>' +
+  '<div class="fw6 fz17" style="color:var(--success)">¥ 2,180 万</div><div class="muted fz11 mt4">成功率提升带来的 GMV</div></div></div>' +
+  '<div class="mt12">' + UI.bar(96, 'green') + '<div class="flex mt4"><span class="muted fz11">ROI</span>' +
+  '<b class="ml-auto fz12" style="color:var(--success)">259 倍（回本周期 &lt; 1 天）</b></div></div>' +
+  '<div class="tl-box mt12">成本数据来自智能工时系统自动核算（基于代码提交与工作项归集），无需人工填报。</div>';
+document.getElementById('lessons').innerHTML = [
+  ['可复制', '「可量化收益指标 + 上线后自动对照」的需求写法，建议纳入需求模板', 'success'],
+  ['需改进', '业务口径在开发中反复调整 3 轮，应在 DoR 阶段锁定', 'warning'],
+  ['需改进', '价值回访滞后 2 周，建议上线后 7 天自动触发回访任务', 'warning'],
+  ['可复制', 'SRE 在需求评审阶段介入，监控埋点一次到位', 'success']
+].map(function (l) {
+  return '<div class="flex items-start gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag ' + l[2] + '">' + l[0] + '</span><span class="fz12" style="flex:1;color:var(--ink-600);line-height:1.65">' + l[1] + '</span></div>';
+}).join('');
+document.getElementById('valueTable').innerHTML =
+  '<thead><tr><th>需求</th><th>上线时间</th><th>预估/实际投入</th><th>预期收益</th><th>实际达成</th><th>结论</th><th>客户回访</th><th>复盘状态</th></tr></thead><tbody>' +
+  [['REQ-2031 支付成功率实时大盘', '07-18', '12 / 18.6 人日', '成功率 +1.5pt', '+1.8pt', '超预期', 'success', '5 星', '已完成'],
+   ['REQ-2029 反洗钱名单实时同步', '07-10', '19 / 21.2 人日', '合规达标', '一次通过', '达成', 'success', '5 星', '已完成'],
+   ['REQ-2033 商户中心首页重构', '07-05', '16 / 22.4 人日', '自助率 +15pt', '+8pt', '部分达成', 'warning', '4 星', '已完成'],
+   ['REQ-2026 批量退款优化', '06-28', '9 / 11.8 人日', '处理时长 −50%', '−38%', '部分达成', 'warning', '3 星', '已完成'],
+   ['REQ-2024 商户经营看板', '06-15', '24 / 31.5 人日', '日活 +20%', '+6%', '未达成', 'danger', '3 星', '已完成'],
+   ['REQ-2038 风控规则热更新', '待上线', '26 人日（预估）', '规则生效 ≤ 30s', '—', '—', '', '—', '待上线复盘']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td class="dim fz12">' + r[1] + '</td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td class="fz12">' + r[3] + '</td><td class="fz12"><b>' + r[4] + '</b></td>' +
+      '<td>' + (r[5] === '—' ? '<span class="muted">—</span>' : '<span class="tag ' + r[6] + '">' + r[5] + '</span>') + '</td>' +
+      '<td class="dim fz12">' + r[7] + '</td><td><span class="tag ' + (r[8] === '已完成' ? 'success' : '') + '">' + r[8] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+
+/* 故障复盘 */
+document.getElementById('incTimeline').innerHTML = [
+  { c: 'red', i: 'alert', t: '<b>02:00</b> 对账任务定时触发，开始处理招行渠道 380 万条流水', time: '故障发生' },
+  { c: 'red', i: 'x', t: '<b>02:47</b> 任务超时中断，连接池耗尽，账单未生成（无自动重试）', time: '影响开始' },
+  { c: 'orange', i: 'bell', t: '<b>07:42</b> 商户反馈账单缺失，SRE 上报缺陷 BUG-771', time: '发现耗时 4h55m（监控盲区）' },
+  { c: 'orange', i: 'arrowUp', t: '<b>08:05</b> 升级为 P0，应急群拉起，通知研发中心总裁', time: '响应' },
+  { c: 'brand', i: 'user', t: '<b>08:40</b> 定位根因：单批次过大导致连接池耗尽', time: '定位耗时 35 分钟' },
+  { c: 'green', i: 'check', t: '<b>09:55</b> 手工分批重跑完成，128 家商户账单恢复', time: '恢复（总时长 2h18m）' },
+  { c: '', i: 'branch', t: '<b>10:10</b> 提交修复分支 hotfix/settle-batch-split', time: '修复中' }
+].map(function (f) {
+  return '<div class="tl-item"><span class="tl-dot ' + f.c + '">' + icon(f.i, 8) + '</span>' +
+    '<div class="tl-title">' + f.t + '</div><div class="tl-time">' + f.time + '</div></div>';
+}).join('');
+document.getElementById('fiveWhy').innerHTML = [
+  ['为什么账单没有生成？', '对账任务执行超时被中断'],
+  ['为什么会超时？', '单批次处理 380 万条，耗时超过 45 分钟，数据库连接池耗尽'],
+  ['为什么单批次这么大？', '任务设计时按渠道整体拉取，未做分片；上线时数据量仅 60 万条'],
+  ['为什么数据量增长后没有预警？', '批处理任务缺少耗时与数据量的趋势监控，只有失败告警'],
+  ['为什么失败后没有自动恢复？', '任务重试策略为 NONE，且失败告警未接入值班通道（监控盲区）']
+].map(function (w, i) {
+  return '<div class="flex items-start gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="tag brand" style="width:52px;justify-content:center">Why ' + (i + 1) + '</span>' +
+    '<div style="flex:1"><div class="fz12 fw5">' + w[0] + '</div><div class="muted fz12 mt4">' + w[1] + '</div></div></div>';
+}).join('') +
+  '<div class="tl-box mt12"><b>根本原因：</b>批处理任务缺少「分片 + 重试 + 容量趋势监控」的标准化能力，属于工程规范缺失，而非个人操作失误。</div>';
+document.getElementById('incTiming').innerHTML = [
+  ['故障发生 → 发现', '4h 55m', 'red', '目标 ≤ 5 分钟'], ['发现 → 响应', '23 分钟', 'orange', '目标 ≤ 15 分钟'],
+  ['响应 → 定位', '35 分钟', 'green', '目标 ≤ 60 分钟'], ['定位 → 恢复', '1h 15m', 'orange', '目标 ≤ 60 分钟'],
+  ['总时长 MTTR', '2h 18m', 'red', '目标 ≤ 30 分钟']
+].map(function (t) {
+  return '<div class="flex items-center gap8" style="padding:7px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="fz12 dim" style="flex:1">' + t[0] + '</span>' +
+    '<b class="fz12" style="color:var(--' + (t[2] === 'red' ? 'danger' : t[2] === 'orange' ? 'warning' : 'success') + ')">' + t[1] + '</b>' +
+    '<span class="muted fz11" style="width:96px;text-align:right">' + t[3] + '</span></div>';
+}).join('');
+document.getElementById('incActions').innerHTML = [
+  ['批处理任务统一分片（≤50 万/批）+ 失败自动重试', '何俊', '08-01', 'brand'],
+  ['所有定时任务接入耗时/数据量趋势监控与预测告警', '林小满', '08-10', 'brand'],
+  ['批处理失败告警接入 7×24 值班通道', '林小满', '07-30', 'success'],
+  ['沉淀《批处理任务开发规范》并纳入代码评审检查项', '陈立', '08-15', '']
+].map(function (a) {
+  return '<div class="flex items-start gap8" style="padding:8px 0;border-bottom:1px solid var(--ink-100)">' +
+    '<span class="checkbox' + (a[3] === 'success' ? ' checked' : '') + '"></span>' +
+    '<div style="flex:1"><div class="fz12">' + a[0] + '</div>' +
+    '<div class="flex items-center gap6 mt4">' + UI.avatar(a[1], 'sm') + '<span class="muted fz11">' + a[1] + ' · ' + a[2] + '</span></div></div></div>';
+}).join('');
+document.getElementById('incTable').innerHTML =
+  '<thead><tr><th>故障</th><th>等级</th><th>影响</th><th>MTTR</th><th>根因分类</th><th>改进项</th><th>状态</th></tr></thead><tbody>' +
+  [['INC-0725 对账任务超时', 'P0', '128 家商户账单延迟', '2h18m', '容量与批处理', '4 项', '复盘中', 'warning'],
+   ['INC-0712 风控模型内存溢出', 'P1', '风控决策降级 42 分钟', '42m', '资源与配置', '3 项', '已闭环', 'success'],
+   ['INC-0703 商户后台导出 502', 'P2', '部分商户导出失败', '25m', '网关配置', '2 项', '已闭环', 'success'],
+   ['INC-0621 收银台组件加载失败', 'P1', '安卓端 8% 用户白屏', '1h05m', '兼容性', '3 项', '已闭环', 'success']
+  ].map(function (r) {
+    return '<tr><td class="t-main">' + r[0] + '</td><td>' + UI.priority(r[1]) + '</td><td class="dim fz12">' + r[2] + '</td>' +
+      '<td class="fz12"><b>' + r[3] + '</b></td><td class="dim fz12">' + r[4] + '</td><td class="num">' + r[5] + '</td>' +
+      '<td><span class="tag ' + r[7] + '">' + r[6] + '</span></td></tr>';
+  }).join('') + '</tbody>';
+Charts.donut('#incRoot', { size: 150, thickness: 19, center: { value: '14', label: '近 12 月' }, data: [
+  { name: '容量与批处理', value: 4, color: '#e5484d' }, { name: '资源与配置', value: 3, color: '#f59e0b' },
+  { name: '代码缺陷', value: 3, color: '#2b5cff' }, { name: '第三方依赖', value: 2, color: '#7c5cff' },
+  { name: '变更操作', value: 2, color: '#0fb5ba' }] });
+
+/* 改进项跟踪 */
+document.getElementById('actStats').innerHTML = [
+  { l: '改进项总数', v: 36, c: '#2b5cff', i: 'target' }, { l: '已闭环', v: 26, c: '#15a86b', i: 'circleCheck' },
+  { l: '进行中', v: 7, c: '#f59e0b', i: 'refresh' }, { l: '已逾期', v: 3, c: '#e5484d', i: 'alert' }
+].map(function (s) {
+  return '<div class="stat"><div class="stat-top"><span class="stat-ico" style="background:' + s.c + '16;color:' + s.c + '">' + icon(s.i, 15) + '</span>' +
+    '<span class="stat-label">' + s.l + '</span></div><div class="stat-val">' + s.v + '<small>项</small></div></div>';
+}).join('');
+document.getElementById('actionTable').innerHTML =
+  '<thead><tr><th style="width:28%">改进项</th><th>来源复盘</th><th>类型</th><th>责任人</th><th>关联任务</th><th>截止</th>' +
+  '<th style="width:100px">进度</th><th>状态</th><th>重复</th></tr></thead><tbody>' +
+  [['建立插入需求准入规则', 'Sprint 26-14 回顾', '流程', '周雅', 'TASK-5560', '08-08', 40, '进行中', 0, 'brand'],
+   ['跨团队依赖登记 SLA 并自动升级', 'Sprint 26-14 回顾', '协作', '徐磊', 'TASK-5561', '08-10', 25, '进行中', 1, 'brand'],
+   ['CI 熔断器测试改为可注入 Clock', 'Sprint 26-14 回顾', '工程', '何俊', 'TASK-5562', '08-01', 100, '已闭环', 0, 'success'],
+   ['批处理任务统一分片 + 自动重试', 'INC-0725 故障复盘', '工程', '何俊', 'TASK-5570', '08-01', 60, '进行中', 0, 'brand'],
+   ['定时任务耗时趋势监控与预测告警', 'INC-0725 故障复盘', '可观测', '林小满', 'TASK-5571', '08-10', 20, '进行中', 1, 'brand'],
+   ['批处理失败告警接入值班通道', 'INC-0725 故障复盘', '可观测', '林小满', 'TASK-5572', '07-30', 100, '已闭环', 0, 'success'],
+   ['需求 DoR 阶段锁定业务口径', 'REQ-2031 价值复盘', '流程', '周雅', 'TASK-5580', '08-15', 50, '进行中', 1, 'brand'],
+   ['上线 7 天自动触发客户回访任务', 'REQ-2031 价值复盘', '流程', '孙悦', 'TASK-5581', '08-05', 80, '进行中', 0, 'brand'],
+   ['13 点以上故事强制拆分', 'Sprint 26-13 回顾', '流程', '陈立', 'TASK-5563', '08-05', 0, '已逾期', 1, 'danger'],
+   ['压测环境资源池化自助申请', 'Sprint 26-14 回顾', '基础设施', '林小满', 'TASK-5564', '08-20', 10, '进行中', 0, 'brand'],
+   ['新功能上线配套用户培训材料', 'REQ-2033 价值复盘', '产品', '孙悦', 'TASK-5590', '07-25', 60, '已逾期', 0, 'danger'],
+   ['压测覆盖长时运行场景', 'INC-0712 故障复盘', '测试', '赵鹏', 'TASK-5595', '07-20', 100, '已闭环', 0, 'success']
+  ].map(function (a) {
+    return '<tr><td class="t-main">' + a[0] + '</td><td class="dim fz12">' + a[1] + '</td>' +
+      '<td><span class="tag">' + a[2] + '</span></td>' +
+      '<td><div class="row-flex">' + UI.avatar(a[3], 'sm') + '<span class="fz12">' + a[3] + '</span></div></td>' +
+      '<td class="id-link">' + a[4] + '</td><td class="fz12">' + a[5] + '</td>' +
+      '<td>' + UI.bar(a[6], a[6] === 100 ? 'green' : a[7] === '已逾期' ? 'red' : '', 'thin') + '</td>' +
+      '<td><span class="tag ' + a[9] + '">' + a[7] + '</span></td>' +
+      '<td>' + (a[8] ? '<span class="tag danger">重复出现</span>' : '<span class="muted">—</span>') + '</td></tr>';
+  }).join('') + '</tbody>';
+
+document.getElementById('retroTypes').innerHTML = [['迭代回顾', 'refresh'], ['需求价值复盘', 'bulb'], ['故障复盘', 'alert'], ['项目复盘', 'kanban']]
+  .map(function (t, i) {
+    return '<div style="border:1.5px solid var(--' + (i === 0 ? 'brand-400' : 'ink-200') + ');border-radius:8px;padding:10px;text-align:center;cursor:pointer">' +
+      '<div style="color:var(--brand-500)">' + icon(t[1], 18) + '</div><div class="fz11 mt4">' + t[0] + '</div></div>';
+  }).join('');
+</script>
+</body>
+</html>

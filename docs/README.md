@@ -1,0 +1,40 @@
+# DevFlow 文档中心
+
+本目录是 DevFlow 研发管理平台的产品文档。所有内容与仓库根目录的高保真原型（24 个 HTML 页面）保持一致——文档里写的状态、字段、算法、规则，都能在原型上点开看到对应实现。
+
+## 文档地图
+
+| 文档 | 内容 | 适合谁读 |
+| --- | --- | --- |
+| [PRD.md](PRD.md) | **主文档**：背景与目标、角色与权限、范围与版本切分、模块地图、功能需求总表（FR）、关键业务规则、非功能需求、集成方案、埋点、上线与迁移、验收策略、风险与开放问题 | 所有人；评审从这里开始 |
+| [prd/user-stories.md](prd/user-stories.md) | 12 个 Epic、60 条用户故事，每条含三段式描述与 Given/When/Then 验收标准 | 产品、研发、测试（排期与验收依据） |
+| [prd/state-machines.md](prd/state-machines.md) | 8 类对象的状态机图、状态字典、转换表（触发/守卫/动作）、SLA 与升级、状态操作权限 | 研发、测试（实现与用例设计依据） |
+| [prd/data-model.md](prd/data-model.md) | 全域 ER 图 + 5 个子域 ER 图、字段口径、枚举字典、唯一约束与索引建议 | 研发、DBA |
+| [prd/flows.md](prd/flows.md) | 端到端主流程、8 个子流程泳道图、事件驱动自动流转规则、集成时序图、异常流程 | 所有人（理解协作交接点） |
+| [prd/metrics.md](prd/metrics.md) | 指标口径字典：DORA、交付效率、质量、工时成本、人效贡献、客户业务、平台自身健康 | 管理者、数据开发 |
+
+## 开发执行文档（AI 编码用）
+
+| 文档 | 内容 |
+| --- | --- |
+| [`../AGENTS.md`](../AGENTS.md) | **AI 开发总纲**：触发词、启动协议、事实来源优先级、十条铁律、DoD。Cursor 会自动加载 |
+| [`../.cursor/rules/`](../.cursor/rules) | 8 条项目规则：核心约束、工作流、PRD 一致性、还原规范、前端(Vue)、后端(Java)、测试、领域契约与代码生成 |
+| [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md) | 14 个批次、75 个任务的施工图，每个任务含输入（PRD 章节 + 原型页面）、产出与验收 |
+| [`dev/TASKS.md`](dev/TASKS.md) | 任务进度板，AI 边做边勾选并记录 commit |
+| [`dev/TECH-STACK.md`](dev/TECH-STACK.md) | 技术选型（Java + Vue 3 + MySQL）与架构决策、跨语言契约机制、统一命令与环境变量 |
+| [`dev/UI-PARITY.md`](dev/UI-PARITY.md) | 24 页高保真还原清单与豁免登记 |
+| [`dev/OPEN-QUESTIONS.md`](dev/OPEN-QUESTIONS.md) | 开放问题记录（遇到歧义写这里，不要停下来问人） |
+| [`dev/PROMPTS.md`](dev/PROMPTS.md) | 提示词速查：日常四句 + 精细控制 + 纠偏话术 |
+
+启动开发只需要对 Cursor 说：**开始开发**。
+
+## 阅读建议
+
+- **第一次接触**：先看 [PRD 第一章背景与问题](PRD.md#一背景与问题) 和 [第四章核心业务流程](PRD.md#四核心业务流程)，再打开原型 `index.html` 对照点一遍。
+- **要排期**：看 [用户故事](prd/user-stories.md)，Must 级 43 条构成 R1+R2 的主体。
+- **要写代码**：看 [状态机](prd/state-machines.md) 和 [数据模型](prd/data-model.md)，这两份是实现约束最强的。
+- **要对数**：看 [指标口径字典](prd/metrics.md)，任何指标争议以此为准。
+
+## 图表说明
+
+文档中的状态机、ER 图、流程图、时序图共 30 张，全部用 Mermaid 编写，GitHub 与主流 Markdown 编辑器可直接渲染。所有图均通过 `mermaid.parse` 语法校验，所有站内链接与锚点均通过自动检查。
